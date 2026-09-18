@@ -1,0 +1,95 @@
+# ==============================================================================
+# 🛡️ GITIGNORE — PROJECT ARGUS (PT PLN Persero UP3 Mojokerto)
+# ==============================================================================
+
+# 1. Kredensial & Secrets (Dilarang Keras Masuk Git - Pilar 5 RULEBOOK)
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# 2. Master Data Besar PLN (Proteksi Kerahasiaan & Batas 100MB GitHub)
+# Master Excel 277MB (Berisi ribuan drawing image tertanam)
+12 LBKB Billing Rek 12 2025 copy+foto.xlsx
+*.xlsx
+*.xls
+*.xlsm
+~$*.xlsx
+~$*.xls
+
+# 3. Direktori Citra Lapangan Mentah (300MB+ / 7.470 File JPG)
+DOkumentasi LBKB/
+**/DOkumentasi LBKB/
+data/raw_images/
+data/raw_excel/
+data/output/
+Docs/File/
+**/Docs/File/
+*.jpg
+*.jpeg
+*.png
+# Pengecualian: Izinkan foto sampel benchmark kecil (< 1MB) di folder data/samples/
+!data/samples/
+!data/samples/*.jpg
+!data/samples/*.jpeg
+!data/samples/*.png
+!Docs/*.svg
+!Docs/*.png
+
+# 4. Lingkungan Virtual & Cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 5. Dependensi Node.js & Webpack/Build Tools (Userscript)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 6. Sistem Operasi (Windows / macOS)
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# 7. IDE & Editor Workspace Cache
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.sublime-workspace
+*.sublime-project
+*.code-workspace
+.history/
+**/.history/
