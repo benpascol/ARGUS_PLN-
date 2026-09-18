@@ -110,7 +110,8 @@ ARGUS/
 │   └── benchmark_barcode.py                   # Uji Coba Hit-Rate Barcode ZBar
 │
 └── Docs/                                      # Dokumentasi & Aset Visual
-    └── arsitektur_pipeline.svg                # Vektor Diagram Pipeline Sistem
+    ├── arsitektur_pipeline.svg                # Vektor Diagram Pipeline Sistem
+    └── requirements.txt                       # Daftar Dependensi Resmi Python
 ```
 
 ---
@@ -138,6 +139,55 @@ ARGUS/
     "confidence_score": 0.95
   }
   ```
+
+---
+
+## 🛠 Panduan Instalasi & Setup Lingkungan Kerja
+
+Ikuti langkah-langkah berikut untuk mengonfigurasi lingkungan kerja lokal ARGUS:
+
+### 1. Prasyarat Sistem
+* **Python:** Versi 3.10 s.d. 3.14 (64-bit).
+* **Git:** Pastikan Git terpasang dan SSH key terdaftar di GitHub.
+
+### 2. Inisialisasi Virtual Environment & Dependensi
+Buka PowerShell pada direktori proyek `ARGUS/` dan jalankan:
+
+```powershell
+# 1. Buat lingkungan virtual terisolasi
+python -m venv .venv
+
+# 2. Aktifkan virtual environment (Windows PowerShell)
+.\.venv\Scripts\activate
+
+# 3. Instal seluruh dependensi resmi ARGUS
+pip install -r Docs/requirements.txt
+```
+
+### 3. Konfigurasi Kredensial Environment (`.env`)
+Salin template konfigurasi dan masukkan kunci akses API:
+```powershell
+# Salin template .env.example menjadi .env
+Copy-Item .env.example .env
+```
+Buka berkas `.env` dan masukkan API Key:
+```env
+API=your_nvidia_nim_api_key_here
+BLUR_THRESHOLD=30.0
+CONCURRENCY_LIMIT=5
+```
+
+### 4. Ekstensi VS Code / Antigravity IDE yang Diperlukan
+Pastikan ekstensi berikut terpasang di VS Code (`Ctrl + Shift + X`):
+1. **Python & Pylance (Microsoft):** Pengenalan interpreter dan debugging.
+   * *Aktivasi:* Tekan `Ctrl + Shift + P` $\rightarrow$ `Python: Select Interpreter` $\rightarrow$ pilih `('ARGUS': .venv)`.
+2. **Excel Viewer (GrapeCity):** Membaca tabel file Excel langsung di VS Code tanpa membuka software MS Excel.
+3. **Markdown Preview Mermaid Support (Matt Bierner):** Merender grafik Mermaid interaktif di markdown.
+
+### 5. Modul Userscript Browser (Portal ACMT PLN)
+Untuk staf operasional di portal PLN (`https://portalapp.iconpln.co.id/*`):
+1. Pasang ekstensi **Tampermonkey** / **Violentmonkey** di Google Chrome atau Microsoft Edge.
+2. Tambahkan script baru dan salin isi berkas `web_extension/argus_evaluator.user.js`.
 
 ---
 
