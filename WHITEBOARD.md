@@ -1,48 +1,79 @@
 # 🎯 Section 1: Current Grand Plan
 > [!IMPORTANT]
 > **Fokus Utama Saat Ini:** Tahap 1: Pengujian Sampel Nyata (Proof of Concept) pada 15-20 Foto Citra Lapangan, Benchmark Algoritma Blur ROI (OpenCV Laplacian), Validasi Barcode Scanner dengan CLAHE (ZBar), dan Pemetaan Prompt Semantik VLM untuk Kasus LBKB PLN.
-> **Affected Areas:** Folder Citra `DOkumentasi LBKB/`, File Master `12 LBKB Billing Rek 12 2025 copy+foto.xlsx`, Script Portal `Tanpa judul.txt`, Dokumen Riset [`Docs/ARGUS_Research_Validation.md`](file:///d:/Hooh_Lah/PLN/ARGUS/Docs/ARGUS_Research_Validation.md), dan Skrip Pengujian Python.
-> **Dokumentasi Resmi:** [`README.md`](file:///d:/Hooh_Lah/PLN/ARGUS/README.md), [`RULEBOOK.md`](file:///d:/Hooh_Lah/PLN/ARGUS/RULEBOOK.md), [`ARGUS_Research_Validation.md`](file:///d:/Hooh_Lah/PLN/ARGUS/Docs/ARGUS_Research_Validation.md).
+> **Affected Areas:** Folder Citra `DOkumentasi LBKB/`, File Master `12 LBKB Billing Rek 12 2025 copy+foto.xlsx`, Script Portal `Tanpa judul.txt`, Dokumen Riset [`Docs/ARGUS_Research_Validation.md`](file:///d:/Hooh_Lah/PLN/ARGUS/Docs/ARGUS_Research_Validation.md), Roadmap Metodologi [`Docs/ARGUS_Methodology_Roadmap.md`](file:///d:/Hooh_Lah/PLN/ARGUS/Docs/ARGUS_Methodology_Roadmap.md), dan Skrip Pengujian Python.
+> **Dokumentasi Resmi:** [`README.md`](file:///d:/Hooh_Lah/PLN/ARGUS/README.md), [`RULEBOOK.md`](file:///d:/Hooh_Lah/PLN/ARGUS/RULEBOOK.md), [`ARGUS_Research_Validation.md`](file:///d:/Hooh_Lah/PLN/ARGUS/Docs/ARGUS_Research_Validation.md), [`ARGUS_Methodology_Roadmap.md`](file:///d:/Hooh_Lah/PLN/ARGUS/Docs/ARGUS_Methodology_Roadmap.md).
 > **Success Criteria:** 
 > 1. Terbuktinya metrik Laplacian Variance pada ROI dalam memisahkan foto buram/rusak dari foto layak audit pada sampel foto lapangan $\pm 20$ citra. *(Status: IN PROGRESS)*
 > 2. Terverifikasinya pembacaan nomor meteran 11 digit via Barcode Reader ZBar + CLAHE secara otomatis tanpa halusinasi pada KWH Meter prabayar bertipe stiker barcode. *(Status: IN PROGRESS)*
-> 3. Terumuskannya *system prompt* VLM (NVIDIA NIM LLaMA 3.2 11B Vision) yang menghasilkan output JSON deterministik untuk mendeteksi rintangan pagar terkunci, pintu rumah tutup, dan foto manipulasi/fraud. *(Status: PLANNED)*
-> 4. Sinkronisasi logika Decision Engine dengan data kolom Excel sheet `Detail` (IDPEL, NAMA, KDBACA, KODE LBKB). *(Status: PLANNED)*
-> 5. Eksekusi pengemasan ganda (*dual-mode packaging*): Userscript Browser ACMT (`web_extension/argus_evaluator.user.js`) dan Batch CLI Python (`src/pipeline.py`) untuk audit 8.000 foto. *(Status: PLANNED)*
+> 3. Terumuskannya *system prompt* VLM (NVIDIA NIM LLaMA 3.2 11B Vision) berbasis 4-layer architecture yang menghasilkan output JSON deterministik untuk mendeteksi rintangan pagar terkunci, pintu rumah tutup, dan foto manipulasi/fraud. *(Status: PLANNED)*
+> 4. Sinkronisasi logika Decision Engine dengan data kolom Excel sheet `Detail` (IDPEL, NAMA, KDBACA, KODE LBKB) menggunakan kontrak data formal (`ImageSignal` & `AuditVerdict`). *(Status: PLANNED)*
+> 5. Evaluasi performa sistem berbasis metrik komprehensif (Precision, Recall, F1-Score, Barcode Hit-Rate, Cost Saving) dan validasi Ground Truth 100 sampel manual bersama PLN. *(Status: PLANNED)*
+> 6. Eksekusi pengemasan ganda (*dual-mode packaging*): Userscript Browser ACMT (`web_extension/argus_evaluator.user.js`) dan Batch CLI Python (`src/pipeline.py`) untuk audit 8.000 foto. *(Status: PLANNED)*
 
 ---
 
-### 🚀 Roadmap Fase Pengembangan ARGUS:
+### 🚀 Roadmap Fase Pengembangan ARGUS (Sesuai Metodologi MLLC + IEEE):
 
 #### 🔹 FASE 0: Validasi Ilmiah & Grounding Arsitektur [SELESAI ✅ — 26-09-2026]
 - [x] **Riset Literatur & Komparasi Industri:** Validasi cascading pipeline vs Pure VLM vs Fine-tuned YOLO.
 - [x] **Dokumentasi Ilmiah:** Penyusunan laporan validasi di [`Docs/ARGUS_Research_Validation.md`](file:///d:/Hooh_Lah/PLN/ARGUS/Docs/ARGUS_Research_Validation.md) dengan 6 sitasi jurnal terindeks (MDPI, IEEE, CMC).
+- [x] **Penyusunan Roadmap Metodologi:** Pemetaan lengkap langkah pengembangan berbasis standar MLLC & IEEE di [`Docs/ARGUS_Methodology_Roadmap.md`](file:///d:/Hooh_Lah/PLN/ARGUS/Docs/ARGUS_Methodology_Roadmap.md).
 - [x] **Identifikasi Mitigasi Teknis:** Penambahan strategi ROI cropping untuk Laplacian dan enhancement CLAHE untuk ZBar.
 
 #### 🔹 FASE 1: Pengujian Empiris Sampel & Benchmarking (PoC Lapangan) [AKTIF 🚀]
-1. 🔲 **Seleksi 15–20 Foto Sampel Representatif:** Memilih sampel foto dari `DOkumentasi LBKB/` yang mewakili 5 skenario:
-   - (a) KWH Meter prabayar stiker barcode jelas
-   - (b) KWH Meter dengan silau mika / debu lapangan
-   - (c) KWH Meter pascabayar teks spidol / LCD
-   - (d) Rintangan fisik lapangan (Pagar gembok / rumah tutup kode E & F)
-   - (e) Foto blur ekstrem / manipulasi oknum (aspal, jok motor, dinding kosong).
-2. 🔲 **Benchmark Deteksi Blur OpenCV (ROI-Focused):** Menguji varians Laplacian $\sigma^2$ pada crop area meteran dengan range threshold rekomendasi riset (80–120) agar background clutter tidak mengaburkan penilaian.
-3. 🔲 **Benchmark Barcode Scanner ZBar + CLAHE:** Menguji hit-rate pembacaan barcode 11 digit pada citra mentah vs citra yang telah ditingkatkan kontrasnya dengan CLAHE.
-4. 🔲 **Formulasi Prompt JSON VLM:** Menguji respon LLaMA 3.2 11B Vision via API Key NVIDIA NIM untuk kasus foto non-barcode dan rintangan fisik dengan output pure JSON.
+1. 🔲 **Langkah 1.1 — Seleksi & Organisasi Sampel Terstruktur (5 Skenario):**
+   - Mengambil 15–20 sampel foto nyata dari `DOkumentasi LBKB/` dan mengorganisasikannya ke subfolder terpisah:
+     - `data/samples/A_barcode_jelas/` (KWH Meter prabayar stiker barcode ideal - baseline hit-rate)
+     - `data/samples/B_barcode_terhambat/` (Silau mika, pantulan matahari, debu tebal - uji ketangguhan CLAHE)
+     - `data/samples/C_teks_spidol/` (Pascabayar spidol / angka LCD - uji OCR semantik VLM)
+     - `data/samples/D_rintangan_fisik/` (Pagar gembok, pintu tutup kode E & F - uji klasifikasi scene VLM)
+     - `data/samples/E_foto_fraud/` (Aspal, jok motor, dinding kosong, blur ekstrem - uji deteksi anomali/fraud)
+2. 🔲 **Langkah 1.2 — Benchmark Tier 1: Deteksi Blur OpenCV Laplacian (ROI-Focused):**
+   - Menghitung $\text{Var}(L)$ pada area tengah ROI meteran (menghindari background clutter dinding/aspal).
+   - Menguji perbandingan 3 threshold: 30, 80, 120.
+   - Mengukur *False Rejection Rate* vs *False Acceptance Rate* untuk menentukan threshold optimal.
+3. 🔲 **Langkah 1.3 — Benchmark Tier 2: Barcode Scanner ZBar + Preprocessing Bertahap (3 Tahap):**
+   - Uji 1 (Baseline): Citra mentah langsung ke ZBar.
+   - Uji 2 (CLAHE): Citra $\rightarrow$ Grayscale $\rightarrow$ CLAHE (`clipLimit=2.0-3.0`) $\rightarrow$ ZBar.
+   - Uji 3 (Full Pipeline): Citra $\rightarrow$ Grayscale $\rightarrow$ CLAHE $\rightarrow$ Otsu Binarize $\rightarrow$ Morphological Clean $\rightarrow$ ZBar.
+   - Mencatat kuantitatif peningkatan hit-rate & waktu komputasi (ms) untuk laporan ilmiah.
+4. 🔲 **Langkah 1.4 — Formulasi System Prompt VLM 4-Layer (NVIDIA NIM LLaMA 3.2 Vision):**
+   - Menyusun prompt dengan struktur 4-layer: (1) Persona PLN Auditor, (2) Task definition, (3) Chain-of-Thought reasoning, (4) Strict JSON-only output schema.
+   - Menguji zero-shot vs few-shot (1-2 gambar referensi) pada kasus sulit non-barcode & fraud.
+   - Mengintegrasikan regex fallback parser jika terjadi respon non-JSON.
+5. 🔲 **Langkah 1.5 — Dokumentasi Benchmark & Penguncian Threshold Resmi:**
+   - Merekam seluruh angka hasil benchmark di `WHITEBOARD.md` (Section 3).
+   - Mengunci nilai `BLUR_THRESHOLD` optimal dan parameter CLAHE ke `RULEBOOK.md` dan `.env` sebagai Single Source of Truth sebelum melangkah ke Fase 2.
 
 #### 🔹 FASE 2: Perancangan Core Decision Engine & Arbitrase Logika
-5. 🔲 **Penyusunan Modul Arbitrase Keputusan:** Membangun engine yang memetakan sinyal visual (Blur, Barcode, VLM) terhadap data baris Excel (IDPEL, NAMA, KODE LBKB) ke dalam 3 kelas resmi (Sesuai, Tidak Sesuai, Blur).
-6. 🔲 **Confidence Scoring & Audit Trail Logging:** Menambahkan skor keyakinan dan kolom alasan audit (*Audit Reason*) untuk setiap vonis sistem.
-7. 🔲 **Review Routing:** Mengarahkan data dengan confidence rendah (< 0.70) ke antrean verifikasi manual teknisi.
+6. 🔲 **Langkah 2.1 — Desain Kontrak Data Formal (Input/Output Contract Schema):**
+   - Mendefinisikan class skema data formal (`ImageSignal` dan `AuditVerdict`) sebelum menulis logika keputusan untuk menjamin konsistensi antar modul.
+7. 🔲 **Langkah 2.2 — Implementasi Modul Arbitrase Keputusan Berjenjang:**
+   - Membangun hierarki keputusan deterministik: Filter Blur (T1) $\rightarrow$ Match Barcode Checksum (T2) $\rightarrow$ Penalaran Scene VLM (T3).
+   - Pemetaan ke 3 vonis resmi: `Sesuai dengan Data`, `Tidak Sesuai dengan Data`, `Hasil foto blur`.
+8. 🔲 **Langkah 2.3 — Implementasi Confidence Scoring & Audit Trail Logging:**
+   - Menghasilkan alasan keputusan berbahasa bisnis PLN (`audit_reason`) yang akuntabel.
+   - Menetapkan routing data dengan `confidence_score < 0.70` ke antrean `PERLU_REVIEW_MANUAL = True`.
+9. 🔲 **Langkah 2.4 — Evaluasi Decision Engine dengan Metrik Ganda (Bukan Hanya Akurasi):**
+   - Menghitung **Precision**, **Recall** (terutama untuk menangkap fraud), **F1-Score**, **Barcode Hit-Rate**, dan **API Cost Saving** (target 70-80%).
 
 #### 🔹 FASE 3: Dual-Mode Packaging & Integrasi Operasional
-8. 🔲 **Userscript Browser Portal ACMT (`argus_evaluator.user.js`):** Implementasi engine di browser menggunakan Tampermonkey untuk inspeksi interaktif langsung oleh petugas saat membuka web portal PLN.
-9. 🔲 **Script Batch Processing CLI Python (`src/pipeline.py`):** Skrip pemrosesan massal lokal berkecepatan tinggi dengan multi-threading untuk memproses 7.470 foto sekaligus dan mengekspor hasilnya ke Excel.
+10. 🔲 **Langkah 3.1 — Mode A: Script Batch Processing CLI Python (`src/pipeline.py`):**
+    - Multi-threading untuk pemrosesan massal 7.470 foto secara cepat dan efisien di komputer kantor.
+    - Ekspor output Excel terstruktur dengan kolom status audit, confidence, dan audit reason.
+11. 🔲 **Langkah 3.2 — Mode B: Userscript Browser Tampermonkey (`argus_evaluator.user.js`):**
+    - Integrasi langsung ke antarmuka web portal ACMT PLN (`portalapp.iconpln.co.id`).
+    - Evaluasi inline per baris tabel foto kelainan dan sinkronisasi hasil audit.
 
-#### 🔹 FASE 4: Pilot Test Skala Penuh, Evaluasi Metrik & Serah Terima
-10. 🔲 **Audit Penuh Dataset Rek 12 2025:** Menjalankan pipeline pada seluruh 7.470 foto dokumentasi LBKB.
-11. 🔲 **Evaluasi Metrik Akurasi & Cost:** Menghitung hit-rate barcode, akurasi klasifikasi, penghematan kuota API (70-80%), dan rata-rata latensi per foto.
-12. 🔲 **Dokumentasi Laporan Akhir & Serah Terima Repo:** Penyusunan laporan magang resmi berbasis referensi ilmiah dan transfer knowledge ke tim PLN UP3 Mojokerto.
+#### 🔹 FASE 4: Pilot Test Skala Penuh, Evaluasi & Serah Terima
+12. 🔲 **Langkah 4.1 — Pilot Run Penuh Dataset Rek 12 2025:**
+    - Eksekusi pipeline pada seluruh 7.470 foto dokumentasi LBKB, memantau stabilitas latensi dan error rate.
+13. 🔲 **Langkah 4.2 — Evaluasi Akurasi Ilmiah via Ground Truth Sampling (100 Baris Manual):**
+    - Mengambil 100 sampel baris acak dari output ARGUS dan memverifikasinya secara manual bersama petugas PLN.
+    - Menghitung akurasi riil, false positive, dan false negative untuk pertanggungjawaban akademis/laporan magang.
+14. 🔲 **Langkah 4.3 — Penyusunan Laporan Teknis, User Manual & Serah Terima Repo:**
+    - Penulisan laporan akhir berstandar IEEE, panduan operasional pengguna, dan transfer knowledge ke tim PLN UP3 Mojokerto.
 
 ## 💡 Section 2: Ideas to Discuss (Log Ide & Keputusan Rekayasa)
 *Log ide abadi. Jangan pernah menghapus ide di section ini. Gunakan sebagai arsip evolusi pemikiran tim.*
@@ -81,6 +112,21 @@
   2. **ROI-Focused Laplacian:** Laplacian Variance wajib dievaluasi pada Region of Interest (area meteran) agar tekstur kasar background (dinding, tanah, aspal) tidak memicu *false sharpness* pada foto meteran yang buram.
   3. **CLAHE Preprocessing untuk ZBar:** Mengintegrasikan *Contrast Limited Adaptive Histogram Equalization* dan binarisasi adaptif guna mendongkrak *hit-rate* ZBar menghadapi foto meter berdebu atau terpapar silau (*glare*) pantulan mika.
   4. **Dokumen Resmi:** Seluruh sintesis bukti riset dan format sitasi APA diarsipkan di [`Docs/ARGUS_Research_Validation.md`](file:///d:/Hooh_Lah/PLN/ARGUS/Docs/ARGUS_Research_Validation.md).
+
+### [Status: TERTETAPKAN] Standardisasi Metodologi MLLC & 7 Langkah Penyempurnaan Roadmap
+- **Tanggal & Inisiator:** `[26-09-2026]` - Pascol & Agent
+- **Konteks & Latar Belakang:** Meninjau apakah langkah-langkah kerja proyek ARGUS sudah sesuai standar metodologi rekayasa perangkat lunak dan visi komputer internasional (ISO/IEC/IEEE 12207 & Machine Learning Life Cycle).
+- **Keputusan Rekayasa:**
+  1. **Konfirmasi Metodologi:** Mengadopsi kerangka kerja *Machine Learning Life Cycle (MLLC)* dipadukan dengan *Agile-Iterative SDLC*.
+  2. **Pengesahan 7 Langkah Penyempurnaan Roadmap:**
+     - *Langkah 1.1:* Organisasi Folder Sampel Terstruktur 5 Skenario (A-E) untuk reproducibility pengujian.
+     - *Langkah 1.3:* Evaluasi Preprocessing ZBar Bertahap (3 Uji: Baseline, CLAHE, Full Otsu/Morph) untuk data komparatif laporan ilmiah.
+     - *Langkah 1.4:* Arsitektur System Prompt VLM 4-Layer (Persona, Task, Chain-of-Thought, JSON Output) + Few-Shot fallback.
+     - *Langkah 1.5:* Dokumentasi Benchmark & Penguncian Threshold Resmi ke RULEBOOK.md dan .env sebelum masuk Fase 2.
+     - *Langkah 2.1:* Desain Kontrak Data Formal (`ImageSignal` & `AuditVerdict`) untuk mencegah inkonsistensi interface antar modul.
+     - *Langkah 2.4:* Evaluasi Metrik Ganda Komprehensif (Precision, Recall, F1-Score, Barcode Hit-Rate, Cost Saving) guna mencegah *accuracy paradox* pada kasus fraud.
+     - *Langkah 4.2:* Ground Truth Sampling 100 Baris acak terverifikasi manual bersama pengawas PLN sebagai basis pengujian validitas ilmiah laporan akhir.
+  3. **Dokumen Roadmap Resmi:** Seluruh tahapan dan justifikasi literatur diarsipkan di [`Docs/ARGUS_Methodology_Roadmap.md`](file:///d:/Hooh_Lah/PLN/ARGUS/Docs/ARGUS_Methodology_Roadmap.md).
 
 ---
 

@@ -46,8 +46,10 @@ Buku ini adalah hukum tertinggi dan aturan main dalam perancangan, pengembangan,
    - Gunakan standar modern ES6+ (Async/Await, Classes, Promises).
    - Pisahkan logika pemrosesan ke dalam kelas modular: `APIManager`, `ImageProcessor`, `DecisionEngine`, `UIController`, dan `ExportManager`.
    - Hindari manipulasi DOM secara berulang di dalam *loop* data besar (8.000 baris); gunakan `DocumentFragment` atau batch rendering virtual scrolling.
-3. **Respon VLM Terstruktur (Strict JSON Protocol):**
-   - Setiap panggilan ke API VLM (NVIDIA NIM / Gemini) **WAJIB** memaksa output berformat JSON valid tanpa teks pembuka/penutup basa-basi (*strictly no conversational filler*). Sediakan mekanisme JSON regex parser cadangan jika model menambahkan markdown block ````json ... ````.
+3. **Respon VLM Terstruktur & Arsitektur Prompt 4-Layer:**
+   - Setiap prompt untuk VLM (NVIDIA NIM / Gemini) **WAJIB** mengikuti arsitektur 4-layer standar riset: (1) *Persona Layer*, (2) *Task Definition Layer*, (3) *Chain-of-Thought Layer*, dan (4) *Strict JSON Output Layer*.
+   - Output wajib berupa JSON murni tanpa teks basa-basi (*strictly no conversational filler*). Sediakan mekanisme regex fallback parser untuk mengekstrak JSON jika model menyertakan format markdown code blocks.
+   - Sediakan mekanisme *Few-Shot Prompting* (1-2 gambar referensi) pada kasus sulit/edge cases guna meningkatkan akurasi klasifikasi.
 
 ---
 
@@ -87,6 +89,12 @@ Buku ini adalah hukum tertinggi dan aturan main dalam perancangan, pengembangan,
    - `3`: ANJING GALAK
    - `4`: PAGAR TERKUNCI
    - `5`: BARCODE RUSAK/TIDAK ADA
+6. **Kontrak Data Formal Antar Modul (Input/Output Contract):**
+   Setiap pertukaran data antar Tier (Tier 1 s.d. Tier 4) wajib menggunakan skema data formal terstandarisasi (`ImageSignal` dan `AuditVerdict`). Dilarang melempar tipe data mentah yang tidak terdefinisi guna menjamin interoperabilitas antara batch CLI Python dan userscript Tampermonkey.
+7. **Evaluasi Metrik Ganda & Penanganan Imbalanced Data:**
+   Sistem audit LBKB dilarang hanya dievaluasi menggunakan akurasi persentase tunggal (*single accuracy metric*). Karena kasus kelainan dan fraud di lapangan bersifat minoritas (*imbalanced data*), evaluasi performa sistem wajib menyertakan **Precision**, **Recall**, dan **F1-Score**, serta metrik operasional seperti **Barcode Hit-Rate** dan **API Cost Saving**.
+8. **Validasi Empiris Skala Penuh via Ground Truth Sampling:**
+   Sebelum sistem dinyatakan siap serah terima operasional ke PLN, verifikasi akhir wajib dilakukan dengan metode *random sampling* minimal 100 baris data yang diverifikasi manual bersama petugas pengawas PLN sebagai dasar justifikasi ilmiah laporan akhir.
 
 ---
 

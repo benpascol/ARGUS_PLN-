@@ -93,6 +93,11 @@ ARGUS/
 │   ├── raw_excel/                             # [IGNORED] Master File 12 LBKB Rek 12 2025 (277MB)
 │   ├── raw_images/                            # [IGNORED] Folder DOkumentasi LBKB (7.470+ File .jpg)
 │   ├── samples/                               # [TRACKED] 15-20 Foto Sampel Terpilih untuk Benchmark
+│   │   ├── A_barcode_jelas/                   # Sampel prabayar barcode ideal
+│   │   ├── B_barcode_terhambat/               # Sampel silau mika / debu lapangan (uji CLAHE)
+│   │   ├── C_teks_spidol/                     # Sampel pascabayar spidol / LCD
+│   │   ├── D_rintangan_fisik/                 # Sampel pagar gembok / pintu tutup (kode E & F)
+│   │   └── E_foto_fraud/                      # Sampel manipulasi oknum (aspal, jok motor)
 │   └── output/                                # [IGNORED] Hasil Ekspor Excel Klasifikasi & Log Audit
 │
 ├── src/                                       # Core Python Cascading Engine
@@ -111,6 +116,7 @@ ARGUS/
 │
 └── Docs/                                      # Dokumentasi & Aset Visual
     ├── ARGUS_Research_Validation.md           # Laporan Validasi Riset Ilmiah (MDPI, IEEE, CMC)
+    ├── ARGUS_Methodology_Roadmap.md           # Roadmap Metodologi Pengembangan Berbasis IEEE & MLLC
     ├── arsitektur_pipeline.svg                # Vektor Diagram Pipeline Sistem
     └── requirements.txt                       # Daftar Dependensi Resmi Python
 ```
@@ -151,8 +157,9 @@ ARGUS/
 
 ## 📚 Landasan Teori & Validasi Riset Ilmiah
 
-Arsitektur Cascading Multi-Tier ARGUS telah divalidasi dan terbukti secara ilmiah sejalan dengan best practice industri utilitas internasional. Laporan validasi komprehensif beserta sitasi formal dapat diakses di:
-👉 [`Docs/ARGUS_Research_Validation.md`](./Docs/ARGUS_Research_Validation.md)
+Arsitektur Cascading Multi-Tier dan Metodologi Pengembangan ARGUS telah divalidasi dan terbukti secara ilmiah sejalan dengan best practice industri utilitas internasional serta standar rekayasa perangkat lunak ISO/IEC/IEEE 12207:
+- 📄 **Validasi Riset Arsitektur & Sitasi Ilmiah:** [`Docs/ARGUS_Research_Validation.md`](./Docs/ARGUS_Research_Validation.md)
+- 🗺️ **Roadmap Metodologi & Tahapan Pengembangan MLLC:** [`Docs/ARGUS_Methodology_Roadmap.md`](./Docs/ARGUS_Methodology_Roadmap.md)
 
 ### Intisari Justifikasi Akademik:
 1. **Efisiensi Cascading Multi-Tier (*Applied Sciences MDPI, 2023 & Barkat, 2024*):**
@@ -160,9 +167,11 @@ Arsitektur Cascading Multi-Tier ARGUS telah divalidasi dan terbukti secara ilmia
 2. **Keunggulan Barcode Checksum vs Model Deep Learning OCR (*VFAST, 2024*):**
    Untuk deretan angka 11 digit transaksi penagihan listrik, pembacaan berbasis *parity checksum* ZBar mengeliminasi risiko halusinasi angka (misal angka `8` terbaca `3` atau `0` terbaca `O`) yang kerap menjangkiti OCR/VLM.
 3. **Penyaringan Kualitas Citra & ROI (*Computers, Materials & Continua, 2023*):**
-   *Image quality assessment* no-reference berbasis Laplacian Variance adalah gerbang wajib (*gatekeeper*) sebelum data masuk ke tahap ekstraksi, dengan rekomendasi eksekusi pada ROI objek meteran.
+   *Image quality assessment* no-reference berbasis Laplacian Variance adalah gerbang wajib (*gatekeeper*) sebelum data masuk ke tahap ekstraksi, dengan rekomendasi eksekusi pada ROI objek meteran (menghindari background clutter).
 4. **Verifikasi Kepatuhan & Deteksi Manipulasi (*IEEE ICASSP, 2024 & MDPI Sensors, 2024*):**
    VLM multimodal terbukti efektif mendeteksi citra anomali atau foto manipulasi (petugas mengunggah aspal, tanah, atau jok motor saat mengklaim kendala rintangan lapangan).
+5. **Standarisasi Metodologi MLLC & Ground Truth Sampling (*IEEE Computer Society & MDPI 2024*):**
+   Pengembangan visi komputer utilitas mengikuti alur *Data Acquisition → Preprocessing Benchmark → Decision Engine → Full-Scale Ground Truth Sampling (100 baris)* dengan metrik komprehensif (Precision, Recall, F1-Score).
 
 ---
 
