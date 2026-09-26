@@ -70,11 +70,15 @@ Buku ini adalah hukum tertinggi dan aturan main dalam perancangan, pengembangan,
 
 ## 🔬 Pilar 6: Standar Keandalan Sistem Visi (Computer Vision Integrity)
 
-1. **Conservative Blur Thresholding:**
-   Nilai ambang batas deteksi blur (Laplacian Variance) harus disetel secara konservatif. Lebih baik meloloskan foto yang agak redup ke tahap Barcode/VLM (*False Negative Blur*) daripada membuang foto valid yang sebenarnya nomor meternya masih bisa dibaca (*False Positive Blur*).
-2. **Pemberian Skor Keyakinan (Confidence Score):**
+1. **Conservative Blur Thresholding & ROI-Focused Assessment:**
+   Nilai ambang batas deteksi blur (Laplacian Variance) harus disetel secara konservatif. Lebih baik meloloskan foto yang agak redup ke tahap Barcode/VLM (*False Negative Blur*) daripada membuang foto valid yang sebenarnya nomor meternya masih bisa dibaca (*False Positive Blur*). Penilaian ketajaman wajib difokuskan pada Region of Interest (ROI) meteran untuk mencegah tekstur kasar background (dinding, aspal) mengelabui varians Laplacian.
+2. **Pre-processing CLAHE untuk ZBar:**
+   Sebelum memvonis barcode tidak terbaca, sistem wajib mencoba pipeline peningkatan kontras adaptif (*Contrast Limited Adaptive Histogram Equalization* / CLAHE) dan binarisasi Otsu guna menembus silau pantulan mika (*glare*) dan debu lapangan.
+3. **Pemberian Skor Keyakinan (Confidence Score):**
    Setiap hasil pembacaan OCR teks spidol atau inferensi VLM wajib menyertakan estimasi tingkat keyakinan (*confidence score*). Jika skor di bawah batas minimum (misal $< 0.70$), arahkan baris data tersebut ke antrean review manual teknisi.
-3. **Penyelarasan Kode Kelainan LBKB PLN:**
+4. **Presedensi Checksum Matematis:**
+   Hasil pembacaan nomor seri ber-checksum (ZBar) berstatus kepastian mutlak di atas tebakan teks semantik VLM. VLM hanya berperan sebagai validator visual scene (rintangan/fraud) atau fallback saat barcode fisik memang tidak ada.
+5. **Penyelarasan Kode Kelainan LBKB PLN:**
    Pemetaan kode kelainan pada keputusan sistem harus mengacu pada standar resmi PLN:
    - `E`: RUMAH TUTUP
    - `F`: RUMAH KOSONG
