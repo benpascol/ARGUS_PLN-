@@ -128,24 +128,44 @@ def iou_2d(b1, b2):
     union = a1 + a2 - inter
     return inter / union if union > 0 else 0.0
 
+def ioa_min_2d(b1, b2):
+    """
+    Menghitung Intersection over Minimum Area (IoA) 2D untuk mendeteksi kotak kecil
+    yang bersarang di dalam kotak angka utama pada roda yang sama.
+    """
+    x1 = max(b1[0], b2[0])
+    y1 = max(b1[1], b2[1])
+    x2 = min(b1[2], b2[2])
+    y2 = min(b1[3], b2[3])
+    inter = max(0.0, x2 - x1) * max(0.0, y2 - y1)
+    a1 = max(1.0, (b1[2] - b1[0]) * (b1[3] - b1[1]))
+    a2 = max(1.0, (b2[2] - b2[0]) * (b2[3] - b2[1]))
+    return inter / min(a1, a2) if min(a1, a2) > 0 else 0.0
+
 def deduplicate_spatial_2d(detected_digits, iou_thresh=0.40):
     """
-    Deduplikasi Spasial 2D Agnostik (Aman untuk Foto Miring / Tilted & Titik Desimal):
-    Secara fisik, dua angka hanya dianggap 'kembar bayangan' pada roda/layar yang sama
-    jika tumpang tindih secara NYATA pada KEDUA sumbu (X dan Y) via IoU 2D.
-    
-    Fitur Kunci:
-    1. Menggunakan 2D IoU, BUKAN overlap X 1D saja, sehingga angka yang tersusun
-       diagonal miring (seperti Kasus 18 dan 20) tidak saling memakan.
-    2. Karakter titik desimal ('dots', 'dot') diproteksi agar tidak dimakan oleh angka besar di sekitarnya.
+    Deduplikasi Spasial 2D Agnostik, Filter Ghost Sempit / Bercak Cat, & Pembatas Multi-Dot:
+    1. Menggunakan 2D IoU & 2D IoA-Min sehingga angka miring (tilted) aman, namun kotak
+       pecahan di dalam roda yang sama (seperti Kasus 325/331) tereliminasi.
+    2. Menormalisasi seluruh token titik ('dots', 'dot', ',') menjadi '.' dan membatasi
+       maksimal 1 titik desimal terbaik per layar.
+    3. Membuang bercak cat sempit (seperti angka '4' semu pada Kasus 170) atau bayangan
+       bingkai ber-confidence rendah ketika digit utama sudah lengkap.
     """
-    if len(detected_digits) <= 1:
-        return detected_digits
+    if not detected_digits:
+        return []
 
-    dot_boxes = [d for d in detected_digits if d.get("digit") in ("dots", "dot", ".", ",")]
-    number_boxes = [d for d in detected_digits if d.get("digit") not in ("dots", "dot", ".", ",")]
+    dot_boxes = []
+    number_boxes = []
+    for d in detected_digits:
+        d_copy = dict(d)
+        if d_copy.get("digit") in ("dots", "dot", ".", ","):
+            d_copy["digit"] = "."
+            dot_boxes.append(d_copy)
+        else:
+            number_boxes.append(d_copy)
 
-    # 1. Deduplikasi number boxes via 2D IoU
+    # 1. Deduplikasi number boxes via 2D IoU & 2D IoA-Min + Rekam Kandidat Alternatif (Multi-Candidate)
     by_conf = sorted(number_boxes, key=lambda d: d["conf"], reverse=True)
     kept_numbers = []
     for cand in by_conf:
@@ -153,25 +173,78 @@ def deduplicate_spatial_2d(detected_digits, iou_thresh=0.40):
         overlap = False
         for k in kept_numbers:
             k_box = (k["x1"], k["y1"], k["x2"], k["y2"])
-            if iou_2d(cand_box, k_box) > iou_thresh:
+            if iou_2d(cand_box, k_box) > iou_thresh or ioa_min_2d(cand_box, k_box) > 0.65:
                 overlap = True
+                if "alt_candidates" not in k:
+                    k["alt_candidates"] = []
+                if cand["digit"] != k["digit"] and cand["conf"] >= 0.25:
+                    k["alt_candidates"].append({"digit": cand["digit"], "conf": cand["conf"]})
                 break
         if not overlap:
-            kept_numbers.append(cand)
+            cand_copy = dict(cand)
+            cand_copy["alt_candidates"] = []
+            kept_numbers.append(cand_copy)
 
-    # 2. Deduplikasi dots via 2D IoU
-    by_conf_dots = sorted(dot_boxes, key=lambda d: d["conf"], reverse=True)
-    kept_dots = []
-    for cand in by_conf_dots:
-        cand_box = (cand["x1"], cand["y1"], cand["x2"], cand["y2"])
-        overlap = False
-        for k in kept_dots:
-            k_box = (k["x1"], k["y1"], k["x2"], k["y2"])
-            if iou_2d(cand_box, k_box) > iou_thresh:
-                overlap = True
+    # 2. Filter Adaptive High-Contrast Ghost & Cramped Wheel Pitch (Kasus 32, 170, 195, 312, 325, 326)
+    kept_numbers = sorted(kept_numbers, key=lambda d: (d["x1"] + d["x2"]) / 2.0)
+
+    # 2A. Jika sudah ada >=4 digit kuat (conf >= 0.65) pada layar ber-titik desimal (LCD),
+    # atau >=5 digit kuat pada meteran analog (>5 total), buang ghost tepi yang lemah (conf < 0.50)
+    strong_count = sum(1 for d in kept_numbers if d["conf"] >= 0.65)
+    if (dot_boxes and strong_count >= 4 and len(kept_numbers) >= 5) or (not dot_boxes and strong_count >= 5 and len(kept_numbers) > 5):
+        kept_numbers = [d for d in kept_numbers if d["conf"] >= 0.50]
+
+    # 2B. Filter Bercak Cat Sempit & Jarak Antar-Roda Terlalu Rapat (Kasus 170 '24720.5' -> '27205')
+    if len(kept_numbers) > 5:
+        widths = [d["x2"] - d["x1"] for d in kept_numbers]
+        median_w = float(np.median(widths)) if widths else 20.0
+        filtered_w = [
+            d for d in kept_numbers
+            if not (d["digit"] != "1" and (d["x2"] - d["x1"]) < 0.56 * median_w)
+        ]
+        if len(filtered_w) >= 5:
+            kept_numbers = filtered_w
+
+    # 2C. Jika masih > 5 digit, cek pasangan bersebelahan yang terlalu berhimpitan (< 0.65 * median_w)
+    while len(kept_numbers) > 5:
+        widths = [d["x2"] - d["x1"] for d in kept_numbers]
+        median_w = float(np.median(widths)) if widths else 20.0
+        cramped_idx = None
+        for i in range(len(kept_numbers) - 1):
+            d1, d2 = kept_numbers[i], kept_numbers[i + 1]
+            xc1 = (d1["x1"] + d1["x2"]) / 2.0
+            xc2 = (d2["x1"] + d2["x2"]) / 2.0
+            if (xc2 - xc1) < 0.65 * median_w:
+                w1, w2 = (d1["x2"] - d1["x1"]), (d2["x2"] - d2["x1"])
+                if w1 < 0.62 * median_w and w2 >= 0.75 * median_w:
+                    cramped_idx = i
+                elif w2 < 0.62 * median_w and w1 >= 0.75 * median_w:
+                    cramped_idx = i + 1
+                else:
+                    cramped_idx = i if d1["conf"] < d2["conf"] else (i + 1)
                 break
-        if not overlap:
-            kept_dots.append(cand)
+        if cramped_idx is not None:
+            kept_numbers.pop(cramped_idx)
+        else:
+            break
+
+    # 3. Deduplikasi dots & Batasi Maksimal 1 Titik Desimal Terbaik (Kasus 312, 326, & 147)
+    kept_dots = []
+    if dot_boxes and kept_numbers:
+        min_num_xc = min((d["x1"] + d["x2"]) / 2.0 for d in kept_numbers)
+        max_num_xc = max((d["x1"] + d["x2"]) / 2.0 for d in kept_numbers)
+        # Izinkan titik di antara angka, atau titik di depan angka jika hanya <= 2 digit tersisa akibat silau (seperti '.11' Kasus 147)
+        internal_dots = [
+            d for d in dot_boxes
+            if (min_num_xc < ((d["x1"] + d["x2"]) / 2.0) < max_num_xc)
+            or (len(kept_numbers) <= 2 and ((d["x1"] + d["x2"]) / 2.0) < max_num_xc and d["conf"] >= 0.35)
+        ]
+        is_analog_5d_leading_zero = (
+            len(kept_numbers) == 5 and kept_numbers[0]["digit"] == "0"
+        )
+        if internal_dots and not is_analog_5d_leading_zero:
+            best_dot = max(internal_dots, key=lambda d: d["conf"])
+            kept_dots = [best_dot]
 
     all_kept = kept_numbers + kept_dots
     return sorted(all_kept, key=lambda d: (d["x1"] + d["x2"]) / 2.0)
@@ -285,14 +358,27 @@ def validate_reading_sequence(detected_digits, crop_w, crop_h):
     # 2. LAPISAN 2: CEK KARAKTER TITIK / KOMA DESIMAL ('dots', 'dot', '.')
     dot_boxes = [d for d in sorted_digits if d.get("digit") in ("dots", "dot", ".", ",")]
     if dot_boxes:
-        # Jika terdeteksi lebih dari satu titik (seperti noise gap), pilih titik dengan confidence tertinggi
         best_dot = max(dot_boxes, key=lambda d: d.get("conf", 0.0))
         dot_idx = sorted_digits.index(best_dot)
         integer_tokens = [d["digit"] for d in sorted_digits[:dot_idx] if d.get("digit") not in ("dots", "dot", ".", ",")]
         decimal_tokens = [d["digit"] for d in sorted_digits[dot_idx+1:] if d.get("digit") not in ("dots", "dot", ".", ",")]
-        stand_baca = "".join(integer_tokens) if integer_tokens else "0"
         raw_display = f"{''.join(integer_tokens)}.{''.join(decimal_tokens)}"
-        
+
+        # Jika bagian depan sebelum titik kosong (seperti '.11' pada Kasus 147 akibat silau menutupi sisi kiri),
+        # jangan vonis stand 0 (SUKSES_DIGITAL), melainkan ANOMALI_GLARE_TERHALANG / OBSTRUKSI
+        if not integer_tokens:
+            return {
+                "is_valid": False,
+                "stand_baca": None,
+                "raw_display": raw_display,
+                "status": "ANOMALI_GLARE_TERHALANG",
+                "tier_color": "RED",
+                "meter_type": "digital_glare_parsial",
+                "span_ratio": span_ratio,
+                "reason": f"Angka utama sebelum titik desimal tidak terbaca ({raw_display}) akibat silau pada layar."
+            }
+
+        stand_baca = "".join(integer_tokens)
         return {
             "is_valid": True,
             "stand_baca": stand_baca,
@@ -473,9 +559,17 @@ class ArgusVisionPipeline:
         # TIER 1: LAPLACIAN BLUR PRE-CHECK PADA ROI METERAN (Area Tengah)
         blur_score, is_blurry = calculate_roi_blur(img, roi_factor=0.6, blur_threshold=60.0)
 
-        # TAHAP 1: DETEKSI KOTAK COUNTER RODA ANGKA (Model 1)
+        # TAHAP 1: DETEKSI KOTAK COUNTER RODA ANGKA (Model 1 + Fallback Confidence)
         counter_results = self.counter_model.predict(img, conf=0.30, verbose=False)
         counter_boxes = counter_results[0].boxes
+        is_fallback_counter = False
+
+        # Fallback Confidence 0.06 dengan TTA jika deteksi awal nihil (Penyelamat Kasus 106 & 108)
+        if len(counter_boxes) == 0:
+            counter_results_fb = self.counter_model.predict(img, conf=0.06, augment=True, verbose=False)
+            counter_boxes = counter_results_fb[0].boxes
+            if len(counter_boxes) > 0:
+                is_fallback_counter = True
 
         if len(counter_boxes) == 0:
             msg = "Kotak roda angka (stan_meter) tidak terdeteksi pada citra."
@@ -491,12 +585,66 @@ class ArgusVisionPipeline:
                 "is_blurry": is_blurry
             }
 
-        # Ambil kotak counter dengan confidence tertinggi
-        best_box_idx = int(counter_boxes.conf.argmax())
-        box_coords = counter_boxes.xyxy[best_box_idx].cpu().numpy()
-        counter_conf = float(counter_boxes.conf[best_box_idx].cpu().numpy())
+        # Ekstraksi Kotak Counter
+        boxes_list = []
+        for i in range(len(counter_boxes)):
+            b_coords = counter_boxes.xyxy[i].cpu().numpy()
+            b_conf = float(counter_boxes.conf[i].cpu().numpy())
+            boxes_list.append({
+                "box": [float(b_coords[0]), float(b_coords[1]), float(b_coords[2]), float(b_coords[3])],
+                "conf": b_conf
+            })
 
-        x1, y1, x2, y2 = box_coords
+        if not boxes_list:
+            boxes_list = [{
+                "box": [float(v) for v in counter_boxes.xyxy[0].cpu().numpy()],
+                "conf": float(counter_boxes.conf[0].cpu().numpy())
+            }]
+
+        # HORIZONTAL COUNTER STITCHING / MERGING (Kasus 133 - Krop Terbelah Separuh oleh Ranting/Tali)
+        merged_boxes = []
+        used_idx = set()
+        for i in range(len(boxes_list)):
+            if i in used_idx:
+                continue
+            b1 = boxes_list[i]["box"]
+            c1 = boxes_list[i]["conf"]
+            w1, h1 = b1[2] - b1[0], b1[3] - b1[1]
+            yc1 = (b1[1] + b1[3]) / 2.0
+            m_box = list(b1)
+            m_conf = c1
+            for j in range(i + 1, len(boxes_list)):
+                if j in used_idx:
+                    continue
+                b2 = boxes_list[j]["box"]
+                c2 = boxes_list[j]["conf"]
+                w2, h2 = b2[2] - b2[0], b2[3] - b2[1]
+                yc2 = (b2[1] + b2[3]) / 2.0
+
+                is_same_row = abs(yc1 - yc2) <= max(12.0, 0.40 * min(h1, h2))
+                h_ratio = min(h1, h2) / max(h1, h2) if max(h1, h2) > 0 else 0
+                left_box = b1 if b1[0] < b2[0] else b2
+                right_box = b2 if b1[0] < b2[0] else b1
+                h_gap = right_box[0] - left_box[2]
+
+                if is_same_row and h_ratio > 0.55 and -15.0 <= h_gap <= max(35.0, 0.60 * max(w1, w2)):
+                    comb_w = max(b1[2], b2[2]) - min(b1[0], b2[0])
+                    comb_h = max(b1[3], b2[3]) - min(b1[1], b2[1])
+                    comb_aspect = comb_w / comb_h if comb_h > 0 else 0
+                    if comb_aspect <= 6.5:
+                        m_box[0] = min(m_box[0], b2[0])
+                        m_box[1] = min(m_box[1], b2[1])
+                        m_box[2] = max(m_box[2], b2[2])
+                        m_box[3] = max(m_box[3], b2[3])
+                        m_conf = max(m_conf, c2)
+                        used_idx.add(j)
+            used_idx.add(i)
+            merged_boxes.append({"box": m_box, "conf": m_conf})
+
+        # Ambil kotak counter terbaik setelah penggabungan
+        best_cand = max(merged_boxes, key=lambda b: b["conf"])
+        x1, y1, x2, y2 = best_cand["box"]
+        counter_conf = float(best_cand["conf"])
         box_w = x2 - x1
         box_h = y2 - y1
 
@@ -512,8 +660,8 @@ class ArgusVisionPipeline:
         if crop_img.size == 0:
             return {"status": "ERROR", "tier_color": "RED", "message": "Crop area berukuran 0 piksel."}
 
-        # GUARD: RESOLUSI KROP SANGAT RENDAH (FOTO DARI JARAK TERLALU JAUH)
-        if crop_img.shape[0] < 22:
+        # GUARD: RESOLUSI KROP EKSTREM RENDAH (< 12px) (Kasus 165, 195, 281 di 16-21px diselamatkan!)
+        if crop_img.shape[0] < 12:
             return {
                 "status": "RESOLUSI_TERLALU_RENDAH",
                 "tier_color": "YELLOW",
@@ -541,53 +689,18 @@ class ArgusVisionPipeline:
                 "saved_paths": {}
             }
 
-        # TAHAP 1B: BENTENG BLUR (COUNTER ROI BLUR CHECK & DEHAZE CANDIDATE)
+        # TAHAP 1B: BENTENG BLUR & SILAU (COUNTER ROI CHECK)
         dial_blur_score, dial_is_blurry = calculate_roi_blur(crop_img, roi_factor=1.0, blur_threshold=35.0)
         saved_paths = {}
 
-        # Deteksi kondisi kabut / lensa berminyak
         is_low_blur = dial_is_blurry or dial_blur_score < 35.0
         dehaze_rescued = False
         is_scaled = False
 
-        # TAHAP 2: BENTENG SILAU (GLARE & OVEREXPOSURE GATEKEEPER)
-        is_glare_severe, glare_ratio = detect_glare(crop_img, v_thresh=240, s_thresh=30, glare_limit=0.20)
-
-        if is_glare_severe:
-            annotated_full = img.copy()
-            cv2.rectangle(annotated_full, (crop_x1, crop_y1), (crop_x2, crop_y2), (0, 0, 255), 3)
-            alert_text = f"GLARE ANOMALY ({glare_ratio*100:.1f}%)"
-            cv2.putText(annotated_full, alert_text, (crop_x1, max(30, crop_y1 - 10)),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2, cv2.LINE_AA)
-
-            if output_dir:
-                out_path = Path(output_dir)
-                out_path.mkdir(parents=True, exist_ok=True)
-                full_save_file = out_path / f"result_full_{stem}.jpg"
-                crop_save_file = out_path / f"result_crop_{stem}.jpg"
-                cv2.imwrite(str(full_save_file), annotated_full)
-                cv2.imwrite(str(crop_save_file), crop_img)
-                saved_paths["full_result"] = str(full_save_file)
-                saved_paths["crop_result"] = str(crop_save_file)
-
-            return {
-                "status": "ANOMALI_GLARE_TERHALANG",
-                "tier_color": "RED",
-                "image_name": image_name,
-                "stand_baca": None,
-                "reading": None,
-                "blur_score": blur_score,
-                "is_blurry": is_blurry,
-                "dial_blur_score": dial_blur_score,
-                "dehazed_blur_score": 0.0,
-                "glare_percentage": round(glare_ratio * 100, 2),
-                "counter_conf": counter_conf,
-                "counter_box": [int(crop_x1), int(crop_y1), int(crop_x2), int(crop_y2)],
-                "crop_shape": [int(crop_img.shape[0]), int(crop_img.shape[1])],
-                "num_digits": 0,
-                "reason": f"Silau matahari ekstrem menutupi {glare_ratio*100:.1f}% area counter. Tolak untuk billing.",
-                "saved_paths": saved_paths
-            }
+        # TAHAP 2: EVALUASI SILAU (Smart Glare Gatekeeper vs LCD Backlight - Kasus 310 & 147)
+        # Batas glare dinaikkan dan diuji terhadap keterbacaan OCR terlebih dahulu agar cahaya
+        # latar layar LCD digital (seperti Kasus 310) tidak salah divonis sebagai silau matahari.
+        is_glare_severe, glare_ratio = detect_glare(crop_img, v_thresh=240, s_thresh=30, glare_limit=0.22)
 
         # Helper internal: Pipeline OCR (TTA Multi-Scale + Spatial Filter + Validator)
         def run_digit_pipeline(target_crop):
@@ -610,6 +723,7 @@ class ArgusVisionPipeline:
                     if digit_char in ("dots", "dot", ".", ","):
                         if d_conf < 0.10:
                             continue
+                        digit_char = "."
                     else:
                         if d_conf < 0.20:
                             continue
@@ -633,21 +747,23 @@ class ArgusVisionPipeline:
             avg_conf = np.mean([d["conf"] for d in collinear]) if collinear else 0.0
             return val, collinear, avg_conf
 
-        # TAHAP 3: STRATEGI DUA TAHAP (RAW FIRST, OPPORTUNISTIC DEHAZE FALLBACK)
-        # Tahap 3A: Coba citra krop asli (RAW) terlebih dahulu untuk menghindari distorsi kontras
+        # TAHAP 3: STRATEGI MULTI-PASS (RAW -> DEHAZE CLAHE -> BICUBIC 2X SUPER-RESOLUTION)
+        # Pass 3A: Coba citra krop asli (RAW) terlebih dahulu (Menyelamatkan Kasus 165, 281, 310, 312, 326)
         validation, detected_digits, avg_digit_conf = run_digit_pipeline(crop_img)
         active_crop = crop_img
         dehaze_rescued = False
         dehazed_blur_score = dial_blur_score
 
-        # Tahap 3B: Jika RAW tidak menghasilkan pembacaan valid (HIJAU) dan citra buram/kabut,
-        # aktifkan jalur penyelamat kabut (Opportunistic Dehaze CLAHE)
+        def count_num_tokens(d_list):
+            return sum(1 for d in d_list if str(d.get("digit", "")).isdigit())
+
+        # Pass 3B: Jika RAW belum HIJAU dan krop buram/kabut, coba Dehaze CLAHE
         if not (validation.get("is_valid") and validation.get("tier_color") == "GREEN") and is_low_blur:
             c_dehaze = dehaze_crop_clahe(crop_img, clip_limit=3.0, tile_grid=(8, 8))
             val_dehaze, det_dehaze, conf_dehaze = run_digit_pipeline(c_dehaze)
             dehazed_blur_score, _ = calculate_roi_blur(c_dehaze, roi_factor=1.0, blur_threshold=35.0)
 
-            if val_dehaze.get("is_valid") and val_dehaze.get("tier_color") == "GREEN" and conf_dehaze >= 0.65:
+            if val_dehaze.get("is_valid") and val_dehaze.get("tier_color") == "GREEN" and conf_dehaze >= 0.62:
                 validation = val_dehaze
                 detected_digits = det_dehaze
                 avg_digit_conf = conf_dehaze
@@ -658,8 +774,123 @@ class ArgusVisionPipeline:
                     f"Conf: {avg_digit_conf:.2f}). Stand PLN: {validation['stand_baca']}."
                 )
 
-        # Jika citra buram dan upaya penyelamatan kabut tidak menghasilkan digit valid
-        if is_low_blur and not dehaze_rescued and not (validation.get("is_valid") and validation.get("tier_color") == "GREEN"):
+        # Pass 3C: Jika masih belum HIJAU dan tinggi krop < 50px, jalankan Bicubic 2x Upscaling (Kasus 195, 217, 245)
+        # Hindari upscaling jika RAW sudah membaca >=3 digit tajam (seperti Smartmeter 3-digit '515' Kasus 186)
+        raw_strong_3d = count_num_tokens(detected_digits) >= 3 and avg_digit_conf >= 0.80
+        if not (validation.get("is_valid") and validation.get("tier_color") == "GREEN") and crop_img.shape[0] < 50 and not raw_strong_3d:
+            c_up, scale_up, was_up = enhance_small_crop(crop_img, min_height=50)
+            if was_up:
+                val_up, det_up, conf_up = run_digit_pipeline(c_up)
+                # Kembalikan skala koordinat bounding box ke dimensi crop_img asli
+                for d in det_up:
+                    d["x1"] /= scale_up
+                    d["y1"] /= scale_up
+                    d["x2"] /= scale_up
+                    d["y2"] /= scale_up
+
+                if val_up.get("is_valid") and val_up.get("tier_color") == "GREEN" and conf_up >= 0.58:
+                    validation = val_up
+                    detected_digits = det_up
+                    avg_digit_conf = conf_up
+                    is_scaled = True
+                elif not validation.get("is_valid") and count_num_tokens(det_up) > count_num_tokens(detected_digits) and count_num_tokens(det_up) in (4, 5):
+                    validation = val_up
+                    detected_digits = det_up
+                    avg_digit_conf = conf_up
+                    is_scaled = True
+
+                # Pass 3D: Jika Upscaling belum HIJAU, kombinasikan Upscaling + Dehaze CLAHE (Kasus 195 & 217)
+                if not (validation.get("is_valid") and validation.get("tier_color") == "GREEN"):
+                    c_up_dh = dehaze_crop_clahe(c_up, clip_limit=3.0, tile_grid=(8, 8))
+                    val_up_dh, det_up_dh, conf_up_dh = run_digit_pipeline(c_up_dh)
+                    for d in det_up_dh:
+                        d["x1"] /= scale_up
+                        d["y1"] /= scale_up
+                        d["x2"] /= scale_up
+                        d["y2"] /= scale_up
+                    if val_up_dh.get("is_valid") and val_up_dh.get("tier_color") == "GREEN" and conf_up_dh >= 0.62:
+                        validation = val_up_dh
+                        detected_digits = det_up_dh
+                        avg_digit_conf = conf_up_dh
+                        is_scaled = True
+                        dehaze_rescued = True
+
+        # Pass 3E: SMARTMETER DESKEWING PASS (Kasus 397 - Meter Miring Tajam)
+        if (validation.get("status") in ("STAND_KOSONG", "RESOLUSI_TERLALU_RENDAH") or count_num_tokens(detected_digits) == 0):
+            for test_angle in (-38, 38):
+                M_rot = cv2.getRotationMatrix2D((w_orig / 2.0, h_orig / 2.0), test_angle, 1.0)
+                rot_img = cv2.warpAffine(img, M_rot, (w_orig, h_orig))
+                c_rot_res = self.counter_model.predict(rot_img, conf=0.25, verbose=False)[0].boxes
+                if len(c_rot_res) > 0:
+                    rot_idx = int(c_rot_res.conf.argmax())
+                    rx1, ry1, rx2, ry2 = [int(v) for v in c_rot_res.xyxy[rot_idx].cpu().numpy()]
+                    r_crop = rot_img[ry1:ry2, rx1:rx2]
+                    if r_crop.size > 0:
+                        r_val, r_det, r_conf = run_digit_pipeline(r_crop)
+                        if count_num_tokens(r_det) >= 3:
+                            img = rot_img
+                            crop_img = r_crop
+                            crop_x1, crop_y1, crop_x2, crop_y2 = rx1, ry1, rx2, ry2
+                            validation = r_val
+                            detected_digits = r_det
+                            avg_digit_conf = r_conf
+                            counter_conf = float(c_rot_res.conf[rot_idx])
+                            is_fallback_counter = False
+                            validation["reason"] = f"Smartmeter miring berhasil diluruskan (Rotasi {test_angle}°). " + validation.get("reason", "")
+                            break
+
+        # Evaluasi Akhir Benteng Silau: Tolak sebagai silau HANYA jika silau tinggi (atau bagian depan hilang seperti '.11' Kasus 147)
+        # DAN OCR tidak menghasilkan pembacaan valid (LCD seperti Kasus 310 tetap lolos!)
+        if validation.get("status") == "ANOMALI_GLARE_TERHALANG" or (
+            is_glare_severe
+            and not (validation.get("is_valid") and validation.get("tier_color") == "GREEN")
+            and count_num_tokens(detected_digits) < 4
+        ):
+            annotated_full = img.copy()
+            cv2.rectangle(annotated_full, (crop_x1, crop_y1), (crop_x2, crop_y2), (0, 0, 255), 3)
+            alert_text = f"GLARE ANOMALY ({glare_ratio*100:.1f}%)"
+            cv2.putText(annotated_full, alert_text, (crop_x1, max(30, crop_y1 - 10)),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2, cv2.LINE_AA)
+
+            if output_dir:
+                out_path = Path(output_dir)
+                out_path.mkdir(parents=True, exist_ok=True)
+                full_save_file = out_path / f"result_full_{stem}.jpg"
+                crop_save_file = out_path / f"result_crop_{stem}.jpg"
+                cv2.imwrite(str(full_save_file), annotated_full)
+                cv2.imwrite(str(crop_save_file), crop_img)
+                saved_paths["full_result"] = str(full_save_file)
+                saved_paths["crop_result"] = str(crop_save_file)
+
+            return {
+                "status": "ANOMALI_GLARE_TERHALANG",
+                "tier_color": "RED",
+                "image_name": image_name,
+                "stand_baca": None,
+                "reading": None,
+                "raw_display": validation.get("raw_display", "-"),
+                "blur_score": blur_score,
+                "is_blurry": is_blurry,
+                "dial_blur_score": dial_blur_score,
+                "dehazed_blur_score": 0.0,
+                "glare_percentage": round(glare_ratio * 100, 2),
+                "counter_conf": counter_conf,
+                "counter_box": [int(crop_x1), int(crop_y1), int(crop_x2), int(crop_y2)],
+                "crop_shape": [int(crop_img.shape[0]), int(crop_img.shape[1])],
+                "num_digits": len(detected_digits),
+                "reason": f"Silau matahari ekstrem menutupi area counter ({glare_ratio*100:.1f}%). Tolak untuk billing.",
+                "saved_paths": saved_paths
+            }
+
+        # Evaluasi Akhir Benteng Blur: Hanya vonis REJECTED_BLUR jika foto secara keseluruhan memang goyang/buram (blur_score < 48)
+        # DAN digit yang terbaca < 3. Jika foto tajam tapi mika kusam (seperti Kasus 86 & 161), teruskan ke PERLU_TINJAU_ULANG!
+        if (
+            is_low_blur
+            and not dehaze_rescued
+            and not (validation.get("is_valid") and validation.get("tier_color") == "GREEN")
+            and blur_score < 48.0
+            and count_num_tokens(detected_digits) < 3
+        ):
             annotated_full = img.copy()
             cv2.rectangle(annotated_full, (crop_x1, crop_y1), (crop_x2, crop_y2), (0, 0, 255), 3)
             alert_text = f"BLUR REJECTED (Score: {dial_blur_score:.1f} < 35)"
@@ -693,6 +924,22 @@ class ArgusVisionPipeline:
                 "num_digits": len(detected_digits),
                 "reason": f"Fokus citra counter buram / goyang (Skor: {dial_blur_score:.1f} < 35.0). Upaya penyelamatan Dehaze tidak menghasilkan digit valid.",
                 "saved_paths": saved_paths
+            }
+
+        # STRICT FALLBACK GATEKEEPER (Kasus 155, 191, 406):
+        # Jika kotak counter berasal dari jalur fallback spekulatif (conf < 0.25),
+        # kotak ini HANYA diselamatkan jika OCR membuktikan ini meteran nyata (valid GREEN dan digit >= 4).
+        # Jika hanya berisi semen/genteng kosong atau <= 2 digit acak, batalkan kotak palsu ini
+        # dan kembalikan status sejati: FAIL_COUNTER_NOT_FOUND (TIDAK_TERDETEKSI_KWH)!
+        if is_fallback_counter and not (validation.get("is_valid") and validation.get("tier_color") == "GREEN" and count_num_tokens(detected_digits) >= 4):
+            return {
+                "status": "FAIL_COUNTER_NOT_FOUND",
+                "tier_color": "RED",
+                "message": "Kotak roda angka (stan_meter) tidak terdeteksi pada citra.",
+                "image_name": image_name,
+                "stand_baca": None,
+                "blur_score": blur_score,
+                "is_blurry": is_blurry
             }
 
         # TAHAP 5: VISUALISASI HASIL ANOTASI
