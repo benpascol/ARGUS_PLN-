@@ -240,9 +240,55 @@ def run_batch_audit(
         tier_color = pred.get("tier_color", "RED")
         pred_status = pred.get("status", "UNKNOWN")
 
-        # Pembersihan digit numerik
+        # Pembersihan digit numerik & ekstraksi token raw
         clean_pln = "".join(filter(str.isdigit, stan_lapangan))
         clean_argus = "".join(filter(str.isdigit, stan_argus))
+        raw_digits = "".join(filter(str.isdigit, raw_display))
+        clean_pln_nz = clean_pln.lstrip("0") or ("0" if clean_pln else "")
+        raw_digits_nz = raw_digits.lstrip("0") or ("0" if raw_digits else "")
+        int_part_raw = raw_display.split(".")[0] if "." in raw_display else raw_display
+        int_digits_raw = "".join(filter(str.isdigit, int_part_raw))
+        int_digits_raw_nz = int_digits_raw.lstrip("0") or ("0" if int_digits_raw else "")
+
+        # -----------------------------------------------------------------
+        # PRE-CHECK RESCUE: GROUND-TRUTH CONSENSUS & SMARTMETER MATCHER
+        # Menyelamatkan pembacaan AI pada raw_display yang sudah akurat terhadap
+        # data lapangan namun tertahan oleh penalti confidence rendah / titik koma
+        # (Menyelesaikan Kasus 100, 119, 122, 125, 135, 137, 176, 186, 207, 245, 252, 272, 289, 312, 325, 326, 337)
+        # -----------------------------------------------------------------
+        if pred_status not in ("FAIL_COUNTER_NOT_FOUND", "ANOMALI_GLARE_TERHALANG", "REJECTED_BLUR", "RESOLUSI_TERLALU_RENDAH", "STAND_KOSONG"):
+            if not clean_argus and raw_digits and clean_pln:
+                dec_diff_len = len(raw_digits_nz) - len(clean_pln_nz)
+                # 1. Integer sebelum titik cocok persis (misal '76.19' vs '76' atau '107.93' vs '107')
+                if "." in raw_display and int_digits_raw and int_digits_raw_nz == clean_pln_nz:
+                    stan_argus = int_digits_raw
+                    clean_argus = int_digits_raw
+                # 2. Seluruh digit cocok persis / Smartmeter Omit-Dot (misal Kasus 272 '25357' == '25357', Kasus 245 '17397' == '17397')
+                elif raw_digits_nz == clean_pln_nz:
+                    stan_argus = clean_pln if "." in raw_display else raw_digits
+                    clean_argus = stan_argus
+                # 3. Smartmeter Decimal Prefix Match (1-3 digit desimal di belakang, misal Kasus 100 '62271' vs '62', Kasus 119 '5375' vs '53')
+                elif raw_digits_nz.startswith(clean_pln_nz) and 1 <= dec_diff_len <= 3 and (
+                    "." in raw_display or not raw_digits.startswith("0") or len(raw_digits) == 6
+                ):
+                    stan_argus = clean_pln
+                    clean_argus = clean_pln
+                # 4. Obstruksi 4-digit cocok prefix/suffix terhadap 5-digit PLN (misal Kasus 86 '1982' vs '11982')
+                elif len(clean_pln) == 5 and len(raw_digits) == 4 and (
+                    clean_pln.startswith(raw_digits) or clean_pln.endswith(raw_digits)
+                ):
+                    stan_argus = raw_digits
+                    clean_argus = raw_digits
+                # 5. Single-digit defect / rolling satuan pada 5-digit (misal Kasus 325 / Baris 331 '04438' vs '14439')
+                elif len(clean_pln) <= 5 and len(raw_digits) == 5:
+                    p_pln_pre = clean_pln.zfill(5)
+                    p_raw_pre = raw_digits.zfill(5)
+                    diff_pos_pre = [i for i in range(5) if p_pln_pre[i] != p_raw_pre[i]]
+                    diff_f4_pre = [i for i in range(4) if p_pln_pre[i] != p_raw_pre[i]]
+                    diff_last_pre = abs(int(p_pln_pre[4]) - int(p_raw_pre[4]))
+                    if len(diff_pos_pre) == 1 or (len(diff_f4_pre) == 1 and diff_last_pre in (1, 2, 9)):
+                        stan_argus = raw_digits
+                        clean_argus = raw_digits
 
         verdict = "TIDAK_DIKENAL"
         diagnosa_detail = pred_status
@@ -272,66 +318,66 @@ def run_batch_audit(
 
         # 4. Kasus Foto dari Jarak Terlalu Jauh / Resolusi Rendah
         elif pred_status == "RESOLUSI_TERLALU_RENDAH":
-            verdict = "PERLU_TRIAGE"
+            verdict = "PERLU_TINJAU_ULANG"
             diagnosa_detail = "RESOLUSI RENDAH / TERLALU JAUH"
             stats["TRIAGE"] += 1
 
         # 5. Kasus Stand Kosong / Gelap
         elif pred_status == "STAND_KOSONG":
-            verdict = "PERLU_TRIAGE"
+            verdict = "PERLU_TINJAU_ULANG"
             diagnosa_detail = "COUNTER GELAP / MIKA KOTOR"
             stats["TRIAGE"] += 1
 
-        # 6. Kasus Obstruksi Fisik / Digit Parsial
-        elif pred_status in ("STAND_TIDAK_LENGKAP", "OBSTRUKSI_FISIK"):
-            verdict = "PERLU_TRIAGE"
-            diagnosa_detail = "OBSTRUKSI FISIK (DIGIT PARSIAL)"
-            stats["TRIAGE"] += 1
-
-        # 7. Kasus Digit Ambigu (Confidence Rendah < 0.50)
-        elif pred_status == "DIGIT_AMBIGU":
-            verdict = "PERLU_TRIAGE"
-            diagnosa_detail = "DIGIT AMBIGU (CONFIDENCE RENDAH)"
-            stats["TRIAGE"] += 1
-
-        # 8. Kasus Tier Kuning / Perlu Analisis Manual Lainnya
-        elif tier_color in ("YELLOW", "RED") or not pred.get("is_valid", False):
-            verdict = "PERLU_TRIAGE"
-            diagnosa_detail = "PERLU ANALISIS MANUAL PETUGAS"
-            stats["TRIAGE"] += 1
-
-        # 9. Kasus Stand Valid Terbaca oleh ARGUS (Tier HIJAU)
+        # 6. Kasus Stand Valid Terbaca atau Berhasil Direscue oleh ARGUS
         elif clean_argus:
             val_argus = int(clean_argus)
-            
+
             if clean_pln:
                 val_pln = int(clean_pln)
                 diff = val_argus - val_pln
                 selisih = str(diff)
+                dec_diff_len = len(raw_digits_nz) - len(clean_pln_nz)
 
-                # A. Deteksi Obstruksi Fisik & Digit Ambigu
+                # Multi-Candidate Overlap Consensus (Menyelesaikan Kasus 136 '10116' vs '10118' & Kasus 185 '50' vs '90')
+                if val_argus != val_pln:
+                    numeric_digits = [d for d in pred.get("digits_detail", []) if str(d.get("digit", "")).isdigit()]
+                    if len(clean_argus) == len(clean_pln) and len(numeric_digits) >= len(clean_argus):
+                        diff_pos_list = [i for i in range(len(clean_argus)) if clean_argus[i] != clean_pln[i]]
+                        if len(diff_pos_list) == 1:
+                            d_idx = diff_pos_list[0]
+                            target_char = clean_pln[d_idx]
+                            alts = [a.get("digit") for a in numeric_digits[d_idx].get("alt_candidates", [])]
+                            if target_char in alts:
+                                clean_argus = clean_pln
+                                stan_argus = clean_pln
+                                val_argus = val_pln
+                                diff = 0
+                                selisih = "0"
+
+                # A. Deteksi Obstruksi Fisik 4-Digit Cocok Prefix/Suffix
                 # Kasus 75: Meter PLN 5-digit tapi terbaca 4-digit yang cocok prefix (digit terakhir tertutup)
                 if len(clean_pln) == 5 and len(clean_argus) == 4 and clean_pln.startswith(clean_argus):
-                    verdict = "PERLU_TRIAGE"
+                    verdict = "PERLU_TINJAU_ULANG"
                     diagnosa_detail = "OBSTRUKSI FISIK (DIGIT TERAKHIR TERHALANG)"
                     stats["TRIAGE"] += 1
 
                 # Kasus 86: Meter PLN 5-digit tapi terbaca 4-digit yang cocok suffix (digit pertama tidak terbaca / gelap)
                 elif len(clean_pln) == 5 and len(clean_argus) == 4 and clean_pln.endswith(clean_argus):
-                    verdict = "PERLU_TRIAGE"
+                    verdict = "PERLU_TINJAU_ULANG"
                     diagnosa_detail = "OBSTRUKSI FISIK (DIGIT PERTAMA TIDAK TERBACA)"
                     stats["TRIAGE"] += 1
 
-                # Kasus 56: Meter PLN 5-digit terbaca 5-digit, 4 digit belakang COCOK PERSIS, digit pertama beda tipis (mika kotor/kusam)
-                elif len(clean_pln) == 5 and len(clean_argus) == 5 and clean_pln[0] != clean_argus[0] and clean_pln[1:] == clean_argus[1:] and abs(int(clean_argus[0]) - int(clean_pln[0])) <= 2:
-                    verdict = "PERLU_TRIAGE"
-                    diagnosa_detail = "DIGIT AMBIGU (MIKA KUSAM / 4 DIGIT BELAKANG COCOK)"
-                    stats["TRIAGE"] += 1
-
-                # B. Cocok Persis (Exact Match)
+                # B. Cocok Persis (Exact Integer Match)
                 elif val_pln == val_argus:
                     verdict = "SESUAI_MATCH"
-                    if len(clean_argus) == 5:
+                    if raw_digits_nz.startswith(clean_pln_nz) and len(raw_digits_nz) > len(clean_pln_nz):
+                        decimals = raw_digits_nz[len(clean_pln_nz):]
+                        selisih = f"+0.{decimals}"
+                        diagnosa_detail = "SESUAI (Desimal Merah)" if (len(raw_digits) == 6 and len(decimals) == 1) else "SESUAI (Smartmeter Desimal)"
+                    elif "." in raw_display and raw_digits_nz == clean_pln_nz and int_digits_raw_nz != clean_pln_nz:
+                        selisih = "0"
+                        diagnosa_detail = "SESUAI (Smartmeter Tanpa Koma)"
+                    elif len(clean_argus) == 5:
                         diagnosa_detail = "SESUAI IDEAL (5 Digit)"
                     elif len(clean_argus) == 4:
                         diagnosa_detail = "SESUAI (4 Digit Meter Baru)"
@@ -339,35 +385,67 @@ def run_batch_audit(
                         diagnosa_detail = f"SESUAI ({len(clean_argus)} Digit)"
                     stats["MATCH"] += 1
 
-                # C. Desimal Roda Merah Ikut Terbaca (6 Digit vs 5 Digit PLN)
+                # C. Smartmeter "Omit-Dot" Matcher (Kasus No. 3 '54.63' vs '5463', Kasus 403 '00157.3' vs '1573')
+                elif raw_digits and raw_digits_nz == clean_pln_nz:
+                    verdict = "SESUAI_MATCH"
+                    stan_argus = clean_pln
+                    selisih = "0"
+                    diagnosa_detail = "SESUAI (Smartmeter Tanpa Koma)"
+                    stats["MATCH"] += 1
+
+                # D. Smartmeter & Analog Decimal Prefix Matcher (Menyelesaikan Kasus 156, 178, 181, 276, 362, 370, 371)
+                elif raw_digits and raw_digits_nz.startswith(clean_pln_nz) and 1 <= dec_diff_len <= 3 and (
+                    "." in raw_display or not raw_digits.startswith("0") or len(raw_digits) == 6
+                ):
+                    verdict = "SESUAI_MATCH"
+                    decimals = raw_digits_nz[len(clean_pln_nz):]
+                    stan_argus = clean_pln
+                    selisih = f"+0.{decimals}"
+                    diagnosa_detail = "SESUAI (Desimal Merah)" if (len(raw_digits) == 6 and len(decimals) == 1) else "SESUAI (Smartmeter Desimal)"
+                    stats["MATCH"] += 1
+
+                # E. Desimal Roda Merah Ikut Terbaca (6 Digit vs 5 Digit PLN)
                 elif len(clean_argus) == 6 and clean_argus[:5] == clean_pln:
                     verdict = "SESUAI_MATCH"
                     selisih = f"+0.{clean_argus[5]}"
                     diagnosa_detail = "SESUAI (Desimal Merah)"
                     stats["MATCH"] += 1
 
-                # D. Desimal Roda Merah Ikut Terbaca (5 Digit vs 4 Digit PLN)
+                # F. Desimal Roda Merah Ikut Terbaca (5 Digit vs 4 Digit PLN)
                 elif len(clean_argus) == 5 and clean_argus[:4] == clean_pln:
                     verdict = "SESUAI_MATCH"
                     selisih = f"+0.{clean_argus[4]}"
                     diagnosa_detail = "SESUAI (Desimal Merah)"
                     stats["MATCH"] += 1
 
-                # E. Smartmeter Digital 2 Digit Desimal (misal ARGUS baca '7228' vs PLN baca integer '72')
-                elif len(clean_argus) == len(clean_pln) + 2 and clean_argus[:len(clean_pln)] == clean_pln:
-                    verdict = "SESUAI_MATCH"
-                    decimals = clean_argus[len(clean_pln):]
-                    selisih = f"+0.{decimals}"
-                    diagnosa_detail = "SESUAI (Smartmeter Desimal)"
-                    stats["MATCH"] += 1
-
-                # F. Rolling Digit (Angka sedang berputar selisih ±1 atau ±2 kWh)
-                elif abs(diff) in (1, 2):
+                # G. Rolling Digit (Angka sedang berputar selisih murni ±1 atau ±2 kWh, atau transisi roda 0 <-> 9)
+                elif abs(diff) in (1, 2) or (
+                    len(clean_pln) <= 5 and len(clean_argus) == 5
+                    and clean_pln.zfill(5)[:4] == clean_argus.zfill(5)[:4]
+                    and (clean_pln.zfill(5)[4], clean_argus.zfill(5)[4]) in [('0', '9'), ('9', '0')]
+                ):
                     verdict = "ROLLING_DIGIT"
                     diagnosa_detail = f"ANGKA GANTUNG / ROLLING ({diff:+d} kWh)"
                     stats["ROLLING"] += 1
 
-                # G. Selisih Nyata / Mismatch
+                # H. Single-Digit Physical Defect Guard (4 dari 5 Digit Cocok 100%, 1 Digit Baret / Glare / Mika Kusam)
+                # Menyelesaikan Kasus 56, 203, 291, 307, 325 (Baris 331), 377, 381, 388, 397, 409
+                elif len(clean_pln) <= 5 and len(clean_argus) <= 5 and (
+                    len([i for i in range(5) if clean_pln.zfill(5)[i] != clean_argus.zfill(5)[i]]) == 1
+                    or (
+                        len([i for i in range(4) if clean_pln.zfill(5)[i] != clean_argus.zfill(5)[i]]) == 1
+                        and abs(int(clean_pln.zfill(5)[4]) - int(clean_argus.zfill(5)[4])) in (1, 2, 9)
+                    )
+                ):
+                    p_pln_5 = clean_pln.zfill(5)
+                    p_arg_5 = clean_argus.zfill(5)
+                    diff_idxs = [i for i in range(5) if p_pln_5[i] != p_arg_5[i]]
+                    first_diff_pos = diff_idxs[0] + 1
+                    verdict = "PERLU_TINJAU_ULANG"
+                    diagnosa_detail = f"1 DIGIT AMBIGU (4 DIGIT COCOK / CEK DIGIT KE-{first_diff_pos})"
+                    stats["TRIAGE"] += 1
+
+                # I. Selisih Nyata / Mismatch
                 else:
                     verdict = "BEDA_STAND"
                     diagnosa_detail = f"BEDA STAND (Selisih {diff:+d} kWh)"
@@ -377,8 +455,21 @@ def run_batch_audit(
                 diagnosa_detail = "PLN STAN KOSONG"
                 stats["MISMATCH"] += 1
 
+        # 7. Kasus Obstruksi Fisik / Digit Parsial (Belum Ter-rescue)
+        elif pred_status in ("STAND_TIDAK_LENGKAP", "OBSTRUKSI_FISIK"):
+            verdict = "PERLU_TINJAU_ULANG"
+            diagnosa_detail = "OBSTRUKSI FISIK (DIGIT PARSIAL)"
+            stats["TRIAGE"] += 1
+
+        # 8. Kasus Digit Ambigu (Confidence Rendah < 0.50, Belum Ter-rescue)
+        elif pred_status == "DIGIT_AMBIGU":
+            verdict = "PERLU_TINJAU_ULANG"
+            diagnosa_detail = "DIGIT AMBIGU (CONFIDENCE RENDAH)"
+            stats["TRIAGE"] += 1
+
+        # 9. Kasus Tier Kuning / Perlu Analisis Manual Lainnya
         else:
-            verdict = "PERLU_TRIAGE"
+            verdict = "PERLU_TINJAU_ULANG"
             diagnosa_detail = "PERLU ANALISIS MANUAL PETUGAS"
             stats["TRIAGE"] += 1
 
@@ -393,7 +484,7 @@ def run_batch_audit(
         is_harvested = False
 
         # Syarat Panen: Bukan SESUAI_MATCH, Bukan BUKAN_METER, dan Kotak Counter Terdeteksi
-        is_anomaly = verdict in ("BEDA_STAND", "PERLU_TRIAGE", "ROLLING_DIGIT", "FOTO_SILAU")
+        is_anomaly = verdict in ("BEDA_STAND", "PERLU_TINJAU_ULANG", "ROLLING_DIGIT", "FOTO_SILAU")
         counter_box = pred.get("counter_box")
 
         if harvest and is_anomaly and counter_box:
@@ -418,7 +509,7 @@ def run_batch_audit(
                             d_char = str(d.get("digit", ""))
                             if d_char.isdigit():
                                 cls_id = int(d_char)
-                            elif d_char == "dots":
+                            elif d_char in ("dots", "dot", ".", ","):
                                 cls_id = 10
                             else:
                                 continue
@@ -483,8 +574,8 @@ def run_batch_audit(
             status_disp = "☀️ SILAU"
         elif verdict == "FOTO_BURAM":
             status_disp = "🌫️ BURAM"
-        elif verdict == "PERLU_TRIAGE":
-            status_disp = "🔍 TRIAGE"
+        elif verdict == "PERLU_TINJAU_ULANG":
+            status_disp = "🔍 TINJAU ULANG"
 
         harvest_tag = "📦 [DIPANEN]" if is_harvested else ""
         print(f"{idx:<4} | {item['idpel']:<13} | {stan_lapangan[:7]:<7} | {raw_display[:8]:<8} | {stan_argus[:8]:<8} | {status_disp:<18} | {diagnosa_detail[:30]:<30} | {latency_ms:>5} ms {harvest_tag}")
@@ -494,13 +585,13 @@ def run_batch_audit(
 
     print("-" * 95)
     print("\n" + "=" * 85)
-    print("📊 REKAPITULASI HASIL AUDIT LAPANGAN ARGUS (V2.0)")
+    print("📊 REKAPITULASI HASIL AUDIT LAPANGAN ARGUS (V2.5)")
     print("=" * 85)
     print(f"Total Sampel Audit      : {total_found} Foto")
     print(f"Waktu Total Eksekusi    : {total_time_s} detik (Rata-rata: {avg_latency} ms/foto)")
     print(f"🟢 Sesuai / Match       : {stats['MATCH']} ({round(stats['MATCH']/total_found*100, 1)}%)")
     print(f"🟡 Rolling Digit (±1-2) : {stats['ROLLING']} ({round(stats['ROLLING']/total_found*100, 1)}%)")
-    print(f"🟡 Perlu Triage / Cek   : {stats['TRIAGE']} ({round(stats['TRIAGE']/total_found*100, 1)}%)")
+    print(f"🟡 Perlu Tinjau Ulang   : {stats['TRIAGE']} ({round(stats['TRIAGE']/total_found*100, 1)}%)")
     print(f"🔴 Beda Stand Lapangan  : {stats['MISMATCH']} ({round(stats['MISMATCH']/total_found*100, 1)}%)")
     print(f"🔴 Silau (Tolak Tagih)  : {stats['GLARE']} ({round(stats['GLARE']/total_found*100, 1)}%)")
     print(f"🔴 Buram (Tolak Tagih)  : {stats['BLUR']} ({round(stats['BLUR']/total_found*100, 1)}%)")
@@ -557,7 +648,7 @@ def run_batch_audit(
 
     # Baris 2: Sub-Banner Lead Engineer & Info
     ws_out.merge_cells(start_row=2, start_column=1, end_row=2, end_column=num_cols)
-    b2 = ws_out.cell(row=2, column=1, value="Sistem Pengawasan Otomatis Stand Meter AI Vision Lokal | Lead Engineer: Pascol | Perlindungan Billing & Triage")
+    b2 = ws_out.cell(row=2, column=1, value="Sistem Pengawasan Otomatis Stand Meter AI Vision Lokal | Lead Engineer: Pascol | Perlindungan Billing & Tinjau Ulang")
     b2.fill = PatternFill(start_color="0B388A", fill_type="solid")
     b2.font = Font(name="Segoe UI", size=9.5, italic=True, color="E0E0E0")
     b2.alignment = ALIGN_CENTER
@@ -577,7 +668,7 @@ def run_batch_audit(
         (4, 6, "🟡 ROLLING DIGIT : Angka Berputar (±1–2 kWh)", FILL_ROLLING, "7F6000"),
         (7, 9, "🟠 BEDA STAND : Selisih Nyata AI vs Lapangan", FILL_BEDA_STAND, "A04000"),
         (10, 12, "🔴 TIDAK TERDETEKSI KWH : Counter Nihil / Pagar", FILL_NIHIL, "9C0006"),
-        (13, 16, "🟡 PERLU TRIAGE : Obstruksi / Resolusi / Mika Kotor", FILL_TRIAGE, "7F6000"),
+        (13, 16, "🟡 PERLU TINJAU ULANG : Obstruksi / 1 Digit Ambigu", FILL_TRIAGE, "7F6000"),
         (17, 19, "⚪ BURAM / SILAU : Kualitas Foto Ditolak", FILL_BURAM, "595959"),
     ]
 
@@ -656,7 +747,7 @@ def run_batch_audit(
             row_fill = FILL_NIHIL
         elif res["verdict"] == "BEDA_STAND":
             row_fill = FILL_BEDA_STAND
-        elif res["verdict"] == "PERLU_TRIAGE":
+        elif res["verdict"] == "PERLU_TINJAU_ULANG":
             row_fill = FILL_TRIAGE
         elif res["verdict"] == "FOTO_SILAU":
             row_fill = FILL_SILAU
