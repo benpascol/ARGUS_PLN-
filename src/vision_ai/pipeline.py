@@ -538,7 +538,7 @@ class ArgusVisionPipeline:
         print("✅ Kedua Model Siap Digunakan!\n")
         print("✅ Kedua Model Siap Digunakan!")
 
-    def predict_image(self, image_input, output_dir=None, padding_ratio=0.03):
+    def predict_image(self, image_input, output_dir=None, padding_ratio=0.03, save_mode="all"):
         if isinstance(image_input, (str, Path)):
             image_path = Path(image_input)
             img = cv2.imread(str(image_path))
@@ -978,7 +978,13 @@ class ArgusVisionPipeline:
         cv2.putText(annotated_full, header_text, (crop_x1, max(30, crop_y1 - 10)),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.75, status_color, 2, cv2.LINE_AA)
 
-        if output_dir:
+        should_save = bool(output_dir)
+        if should_save and save_mode == "focused":
+            tier = validation.get("tier_color", "RED")
+            if tier == "GREEN":
+                should_save = False
+
+        if should_save:
             out_path = Path(output_dir)
             out_path.mkdir(parents=True, exist_ok=True)
             crop_save_file = out_path / f"result_crop_{stem}.jpg"

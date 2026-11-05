@@ -97,6 +97,7 @@ def run_batch_audit(
     output_excel: Path,
     limit: int = 100,
     save_annotated: bool = True,
+    save_mode: str = "focused",
     harvest: bool = False,
     harvest_dir: Optional[Path] = None,
     digit_model_path: Optional[Path] = None
@@ -114,6 +115,7 @@ def run_batch_audit(
     if harvest:
         h_dir = harvest_dir or (BASE_DIR / "data" / "harvest_anomalies")
         print(f"📦 Auto-Harvest      : AKTIF (Target Anomali -> {h_dir})")
+    print(f"🖼️ Mode Simpan Foto  : {save_mode.upper()} ({'Fokus Anomali/Tinjau Ulang' if save_mode == 'focused' else 'Semua Sampel' if save_mode == 'all' else 'Nonaktif'})")
     print("=" * 85)
 
     if not excel_path.is_file():
@@ -230,7 +232,8 @@ def run_batch_audit(
         t0_single = time.time()
         pred = pipeline.predict_image(
             str(photo_path),
-            output_dir=str(annotated_dir) if annotated_dir else None
+            output_dir=str(annotated_dir) if (save_annotated and save_mode != "none") else None,
+            save_mode=save_mode
         )
         latency_ms = round((time.time() - t0_single) * 1000, 1)
         stats["total_latency_ms"] += latency_ms
@@ -537,6 +540,16 @@ def run_batch_audit(
         saved_paths = pred.get("saved_paths", {})
         ai_annotated_file = saved_paths.get("full_result") or saved_paths.get("crop_result")
 
+        # Focused Mode Rescue: Jika ada anomali tetapi gambar belum disimpan (misal Green tapi beda stand),
+        # simpan gambar anotasi untuk baris anomali ini agar auditor tetap bisa membuka fotonya
+        if save_annotated and save_mode == "focused" and not ai_annotated_file and verdict != "SESUAI_MATCH" and annotated_dir:
+            try:
+                rescue_pred = pipeline.predict_image(str(photo_path), output_dir=str(annotated_dir), save_mode="all")
+                r_saved = rescue_pred.get("saved_paths", {})
+                ai_annotated_file = r_saved.get("full_result") or r_saved.get("crop_result")
+            except Exception:
+                pass
+
         audit_results.append({
             "no": idx,
             "idpel": item["idpel"],
@@ -815,6 +828,13 @@ def main():
         help="Jangan simpan foto hasil crop anotasi (menghemat disk)"
     )
     parser.add_argument(
+        "--save-mode",
+        type=str,
+        choices=["focused", "all", "none"],
+        default="focused",
+        help="Mode simpan foto anotasi: 'focused' (hanya anomali/tinjau ulang), 'all' (semua), atau 'none'"
+    )
+    parser.add_argument(
         "--model-digit",
         type=str,
         default=None,
@@ -843,12 +863,14 @@ def main():
 
     digit_model = Path(args.model_digit) if args.model_digit else None
 
+    save_mode = "none" if args.no_crops else args.save_mode
     run_batch_audit(
         excel_path=Path(args.excel_path),
         photo_dir=Path(args.photo_dir),
         output_excel=out_excel,
         limit=limit,
-        save_annotated=not args.no_crops,
+        save_annotated=(save_mode != "none"),
+        save_mode=save_mode,
         harvest=args.harvest,
         harvest_dir=Path(args.harvest_dir) if args.harvest_dir else None,
         digit_model_path=digit_model
