@@ -18,24 +18,68 @@
 ~$*.xlsx
 ~$*.xls
 
-# 3. Direktori Citra Lapangan Mentah (300MB+ / 7.470 File JPG)
+# 3. Direktori Citra Lapangan Mentah & Data Sampel Besar
 DOkumentasi LBKB/
 **/DOkumentasi LBKB/
 data/raw_images/
 data/raw_excel/
 data/output/
+data/datasets/
+**/datasets/
+data/dataset_*/
+data/crops_for_labeling/
+**/crops_for_labeling/
+data/harvest_anomalies/
+**/harvest_anomalies/
+data/audit_results/
+**/audit_results/
 Docs/File/
 **/Docs/File/
+scratch/
+**/scratch/
+
+# File Arsip & Model AI (Batas GitHub 100MB)
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+*.pt
+*.pth
+*.onnx
+*.engine
+*.weights
+*.tflite
+best.pt/
+**/best.pt/
+runs/
+**/runs/
+argus_digits-*/
+**/argus_digits-*/
+data/argus_digits-*/
+data/ARGUS_DIGITS*/
+**/ARGUS_DIGITS*/
+*.yolov8/
+**/*.yolov8/
+
+# Direktori Sampel Ekstraksi Sementara
+data/samples/extracted_*/
+data/samples/inspected_*/
+data/samples/best.pt/
+data/samples/Hasil_Deteksi_*
+
+# Aturan Format Citra Umum
 *.jpg
 *.jpeg
 *.png
-# Pengecualian: Izinkan foto sampel benchmark kecil (< 1MB) di folder data/samples/
-!data/samples/
-!data/samples/*.jpg
-!data/samples/*.jpeg
-!data/samples/*.png
+# Pengecualian: Izinkan foto aset dokumentasi SVG/PNG dan sampel benchmark resmi di subfolder
 !Docs/*.svg
 !Docs/*.png
+!data/samples/A_*/*.jpg
+!data/samples/B_*/*.jpg
+!data/samples/C_*/*.jpg
+!data/samples/D_*/*.jpg
+!data/samples/E_*/*.jpg
 
 # 4. Lingkungan Virtual & Cache Python
 __pycache__/
@@ -59,7 +103,9 @@ wheels/
 .installed.cfg
 *.egg
 .venv/
+.venv*/
 venv/
+venv*/
 env/
 ENV/
 .pytest_cache/
