@@ -24,40 +24,44 @@ flowchart TD
 
     RawInput["📁 FOTO DOKUMENTASI LBKB<br/>(7.470+ File .jpg, Resolusi 540x960)"]:::inputClass
 
-    subgraph T1 ["TIER 1: Filter Kualitas & Blur Citra (OpenCV)"]
-        BlurFilter{"Uji Varians Laplacian<br/>Var(Laplacian) < Ambang Batas?"}:::tierClass
+    subgraph T1 ["TIER 1: Gatekeeper Kualitas, Blur & Silau (OpenCV)"]
+        BlurFilter{"Uji Kualitas Citra<br/>• Var(Laplacian) < Ambang Batas?<br/>• Glare HSV (V>240, S<30) > 20%?"}:::tierClass
     end
 
-    subgraph T2 ["TIER 2: Ekstraksi Barcode Nomor Seri (ZBar / PyZbar)"]
-        BarcodeScan{"Scan Barcode / QR Code Fisik<br/>Apakah Barcode Terdeteksi?"}:::tierClass
+    subgraph T2 ["TIER 2: Ekstraksi Lokal 100% Offline (ZBar & Two-Stage YOLO)"]
+        BarcodeScan{"Scan Barcode Nomor Seri<br/>(ZBar + CLAHE)"}:::tierClass
+        YoloDigits{"Two-Stage Local YOLO Digits<br/>1. Crop Dial Box (meter_counter_detector)<br/>2. Read Digits & Dot (digit_ocr_detector)"}:::tierClass
     end
 
-    subgraph T3 ["TIER 3: Multimodal Vision-Language Model (VLM)"]
-        VLMProc["NVIDIA NIM LLaMA 3.2 11B Vision<br/>• Verifikasi Scene (Pagar / Pintu Tutup)<br/>• OCR Teks Spidol IDPEL<br/>• Deteksi Foto Palsu / Fraud (Aspal, Jok Motor)"]:::tierClass
+    subgraph T3 ["TIER 3: Hakim Semantik & Fraud Detector (VLM)"]
+        VLMProc{"NVIDIA NIM LLaMA 3.2 11B Vision<br/>(Eksklusif: Fraud aspal/jok, pagar, ketiadaan meter)<br/>⚠️ ANTI-PEMBOROSAN TOKEN: Dilarang untuk digit rutin!"}:::tierClass
     end
 
     subgraph T4 ["TIER 4: Deterministic Decision Engine"]
-        Arbiter{"Arbitrase Aturan Audit<br/>(Visual Sinyal vs Master Data Excel)"}:::tierClass
+        Arbiter{"Arbitrase Integritas & SOP PLN<br/>• Validasi Sequence (Tolak angka parsial)<br/>• Split integer kWh di depan desimal 'dot'<br/>• Cocokkan STAN_BACA vs STAN_METER"}:::tierClass
     end
 
     %% Node Hasil Akhir
-    ResBlur["3. Hasil Foto Blur<br/>(Alasan: Dispersi Fokus Rendah / Gelap Total)"]:::resultBlur
-    ResSesuai["1. Sesuai dengan Data<br/>(Barcode Cocok / Rintangan Valid Terverifikasi)"]:::resultOk
-    ResTidak["2. Tidak Sesuai dengan Data<br/>(Salah Meter / Foto Manipulatif / Fraud)"]:::resultFail
+    ResBlur["3. Hasil Foto Blur / Glare<br/>(Alasan: Fokus Rendah / Silau Ekstrem)"]:::resultBlur
+    ResSesuai["1. Sesuai dengan Data<br/>(Stand Cocok / Rintangan Sah Terverifikasi)"]:::resultOk
+    ResTidak["2. Tidak Sesuai dengan Data<br/>(Kelainan Stand / Foto Fraud Tidak Relevan)"]:::resultFail
 
     %% Alur Relasi & Keputusan
     RawInput --> BlurFilter
-    BlurFilter -- "Ya (Buram Parah / Gelap)" --> ResBlur
-    BlurFilter -- "Tidak (Foto Tajam / Layak)" --> BarcodeScan
+    BlurFilter -- "Ya (Buram Parah / Silau Menutup Angka)" --> ResBlur
+    BlurFilter -- "Tidak (Foto Tajam & Jelas)" --> BarcodeScan
 
-    BarcodeScan -- "Barcode Terbaca (Nomor Seri 11 Digit)" --> Arbiter
-    BarcodeScan -- "Barcode Tidak Terdeteksi / Foto Rintangan" --> VLMProc
+    BarcodeScan -- "Barcode Terbaca (Prabayar 11 Digit)" --> Arbiter
+    BarcodeScan -- "Bukan Meter Barcode / Meter Pascabayar" --> YoloDigits
+
+    YoloDigits -- "Angka Stand Terbaca (Analog/Digital)" --> Arbiter
+    YoloDigits -- "Bukan Meteran / Anomali Pemandangan" --> VLMProc
 
     VLMProc --> Arbiter
 
-    Arbiter -- "Nomor Barcode Cocok ATAU Pagar Valid Sesuai Kode" --> ResSesuai
-    Arbiter -- "Nomor Beda ATAU Foto Fraud Tidak Relevan" --> ResTidak
-    Arbiter -- "VLM Konfirmasi Foto Rusak / Tidak Terbaca" --> ResBlur
+    Arbiter -- "Stand Valid Cocok ATAU Pagar Sah Sesuai Kode" --> ResSesuai
+    Arbiter -- "Stand Beda ATAU Terbukti Foto Fraud" --> ResTidak
+    Arbiter -- "Angka Parsial Silau / Ragu" --> ResBlur
 ```
 
 </details>
@@ -125,23 +129,31 @@ ARGUS/
 
 ## 🔬 Spesifikasi Komponen Pipeline
 
-### 1. Deteksi Blur (OpenCV Laplacian ROI)
+### 1. Gatekeeper Kualitas Citra: Blur & Glare (OpenCV Laplacian & HSV)
 
-- **Metode:** Konvolusi kernel Laplacian $3 \times 3$ pada citra grayscale, menghitung varians respon tepi:
+- **Deteksi Blur (Laplacian ROI):** Konvolusi kernel Laplacian $3 \times 3$ pada ROI meteran grayscale:
   $$\sigma^2 = \frac{1}{N} \sum_{x,y} (L(x,y) - \mu)^2$$
-- **ROI-Focused Assessment:** Berdasarkan temuan riset, perhitungan Laplacian difokuskan pada Region of Interest (area meteran) agar tekstur kasar background (dinding/aspal) tidak memicu *false sharpness*.
-- **Threshold Strategi:** Dikalibrasi secara empiris pada rentang rekomendasi literatur ($\sigma^2 \approx 80–120$ untuk citra $540 \times 960$) dengan prinsip konservatif agar tidak membuang foto valid.
+  Fokus pada ROI tengah meteran untuk mencegah tekstur kasar background memicu *false sharpness*.
+- **Deteksi Silau / Glare (HSV Masking):** Mengevaluasi piksel overexposure dengan intensitas Value > 240 dan Saturation < 30. Jika silau menutupi > 20% area angka, proses dihentikan dengan status `ANOMALI_GLARE_TERHALANG` (mencegah output angka sebatang kara).
 
 ### 2. Barcode & QR Scanner (ZBar Engine + CLAHE)
 
 - **Karakteristik:** Ekstraksi pola garis Code 128 / Code 39 / QR Code pada stiker KWH Meter prabayar.
-- **Pre-processing CLAHE:** Dilengkapi *Contrast Limited Adaptive Histogram Equalization* dan binarisasi Otsu untuk menembus silau pantulan mika (*glare*) dan debu lapangan.
-- **Keunggulan:** Menggunakan _built-in parity checksum_. Jika nomor 11 digit berhasil terbaca (misal `86 7008 2427 6`), hasil dijamin 100% akurat secara matematis tanpa halusinasi visual.
+- **Pre-processing CLAHE:** Dilengkapi *Contrast Limited Adaptive Histogram Equalization* dan binarisasi Otsu untuk menembus debu lapangan.
+- **Keunggulan:** Menggunakan _built-in parity checksum_ 11 digit tanpa risiko halusinasi visual.
 
-### 3. VLM Reasoning Engine (NVIDIA NIM / Gemini)
+### 3. Two-Stage Local YOLO Digit Reader (Dual Neural Networks, 4.2 ms)
 
-- **Model Primer:** `meta/llama-3.2-11b-vision-instruct` (via endpoint `integrate.api.nvidia.com`).
-- **Peran:** Fallback cerdas untuk $\pm 20-30\%$ citra (kasus rintangan fisik pagar gembok/rumah tutup, spidol pascabayar, atau meteran tanpa barcode).
+- **Stage 1 (Crop Area Stand):** `models/meter_counter_detector.pt` mendeteksi dan memotong kotak dial roller / display LCD.
+- **Stage 2 (OCR Angka & Desimal):** `models/digit_ocr_detector.pt` (YOLOv8s, mAP@50 96.1%) membaca digit `0-9` dan titik desimal `dot`.
+- **Strict Sequence & Logic PLN:**
+  - *Meter Analog:* Wajib deretan kontinu 4–6 digit (tolak angka parsial).
+  - *Meter Digital:* Mengurutkan koordinat sumbu X. Seluruh angka di depan tanda `dot` diambil sebagai stand integer kWh resmi, angka di belakang koma diabaikan sesuai SOP penagihan PLN.
+
+### 4. VLM Semantic Auditor (NVIDIA NIM LLaMA 3.2 11B Vision)
+
+- **Prinsip Anti-Pemborosan Token:** VLM **dilarang** untuk membaca angka digital rutin (100% dialihkan ke model lokal Tier 2).
+- **Peran Eksklusif:** Hakim anomali semantik tingkat tinggi: memvalidasi fraud (aspal jalan, jok motor, dinding kosong), rintangan fisik nyata (pagar gembok, rumah kosong, anjing galak), dan ketiadaan/kerusakan fisik meteran.
 - **Format Output:** Pure JSON Response deterministik:
   ```json
   {
@@ -240,15 +252,16 @@ Untuk staf operasional di portal PLN (`https://portalapp.iconpln.co.id/*`):
 
 - **Fondasi Ilmiah & Arsitektur Terverifikasi:** Cascading Multi-Tier Pipeline resmi divalidasi oleh literatur internasional (MDPI, IEEE, CMC) dan didokumentasikan di [`Docs/ARGUS_Research_Validation.md`](./Docs/ARGUS_Research_Validation.md).
 - **Dataset Lapangan Masif & Valid:** Tersedia 7.470 foto asli lapangan beresolusi $540 \times 960$ dan 8.126 data pelanggan lengkap dengan koordinat geolokasi di Excel.
-- **Kunci Akses VLM Siap Pakai:** Kredensial NVIDIA NIM API Key terpasang aman di `.env` untuk inferensi visual berkecepatan tinggi.
-- **Arsitektur Berjenjang Terdefinisi:** Pemisahan tugas yang jelas antara OpenCV (kecepatan), ZBar (kepastian matematis), dan VLM (penalaran semantik).
+- **Lonjakan Akurasi Digit YOLOv8s ke 96.1% mAP@50:** Pelatihan model digit lokal di GPU RTX 4060 tanpa flip horizontal melesat dengan Precision 94.6%, Recall 92.8%, dan latensi inferensi super kencang 4.2 ms.
+- **Two-Stage Pipeline Sukses 100% pada Analog Bersih:** Menguji end-to-end 10 sampel foto lapangan menghasilkan pembacaan 5-digit sempurna pada seluruh meteran analog yang tidak silau.
+- **Kunci Akses VLM Siap Pakai:** Kredensial NVIDIA NIM API Key terpasang aman di `.env` untuk penalaran anomali semantik.
 
 ### The Bad
 
-- **Script Web Eksisting Salah Target:** Source code userscript `Tanpa judul.txt` masih membawa logika lama (membaca angka stand LCD pascabayar), memerlukan refactoring prompt dan parser data untuk kasus LBKB token/rintangan.
-- **Background Clutter Mengelabui Laplacian:** Menghitung blur pada keseluruhan citra berisiko *false negative blur* akibat tekstur dinding/aspal (dimitigasi dengan evaluasi ROI meteran).
+- **Karakter Titik/Koma LCD Digital Belum Teranotasi:** Model digit saat ini (`v2`) belum mengenali karakter `dot` desimal, menyebabkan meter digital seperti Sampel #8 (`20,163`) baru terbaca parsial (`2, 6, 3`). Diperlukan rilis dataset `v3` dengan kelas `dot` agar pembacaan digital tuntas lokal tanpa buang token VLM.
+- **Script Web Eksisting Salah Target:** Source code userscript `Tanpa judul.txt` masih membawa logika lama, memerlukan refactoring prompt dan parser data untuk kasus LBKB token/rintangan.
 
 ### The Ugly
 
-- **Tingkat Kebersihan Stiker Barcode & Silau Lapangan:** Sebagian meteran tertutup debu atau terpapar silau mika pelindung (dimitigasi dengan preprocessing CLAHE + binarisasi adaptif sebelum ZBar).
+- **Silau Matahari Ekstrem (Kasus Sampel #6):** Pantulan cahaya pada mika penutup menghapus 4 digit analog, namun menyisakan 1 digit ('6') dengan confidence 85%. Tanpa Gatekeeper Kualitas & Strict Sequence Validator, pipeline naif meloloskan angka tunggal ke database penagihan.
 - **Resiko Manipulasi Lapangan (Fraud):** Petugas lapangan kerap mengunggah foto tidak relevan untuk mengejar target laporan, menuntut VLM memiliki *prompt guardrails* yang ketat terhadap deteksi objek aspal/lantai/jok motor.

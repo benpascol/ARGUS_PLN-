@@ -11,9 +11,11 @@ Buku ini adalah hukum tertinggi dan aturan main dalam perancangan, pengembangan,
 2. **Auditability over Black-Box:**
    Sistem penilai audit korporat tidak boleh beroperasi seperti kotak hitam (*black-box*). Setiap vonis keputusan (**Sesuai**, **Tidak Sesuai**, **Blur**) **WAJIB** disertai alasan logis (*audit reason*) yang dapat dipertanggungjawabkan di depan manajemen PLN.
 3. **Pragmatism & Cascading Efficiency:**
-   Gunakan alat yang paling ringan dan hemat untuk menyelesaikan masalah di tahap awal. Saring jutaan piksel buram menggunakan OpenCV gratisan (<5 ms), saring meteran barcode dengan ZBar (<30 ms), dan hanya gunakan VLM/API berbayar untuk sisa citra yang membutuhkan penalaran semantik kompleks.
+   Gunakan alat yang paling ringan dan hemat untuk menyelesaikan masalah di tahap awal. Saring jutaan piksel buram menggunakan OpenCV gratisan (<5 ms), saring meteran barcode dengan ZBar (<30 ms), dan selesaikan deteksi angka serta proteksi fraud secara lokal tanpa token cloud.
 4. **Anti-Fraud Vigilance:**
    Sistem ini dirancang untuk mendeteksi manipulasi petugas lapangan. Jangan pernah membuat aturan logika yang langsung meloloskan status "Sesuai" hanya karena di Excel tertulis kelainan bacaan tertentu tanpa memverifikasi bukti citranya secara nyata.
+5. **Pure Local & Offline-First Sovereignty (Kedaulatan Sistem Mandiri Tanpa Cloud VLM):**
+   Seluruh arsitektur inti ARGUS (Tier 1 Blur, Stage 1/2 YOLO Digit OCR, dan Anti-Fraud Triage) **WAJIB** berjalan 100% secara lokal dan *offline* di lingkungan komputasi PLN. Dilarang keras menggantungkan logika penagihan pada API cloud pihak ketiga yang rentan limit, kedaluwarsa, atau terputus internet. Hal ini menjamin kedaulatan data pelanggan PLN, keandalan operasional, dan latensi ultra-cepat.
 
 ---
 
@@ -46,10 +48,10 @@ Buku ini adalah hukum tertinggi dan aturan main dalam perancangan, pengembangan,
    - Gunakan standar modern ES6+ (Async/Await, Classes, Promises).
    - Pisahkan logika pemrosesan ke dalam kelas modular: `APIManager`, `ImageProcessor`, `DecisionEngine`, `UIController`, dan `ExportManager`.
    - Hindari manipulasi DOM secara berulang di dalam *loop* data besar (8.000 baris); gunakan `DocumentFragment` atau batch rendering virtual scrolling.
-3. **Respon VLM Terstruktur & Arsitektur Prompt 4-Layer:**
-   - Setiap prompt untuk VLM (NVIDIA NIM / Gemini) **WAJIB** mengikuti arsitektur 4-layer standar riset: (1) *Persona Layer*, (2) *Task Definition Layer*, (3) *Chain-of-Thought Layer*, dan (4) *Strict JSON Output Layer*.
-   - Output wajib berupa JSON murni tanpa teks basa-basi (*strictly no conversational filler*). Sediakan mekanisme regex fallback parser untuk mengekstrak JSON jika model menyertakan format markdown code blocks.
-   - Sediakan mekanisme *Few-Shot Prompting* (1-2 gambar referensi) pada kasus sulit/edge cases guna meningkatkan akurasi klasifikasi.
+3. **Respon API Lokal & Standar Kontrak JSON Terstruktur:**
+   - Seluruh endpoint API lokal (`/predict` dan `/predict-base64`) **WAJIB** mengembalikan skema JSON deterministik (`stand_baca`, `status`, `tier_color`, `is_valid`, `latency_ms`).
+   - Respon wajib bertipe data native Python (bersih dari tipe objek NumPy float/int) agar serialisasi JSON berjalan cepat dan bebas crash.
+   - Menyediakan metadata lengkap termasuk latency inferensi lokal untuk diagnostik performa di front-end.
 
 ---
 
@@ -64,7 +66,7 @@ Buku ini adalah hukum tertinggi dan aturan main dalam perancangan, pengembangan,
 ## 🛡 Pilar 5: Keamanan & Privasi Data PLN
 
 1. **Zero Hardcoding Credentials:**
-   Dilarang keras menuliskan API Key (NVIDIA NIM API Key, Token Portal PLN, dll) langsung di dalam file kode sumber atau file yang dipublikasikan. Kredensial wajib dipanggil melalui environment variable (`.env`) atau `GM_getValue` terenkripsi pada browser.
+   Dilarang keras menuliskan kredensial rahasia (Token Portal PLN, secret keys, dll) langsung di dalam file kode sumber atau file yang dipublikasikan. Kredensial wajib dipanggil melalui environment variable (`.env`) atau `GM_getValue` terenkripsi pada browser.
 2. **Kerahasiaan Data Konsumen:**
    Data master pelanggan (IDPEL, Nama, Alamat, Tarif, Daya, Foto KWH Meter) adalah informasi rahasia PT PLN (Persero). Dilarang mengunggah dataset foto atau file Excel ke repositori publik. Gunakan `.gitignore` untuk melindungi folder `DOkumentasi LBKB/` dan file `.xlsx`.
 
@@ -77,9 +79,9 @@ Buku ini adalah hukum tertinggi dan aturan main dalam perancangan, pengembangan,
 2. **Pre-processing CLAHE untuk ZBar:**
    Sebelum memvonis barcode tidak terbaca, sistem wajib mencoba pipeline peningkatan kontras adaptif (*Contrast Limited Adaptive Histogram Equalization* / CLAHE) dan binarisasi Otsu guna menembus silau pantulan mika (*glare*) dan debu lapangan.
 3. **Pemberian Skor Keyakinan (Confidence Score):**
-   Setiap hasil pembacaan OCR teks spidol atau inferensi VLM wajib menyertakan estimasi tingkat keyakinan (*confidence score*). Jika skor di bawah batas minimum (misal $< 0.70$), arahkan baris data tersebut ke antrean review manual teknisi.
+   Setiap hasil pembacaan OCR digit meteran wajib menyertakan estimasi tingkat keyakinan (*confidence score*). Jika skor di bawah batas minimum (misal $< 0.70$) atau terindikasi gap/silau, arahkan baris data tersebut ke antrean review manual teknisi (🟡 Triage).
 4. **Presedensi Checksum Matematis:**
-   Hasil pembacaan nomor seri ber-checksum (ZBar) berstatus kepastian mutlak di atas tebakan teks semantik VLM. VLM hanya berperan sebagai validator visual scene (rintangan/fraud) atau fallback saat barcode fisik memang tidak ada.
+   Hasil pembacaan nomor seri ber-checksum (ZBar) berstatus kepastian mutlak. Stage 1 YOLO dan heuristik ketiadaan dial counter (`FAIL_COUNTER_NOT_FOUND`) berperan mendeteksi anomali/fraud non-meteran secara deterministik dan bebas biaya token.
 5. **Penyelarasan Kode Kelainan LBKB PLN:**
    Pemetaan kode kelainan pada keputusan sistem harus mengacu pada standar resmi PLN:
    - `E`: RUMAH TUTUP
@@ -95,6 +97,12 @@ Buku ini adalah hukum tertinggi dan aturan main dalam perancangan, pengembangan,
    Sistem audit LBKB dilarang hanya dievaluasi menggunakan akurasi persentase tunggal (*single accuracy metric*). Karena kasus kelainan dan fraud di lapangan bersifat minoritas (*imbalanced data*), evaluasi performa sistem wajib menyertakan **Precision**, **Recall**, dan **F1-Score**, serta metrik operasional seperti **Barcode Hit-Rate** dan **API Cost Saving**.
 8. **Validasi Empiris Skala Penuh via Ground Truth Sampling:**
    Sebelum sistem dinyatakan siap serah terima operasional ke PLN, verifikasi akhir wajib dilakukan dengan metode *random sampling* minimal 100 baris data yang diverifikasi manual bersama petugas pengawas PLN sebagai dasar justifikasi ilmiah laporan akhir.
+9. **Anti-Partial Stand Emission & Strict Sequence Integrity:**
+   Sistem DILARANG KERAS mengeluarkan hasil pembacaan parsial/sebatang kara ke kolom `STAN_BACA` (seperti kasus silau yang hanya menyisakan angka "6"). Untuk meteran analog, hasil bacaan wajib memenuhi deretan horizontal kontinu minimal 4–6 digit. Jika kurang dari itu, sistem wajib menolak dan memvonis `STAND_TIDAK_LENGKAP` atau `ANOMALI_GLARE_TERHALANG`.
+10. **Glare Gatekeeping (Pencegahan Saturasi Silau Matahari):**
+    Sebelum meneruskan crop counter box ke model digit, sistem wajib mengevaluasi persentase piksel silau (HSV: V > 240, S < 30). Jika piksel silau melebihi 20% luas area angka, sistem wajib menghentikan inferensi digit dan menandai `ANOMALI_GLARE_TERHALANG`.
+11. **Local Decimal Handling for Digital Meters:**
+    Meteran digital harus ditangani secara lokal menggunakan deteksi titik desimal (`dot`). Stand meter resmi penagihan PLN adalah angka integer di depan titik desimal (`val.split('.')[0]`), sedangkan digit di belakang koma diabaikan sesuai SOP penagihan energi.
 
 ---
 
