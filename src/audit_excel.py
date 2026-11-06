@@ -470,7 +470,13 @@ def run_batch_audit(
             diagnosa_detail = "DIGIT AMBIGU (CONFIDENCE RENDAH)"
             stats["TRIAGE"] += 1
 
-        # 9. Kasus Tier Kuning / Perlu Analisis Manual Lainnya
+        # 9. Kasus Layar Status Operasional LCD (TUTUP - TR, PERIKSA, OFF, dll)
+        elif pred_status == "METER_STATUS_OPERASIONAL":
+            verdict = "PERLU_TINJAU_ULANG"
+            diagnosa_detail = "LAYAR OPERASIONAL (TUTUP/PERIKSA/STAND NON-AKTIF)"
+            stats["TRIAGE"] += 1
+
+        # 10. Kasus Tier Kuning / Perlu Analisis Manual Lainnya
         else:
             verdict = "PERLU_TINJAU_ULANG"
             diagnosa_detail = "PERLU ANALISIS MANUAL PETUGAS"

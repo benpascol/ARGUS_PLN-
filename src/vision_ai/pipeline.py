@@ -418,6 +418,21 @@ def validate_reading_sequence(detected_digits, crop_w, crop_h):
             "reason": f"Hanya terdeteksi {num_tokens} digit dengan span coverage {span_ratio*100:.1f}% (<35%). Indikasi silau / angka terpotong."
         }
 
+    # KASUS TEKS STATUS OPERASIONAL LCD (Kasus Layar TUTUP - TR, PERIKSA, OFF, RELAY):
+    # Layar menampilkan huruf status, bukan angka stand kWh. Garis-garis huruf T/U/P memicu deteksi '1' semu.
+    ones_count = sum(1 for d in raw_tokens if d == "1")
+    if num_tokens >= 5 and (ones_count / num_tokens) >= 0.55 and has_abnormal_gap:
+        return {
+            "is_valid": False,
+            "stand_baca": None,
+            "raw_display": "STATUS_LCD (TUTUP/PERIKSA)",
+            "status": "METER_STATUS_OPERASIONAL",
+            "tier_color": "YELLOW",
+            "meter_type": "lcd_status_text",
+            "span_ratio": span_ratio,
+            "reason": f"Layar LCD menampilkan teks status operasional ({ones_count}/{num_tokens} stroke vertikal semu). Stand kWh tidak aktif di layar."
+        }
+
     # KASUS KUNING (Jeda Renggang Abnormal seperti Layar Koma Samar):
     if has_abnormal_gap:
         return {
@@ -519,8 +534,9 @@ def validate_reading_sequence(detected_digits, crop_w, crop_h):
 class ArgusVisionPipeline:
     def __init__(self, counter_model_path=None, digit_model_path=None):
         base_dir = Path(__file__).resolve().parent.parent.parent
+        v5_path = base_dir / "models" / "digit_ocr_detector_v5.pt"
         v4_path = base_dir / "models" / "digit_ocr_detector_v4.pt"
-        default_digit = v4_path if v4_path.is_file() else (base_dir / "models" / "digit_ocr_detector.pt")
+        default_digit = v5_path if v5_path.is_file() else (v4_path if v4_path.is_file() else (base_dir / "models" / "digit_ocr_detector.pt"))
 
         self.counter_model_path = counter_model_path or (base_dir / "models" / "meter_counter_detector.pt")
         self.digit_model_path = digit_model_path or default_digit

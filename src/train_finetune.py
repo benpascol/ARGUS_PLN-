@@ -100,12 +100,13 @@ def run_training(
     base_model_path: Path,
     dataset_yaml: Path,
     output_model_dir: Path,
+    version_tag: str = "v5",
     epochs: int = 40,
     batch_size: int = 16,
     imgsz: int = 640
 ):
     print("=" * 80)
-    print("⚡ PROJECT ARGUS: FINE-TUNING DIGIT OCR DETECTOR (MODEL V4)")
+    print(f"⚡ PROJECT ARGUS: FINE-TUNING DIGIT OCR DETECTOR (MODEL {version_tag.upper()})")
     print("   PT PLN (Persero) UP3 Mojokerto | Lead Engineer: Pascol")
     print("=" * 80)
     
@@ -130,8 +131,9 @@ def run_training(
     # Eksekusi fine-tuning
     runs_dir = BASE_DIR / "runs" / "finetune"
     runs_dir.mkdir(parents=True, exist_ok=True)
+    run_name = f"argus_digit_{version_tag.lower()}"
 
-    print("\n🚀 Memulai fine-tuning transfer learning di GPU RTX 4060...")
+    print(f"\n🚀 Memulai fine-tuning transfer learning di GPU RTX 4060 (Run: {run_name})...")
     train_results = model.train(
         data=str(dataset_yaml),
         epochs=epochs,
@@ -139,7 +141,7 @@ def run_training(
         imgsz=imgsz,
         device=0 if torch.cuda.is_available() else "cpu",
         project=str(runs_dir),
-        name="argus_digit_v4",
+        name=run_name,
         exist_ok=True,
         pretrained=True,
         lr0=0.001,          # Learning rate awal rendah untuk fine-tuning
@@ -151,22 +153,27 @@ def run_training(
     )
 
     # Validasi model terbaik yang dihasilkan
-    best_weight_src = runs_dir / "argus_digit_v4" / "weights" / "best.pt"
+    best_weight_src = runs_dir / run_name / "weights" / "best.pt"
     if best_weight_src.is_file():
         output_model_dir.mkdir(parents=True, exist_ok=True)
-        v4_target = output_model_dir / "digit_ocr_detector_v4.pt"
-        shutil.copy2(str(best_weight_src), str(v4_target))
+        target_model_file = output_model_dir / f"digit_ocr_detector_{version_tag.lower()}.pt"
+        shutil.copy2(str(best_weight_src), str(target_model_file))
+        
+        # Juga perbarui digit_ocr_detector.pt sebagai symlink/fallback produksi
+        prod_target = output_model_dir / "digit_ocr_detector.pt"
+        shutil.copy2(str(best_weight_src), str(prod_target))
 
         print("\n" + "=" * 80)
         print("🎉 PELATIHAN FINE-TUNING SELESAI DENGAN SUKSES!")
         print("=" * 80)
         print(f"📦 Bobot Terbaik (best.pt) tersimpan di:\n👉 {best_weight_src}")
-        print(f"🚀 Model Produksi Resmi V4 siap dipakai di:\n👉 {v4_target}")
+        print(f"🚀 Model Produksi Resmi {version_tag.upper()} siap dipakai di:\n👉 {target_model_file}")
+        print(f"🔄 Model Standar Produksi diperbarui di:\n👉 {prod_target}")
         print("=" * 80)
 
         # Evaluasi akurasi akhir
-        print("\n📊 Mengevaluasi performa model V4 pada data validasi...")
-        best_model = YOLO(str(v4_target))
+        print(f"\n📊 Mengevaluasi performa model {version_tag.upper()} pada data validasi...")
+        best_model = YOLO(str(target_model_file))
         val_metrics = best_model.val(data=str(dataset_yaml), imgsz=imgsz, device=0 if torch.cuda.is_available() else "cpu")
         map50 = val_metrics.box.map50
         map5095 = val_metrics.box.map
@@ -178,17 +185,31 @@ def run_training(
 
 def main():
     parser = argparse.ArgumentParser(description="ARGUS Model Fine-Tuning Runner")
+    default_dataset = BASE_DIR / "data" / "datasets" / "argus_audit_v2"
+    if not default_dataset.is_dir():
+        default_dataset = BASE_DIR / "data" / "datasets" / "argus_audit_v1"
+
+    default_base = BASE_DIR / "models" / "digit_ocr_detector_v4.pt"
+    if not default_base.is_file():
+        default_base = BASE_DIR / "models" / "digit_ocr_detector.pt"
+
     parser.add_argument(
         "--dataset-dir",
         type=str,
-        default=str(BASE_DIR / "data" / "datasets" / "argus_audit_v1"),
+        default=str(default_dataset),
         help="Direktori dataset Roboflow yang telah diunduh"
     )
     parser.add_argument(
         "--base-model",
         type=str,
-        default=str(BASE_DIR / "models" / "digit_ocr_detector.pt"),
-        help="Path model base weights (best.pt sebelumnya)"
+        default=str(default_base),
+        help="Path model base weights (best.pt / v4 sebelumnya)"
+    )
+    parser.add_argument(
+        "--version",
+        type=str,
+        default="v5",
+        help="Tag versi model baru (default: v5)"
     )
     parser.add_argument(
         "--epochs",
@@ -222,6 +243,7 @@ def main():
         base_model_path=Path(args.base_model),
         dataset_yaml=yaml_path,
         output_model_dir=BASE_DIR / "models",
+        version_tag=args.version,
         epochs=args.epochs,
         batch_size=args.batch
     )
