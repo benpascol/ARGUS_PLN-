@@ -601,23 +601,52 @@ class ArgusVisionPipeline:
                 "conf": float(counter_boxes.conf[0].cpu().numpy())
             }]
 
+        # CONTAINER PREFERENCE / SUB-BOX SUPPRESSION (Kasus 506 & Mika Berkerut)
+        # Menghindari jebakan serpihan krop sempit (aspect < 3.2) mengalahkan krop utuh lebar (aspect >= 3.0)
+        # hanya karena margin confidence 0.001 saat ada lipatan mika / bayangan vertikal.
+        suppressed_sub_idx = set()
+        for i, b_sub in enumerate(boxes_list):
+            box_a = b_sub["box"]
+            w_a = box_a[2] - box_a[0]
+            h_a = box_a[3] - box_a[1]
+            aspect_a = w_a / h_a if h_a > 0 else 0
+            for j, b_parent in enumerate(boxes_list):
+                if i == j:
+                    continue
+                box_b = b_parent["box"]
+                w_b = box_b[2] - box_b[0]
+                h_b = box_b[3] - box_b[1]
+                aspect_b = w_b / h_b if h_b > 0 else 0
+
+                if aspect_b >= 3.0 and aspect_a < 3.2:
+                    inter_x1 = max(box_a[0], box_b[0])
+                    inter_x2 = min(box_a[2], box_b[2])
+                    overlap_w = max(0.0, inter_x2 - inter_x1)
+                    if (overlap_w / max(1.0, w_a) >= 0.75) and (b_parent["conf"] >= b_sub["conf"] - 0.15):
+                        suppressed_sub_idx.add(i)
+                        break
+
+        clean_boxes = [b for idx, b in enumerate(boxes_list) if idx not in suppressed_sub_idx]
+        if not clean_boxes:
+            clean_boxes = boxes_list
+
         # HORIZONTAL COUNTER STITCHING / MERGING (Kasus 133 - Krop Terbelah Separuh oleh Ranting/Tali)
         merged_boxes = []
         used_idx = set()
-        for i in range(len(boxes_list)):
+        for i in range(len(clean_boxes)):
             if i in used_idx:
                 continue
-            b1 = boxes_list[i]["box"]
-            c1 = boxes_list[i]["conf"]
+            b1 = clean_boxes[i]["box"]
+            c1 = clean_boxes[i]["conf"]
             w1, h1 = b1[2] - b1[0], b1[3] - b1[1]
             yc1 = (b1[1] + b1[3]) / 2.0
             m_box = list(b1)
             m_conf = c1
-            for j in range(i + 1, len(boxes_list)):
+            for j in range(i + 1, len(clean_boxes)):
                 if j in used_idx:
                     continue
-                b2 = boxes_list[j]["box"]
-                c2 = boxes_list[j]["conf"]
+                b2 = clean_boxes[j]["box"]
+                c2 = clean_boxes[j]["conf"]
                 w2, h2 = b2[2] - b2[0], b2[3] - b2[1]
                 yc2 = (b2[1] + b2[3]) / 2.0
 
@@ -627,7 +656,7 @@ class ArgusVisionPipeline:
                 right_box = b2 if b1[0] < b2[0] else b1
                 h_gap = right_box[0] - left_box[2]
 
-                if is_same_row and h_ratio > 0.55 and -15.0 <= h_gap <= max(35.0, 0.60 * max(w1, w2)):
+                if is_same_row and h_ratio > 0.55 and -25.0 <= h_gap <= max(35.0, 0.60 * max(w1, w2)):
                     comb_w = max(b1[2], b2[2]) - min(b1[0], b2[0])
                     comb_h = max(b1[3], b2[3]) - min(b1[1], b2[1])
                     comb_aspect = comb_w / comb_h if comb_h > 0 else 0
@@ -641,8 +670,15 @@ class ArgusVisionPipeline:
             used_idx.add(i)
             merged_boxes.append({"box": m_box, "conf": m_conf})
 
-        # Ambil kotak counter terbaik setelah penggabungan
-        best_cand = max(merged_boxes, key=lambda b: b["conf"])
+        # Ambil kotak counter terbaik (prioritaskan aspect ratio standar 3.0-6.5 jika conf bersaing)
+        def score_cand(cand):
+            cw = cand["box"][2] - cand["box"][0]
+            ch = cand["box"][3] - cand["box"][1]
+            caspect = cw / ch if ch > 0 else 0
+            bonus = 0.08 if (3.0 <= caspect <= 6.5) else 0.0
+            return cand["conf"] + bonus
+
+        best_cand = max(merged_boxes, key=score_cand)
         x1, y1, x2, y2 = best_cand["box"]
         counter_conf = float(best_cand["conf"])
         box_w = x2 - x1
