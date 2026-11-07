@@ -100,7 +100,8 @@ def run_batch_audit(
     save_mode: str = "focused",
     harvest: bool = False,
     harvest_dir: Optional[Path] = None,
-    digit_model_path: Optional[Path] = None
+    digit_model_path: Optional[Path] = None,
+    checkpoints: Optional[list] = None
 ):
     print("=" * 85)
     print("⚡ PROJECT ARGUS - BATCH AUDIT EXCEL ENGINE (V2.5 AUTO-HARVEST EDITION)")
@@ -599,6 +600,22 @@ def run_batch_audit(
         harvest_tag = "📦 [DIPANEN]" if is_harvested else ""
         print(f"{idx:<4} | {item['idpel']:<13} | {stan_lapangan[:7]:<7} | {raw_display[:8]:<8} | {stan_argus[:8]:<8} | {status_disp:<18} | {diagnosa_detail[:30]:<30} | {latency_ms:>5} ms {harvest_tag}")
 
+        # Checkpoint export untuk benchmark multi-skala (misal: 2500, 5000)
+        if checkpoints and idx in checkpoints:
+            cp_path = output_excel.parent / f"Audit_LBKB_Result_{idx}_Samples_V5_Production.xlsx"
+            cp_time_s = round(time.time() - t0_all, 2)
+            export_audit_excel_file(
+                output_excel=cp_path,
+                audit_results=list(audit_results),
+                total_found=idx,
+                stats=dict(stats),
+                total_time_s=cp_time_s,
+                annotated_dir=annotated_dir,
+                harvest=harvest,
+                harvest_dir=harvest_dir
+            )
+            print(f"\n💾 [MILESTONE BENCHMARK DISIMPAN] Laporan {idx} sampel diekspor ke: {cp_path.name}\n")
+
     total_time_s = round(time.time() - t0_all, 2)
     avg_latency = round(stats["total_latency_ms"] / total_found, 1)
 
@@ -623,6 +640,28 @@ def run_batch_audit(
     # -----------------------------------------------------------------
     # MENULIS FILE OUTPUT EXCEL DENGAN DUAL HYPERLINK
     # -----------------------------------------------------------------
+    export_audit_excel_file(
+        output_excel=output_excel,
+        audit_results=audit_results,
+        total_found=total_found,
+        stats=stats,
+        total_time_s=total_time_s,
+        annotated_dir=annotated_dir,
+        harvest=harvest,
+        harvest_dir=harvest_dir
+    )
+
+
+def export_audit_excel_file(
+    output_excel: Path,
+    audit_results: list,
+    total_found: int,
+    stats: dict,
+    total_time_s: float,
+    annotated_dir: Optional[Path] = None,
+    harvest: bool = False,
+    harvest_dir: Optional[Path] = None
+):
     print(f"\n📝 Menyusun Laporan Audit Excel Ber-Hyperlink: {output_excel} ...")
     output_excel.parent.mkdir(parents=True, exist_ok=True)
 
@@ -722,7 +761,6 @@ def run_batch_audit(
     # BARIS 7 KE BAWAH: DATA HASIL AUDIT PER PELANGGAN
     # -----------------------------------------------------------------
     for row_idx, res in enumerate(audit_results, 7):
-        # Format Formula Hyperlink Windows
         link_orig_formula = f'=HYPERLINK("{str(res["abs_photo_path"])}", "📷 Buka Foto Asli")'
         if res["ai_annotated_file"] and res["ai_annotated_file"].is_file():
             link_ai_formula = f'=HYPERLINK("{str(res["ai_annotated_file"])}", "🤖 Buka Hasil AI")'
@@ -779,13 +817,11 @@ def run_batch_audit(
             cell.alignment = columns[col_idx - 1][2]
             cell.border = THIN_BORDER
 
-            # Penandaan Warna Sel Kunci (RAW DISPLAY, STAN ARGUS, SELISIH, VONIS, DIAGNOSA)
             if row_fill and col_idx in (7, 8, 9, 10, 11):
                 cell.fill = row_fill
                 if col_idx in (10, 11):
                     cell.font = FONT_BOLD
 
-            # Khusus Kolom Hyperlink: Beri Gaya Link Biru Bergaris Bawah
             if col_idx in (12, 13, 14) and str(val).startswith("=HYPERLINK"):
                 cell.font = FONT_LINK
 
@@ -796,7 +832,7 @@ def run_batch_audit(
     print(f"\n🎉 SUKSES! File Laporan Audit Resmi Ber-Hyperlink tersimpan di:\n👉 {output_excel}")
     if annotated_dir:
         print(f"🖼️ Foto hasil crop & kotak deteksi tersimpan di:\n👉 {annotated_dir}")
-    if harvest and stats["HARVESTED"] > 0:
+    if harvest and stats.get("HARVESTED", 0) > 0:
         print(f"📦 Hasil Auto-Harvest Anomali ({stats['HARVESTED']} pasang gambar & label siap Roboflow) tersimpan di:\n👉 {harvest_dir}")
 
 
@@ -844,7 +880,7 @@ def main():
         "--model-digit",
         type=str,
         default=None,
-        help="Path file bobot model digit (default: digit_ocr_detector_v4.pt jika ada)"
+        help="Path file bobot model digit (default: digit_ocr_detector_v5.pt jika ada)"
     )
     parser.add_argument(
         "--harvest",
@@ -859,6 +895,13 @@ def main():
         help="Folder penyimpanan pasangan crop .jpg dan label .txt untuk Roboflow"
     )
 
+    parser.add_argument(
+        "--checkpoints",
+        type=str,
+        default=None,
+        help="Daftar milestone sampel untuk ekspor otomatis terpisah (contoh: '2500,5000')"
+    )
+
     args = parser.parse_args()
 
     limit = args.limit
@@ -868,6 +911,14 @@ def main():
         out_excel = BASE_DIR / "data" / "audit_results" / f"Audit_LBKB_Result_{limit}_Samples.xlsx"
 
     digit_model = Path(args.model_digit) if args.model_digit else None
+
+    # Parse checkpoints
+    checkpoints_list = None
+    if args.checkpoints:
+        try:
+            checkpoints_list = [int(x.strip()) for x in args.checkpoints.split(",") if x.strip().isdigit()]
+        except Exception:
+            checkpoints_list = None
 
     save_mode = "none" if args.no_crops else args.save_mode
     run_batch_audit(
@@ -879,7 +930,8 @@ def main():
         save_mode=save_mode,
         harvest=args.harvest,
         harvest_dir=Path(args.harvest_dir) if args.harvest_dir else None,
-        digit_model_path=digit_model
+        digit_model_path=digit_model,
+        checkpoints=checkpoints_list
     )
 
 
