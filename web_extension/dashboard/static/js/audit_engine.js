@@ -270,6 +270,42 @@ function closeBatchCompleteModal() {
     if (modal) modal.style.display = 'none';
 }
 
+/**
+ * Penanganan Tombol Keyboard (Enter) ala Excel:
+ * Menyelesaikan edit, menghitung selisih & vonis seketika,
+ * lalu otomatis memindahkan fokus kursor ke baris berikutnya.
+ */
+function handleRowKeydown(event, rowIndex, fieldType) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        const target = event.target;
+        target.blur(); // Blur otomatis memicu event onchange jika ada perubahan
+
+        if (fieldType === 'argus') {
+            onArgusChange(rowIndex);
+        } else {
+            onFieldChange(rowIndex);
+        }
+
+        // Pindahkan fokus ke baris berikutnya (Excel-like experience)
+        const nextRow = document.getElementById(`row-${rowIndex + 1}`);
+        if (nextRow) {
+            let nextInput = null;
+            if (fieldType === 'argus') {
+                nextInput = nextRow.querySelector('.cell-argus');
+            } else if (fieldType === 'stan_lap') {
+                nextInput = nextRow.querySelectorAll('.input-table')[0];
+            } else if (fieldType === 'notes') {
+                nextInput = nextRow.querySelector('.input-notes');
+            }
+            if (nextInput) {
+                nextInput.focus();
+                nextInput.select();
+            }
+        }
+    }
+}
+
 function onArgusChange(rowIndex) {
     const row = document.getElementById(`row-${rowIndex}`);
     if (!row) return;

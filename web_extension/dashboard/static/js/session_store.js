@@ -146,11 +146,11 @@ async function restoreSessionOnStartup() {
                         <td class="idpel-code">${data.idpel}</td>
                         <td><strong>${data.nama}</strong></td>
                         <td>${data.tarif_daya}</td>
-                        <td><input type="text" class="input-table" value="${data.stan_lapangan}" oninput="onFieldChange(${i})"></td>
+                        <td><input type="text" class="input-table" value="${data.stan_lapangan}" onchange="onFieldChange(${i})" onkeydown="handleRowKeydown(event, ${i}, 'stan_lap')"></td>
                         <td><img class="photo-thumbnail" src="${resolvedSrc}" onerror="if(!this.src.includes('/sample-photo/')){this.src='/sample-photo/' + encodeURIComponent('${data.photo_name}')}" onclick="inspectPhoto(${i})" alt="Foto Meter"></td>
                         <td class="cell-raw" style="font-family:'JetBrains Mono';">${data.raw_display}</td>
                         <td>
-                            <input type="text" class="input-table ai-field cell-argus" value="${data.stan_argus}" oninput="onArgusChange(${i})">
+                            <input type="text" class="input-table ai-field cell-argus" value="${data.stan_argus}" onchange="onArgusChange(${i})" onkeydown="handleRowKeydown(event, ${i}, 'argus')">
                             <div class="edit-badge-slot">${data.is_edited ? '<span class="tag-manual"><i class="fas fa-pen"></i> Dikoreksi</span>' : ''}</div>
                         </td>
                         <td class="cell-diff" style="font-family:'JetBrains Mono'; font-weight:700;">${data.selisih}</td>
@@ -164,7 +164,7 @@ async function restoreSessionOnStartup() {
                                 <option value="TRIAGE" ${data.verdict_select === 'TRIAGE' ? 'selected' : ''}>Perlu Tinjau Ulang</option>
                             </select>
                         </td>
-                        <td><input type="text" class="input-notes" placeholder="Catatan auditor..." value="${data.notes || ''}" oninput="onFieldChange(${i})"></td>
+                        <td><input type="text" class="input-notes" placeholder="Catatan auditor..." value="${data.notes || ''}" onchange="onFieldChange(${i})" onkeydown="handleRowKeydown(event, ${i}, 'notes')"></td>
                         <td class="cell-lat" style="font-family:'JetBrains Mono'; font-size:11.5px;">${data.latensi}</td>
                         <td><button class="btn-row-audit" onclick="auditSingleRow(${i})"><i class="fas fa-bolt"></i> Audit</button></td>
                     `;

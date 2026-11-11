@@ -287,13 +287,13 @@ function appendFilesToTable(files) {
             <td class="idpel-code">${idpel}</td>
             <td><strong>${namaDisplay}</strong></td>
             <td>${tarifDayaDisplay}</td>
-            <td><input type="text" class="input-table" value="${stanLapValue}" oninput="onFieldChange(${rowIdx})"></td>
+            <td><input type="text" class="input-table" value="${stanLapValue}" onchange="onFieldChange(${rowIdx})" onkeydown="handleRowKeydown(event, ${rowIdx}, 'stan_lap')"></td>
             <td>
                 <img class="photo-thumbnail" src="${objectUrl}" onerror="if(!this.src.includes('/sample-photo/')){this.src='/sample-photo/' + encodeURIComponent('${file.name}')}" onclick="inspectPhoto(${rowIdx})" alt="Foto Meter">
             </td>
             <td class="cell-raw" style="font-family:'JetBrains Mono';">-</td>
             <td>
-                <input type="text" class="input-table ai-field cell-argus" value="-" oninput="onArgusChange(${rowIdx})">
+                <input type="text" class="input-table ai-field cell-argus" value="-" onchange="onArgusChange(${rowIdx})" onkeydown="handleRowKeydown(event, ${rowIdx}, 'argus')">
                 <div class="edit-badge-slot"></div>
             </td>
             <td class="cell-diff" style="font-family:'JetBrains Mono'; font-weight:700;">-</td>
@@ -307,7 +307,7 @@ function appendFilesToTable(files) {
                     <option value="TRIAGE">Perlu Tinjau Ulang</option>
                 </select>
             </td>
-            <td><input type="text" class="input-notes" placeholder="Catatan auditor..." oninput="onFieldChange(${rowIdx})"></td>
+            <td><input type="text" class="input-notes" placeholder="Catatan auditor..." onchange="onFieldChange(${rowIdx})" onkeydown="handleRowKeydown(event, ${rowIdx}, 'notes')"></td>
             <td class="cell-lat" style="font-family:'JetBrains Mono'; font-size:11.5px;">-</td>
             <td><button class="btn-row-audit" onclick="auditSingleRow(${rowIdx})"><i class="fas fa-bolt"></i> Audit</button></td>
         `;
