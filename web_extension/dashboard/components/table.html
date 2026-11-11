@@ -20,184 +20,32 @@
                 </tr>
             </thead>
             <tbody id="table-body">
-                <!-- Sample 1 -->
-                <tr id="row-0" data-idpel="514500001376" data-photo="202601-514500001376-L.jpg" data-status="PENDING">
-                    <td>1</td>
-                    <td class="idpel-code">514500001376</td>
-                    <td><strong>SAMAN</strong></td>
-                    <td>R1 / 450 VA</td>
-                    <td>
-                        <input type="text" class="input-table" value="1" oninput="onFieldChange(0)">
-                    </td>
-                    <td>
-                        <img class="photo-thumbnail" src="/sample-photo/202601-514500001376-L.jpg" onclick="inspectPhoto(0)">
-                    </td>
-                    <td class="cell-raw" style="font-family:'JetBrains Mono';">-</td>
-                    <td>
-                        <input type="text" class="input-table ai-field cell-argus" value="-" oninput="onArgusChange(0)">
-                        <div class="edit-badge-slot"></div>
-                    </td>
-                    <td class="cell-diff" style="font-family:'JetBrains Mono'; font-weight:700;">-</td>
-                    <td>
-                        <select class="select-status" onchange="onStatusSelectChange(0, this)">
-                            <option value="PENDING" selected>Belum Diaudit</option>
-                            <option value="MATCH">Sesuai Match</option>
-                            <option value="ROLLING">Rolling Digit</option>
-                            <option value="DIFF">Beda Stand</option>
-                            <option value="NIHIL">Bukan KWH / Nihil</option>
-                            <option value="TRIAGE">Perlu Tinjau Ulang</option>
-                        </select>
-                    </td>
-                    <td>
-                        <input type="text" class="input-notes" placeholder="Catatan auditor..." oninput="onFieldChange(0)">
-                    </td>
-                    <td class="cell-lat" style="font-family:'JetBrains Mono'; font-size:11.5px;">-</td>
-                    <td>
-                        <button class="btn-row-audit" onclick="auditSingleRow(0)"><i class="fas fa-bolt"></i> Audit</button>
-                    </td>
-                </tr>
-                <!-- Sample 2 -->
-                <tr id="row-1" data-idpel="514500003050" data-photo="202601-514500003050-L.jpg" data-status="PENDING">
-                    <td>2</td>
-                    <td class="idpel-code">514500003050</td>
-                    <td><strong>ROCHMAD</strong></td>
-                    <td>R1M / 900 VA</td>
-                    <td>
-                        <input type="text" class="input-table" value="7501" oninput="onFieldChange(1)">
-                    </td>
-                    <td>
-                        <img class="photo-thumbnail" src="/sample-photo/202601-514500003050-L.jpg" onclick="inspectPhoto(1)">
-                    </td>
-                    <td class="cell-raw" style="font-family:'JetBrains Mono';">-</td>
-                    <td>
-                        <input type="text" class="input-table ai-field cell-argus" value="-" oninput="onArgusChange(1)">
-                        <div class="edit-badge-slot"></div>
-                    </td>
-                    <td class="cell-diff" style="font-family:'JetBrains Mono'; font-weight:700;">-</td>
-                    <td>
-                        <select class="select-status" onchange="onStatusSelectChange(1, this)">
-                            <option value="PENDING" selected>Belum Diaudit</option>
-                            <option value="MATCH">Sesuai Match</option>
-                            <option value="ROLLING">Rolling Digit</option>
-                            <option value="DIFF">Beda Stand</option>
-                            <option value="NIHIL">Bukan KWH / Nihil</option>
-                            <option value="TRIAGE">Perlu Tinjau Ulang</option>
-                        </select>
-                    </td>
-                    <td>
-                        <input type="text" class="input-notes" placeholder="Catatan auditor..." oninput="onFieldChange(1)">
-                    </td>
-                    <td class="cell-lat" style="font-family:'JetBrains Mono'; font-size:11.5px;">-</td>
-                    <td>
-                        <button class="btn-row-audit" onclick="auditSingleRow(1)"><i class="fas fa-bolt"></i> Audit</button>
-                    </td>
-                </tr>
-                <!-- Sample 3 -->
-                <tr id="row-2" data-idpel="514500003587" data-photo="202601-514500003587-L.jpg" data-status="PENDING">
-                    <td>3</td>
-                    <td class="idpel-code">514500003587</td>
-                    <td><strong>KANT URUSAN AGAMA</strong></td>
-                    <td>P1 / 900 VA</td>
-                    <td>
-                        <input type="text" class="input-table" value="22962" oninput="onFieldChange(2)">
-                    </td>
-                    <td>
-                        <img class="photo-thumbnail" src="/sample-photo/202601-514500003587-L.jpg" onclick="inspectPhoto(2)">
-                    </td>
-                    <td class="cell-raw" style="font-family:'JetBrains Mono';">-</td>
-                    <td>
-                        <input type="text" class="input-table ai-field cell-argus" value="-" oninput="onArgusChange(2)">
-                        <div class="edit-badge-slot"></div>
-                    </td>
-                    <td class="cell-diff" style="font-family:'JetBrains Mono'; font-weight:700;">-</td>
-                    <td>
-                        <select class="select-status" onchange="onStatusSelectChange(2, this)">
-                            <option value="PENDING" selected>Belum Diaudit</option>
-                            <option value="MATCH">Sesuai Match</option>
-                            <option value="ROLLING">Rolling Digit</option>
-                            <option value="DIFF">Beda Stand</option>
-                            <option value="NIHIL">Bukan KWH / Nihil</option>
-                            <option value="TRIAGE">Perlu Tinjau Ulang</option>
-                        </select>
-                    </td>
-                    <td>
-                        <input type="text" class="input-notes" placeholder="Catatan auditor..." oninput="onFieldChange(2)">
-                    </td>
-                    <td class="cell-lat" style="font-family:'JetBrains Mono'; font-size:11.5px;">-</td>
-                    <td>
-                        <button class="btn-row-audit" onclick="auditSingleRow(2)"><i class="fas fa-bolt"></i> Audit</button>
-                    </td>
-                </tr>
-                <!-- Sample 4 -->
-                <tr id="row-3" data-idpel="514500003616" data-photo="202601-514500003616-L.jpg" data-status="PENDING">
-                    <td>4</td>
-                    <td class="idpel-code">514500003616</td>
-                    <td><strong>USMAN</strong></td>
-                    <td>R1 / 450 VA</td>
-                    <td>
-                        <input type="text" class="input-table" value="5013" oninput="onFieldChange(3)">
-                    </td>
-                    <td>
-                        <img class="photo-thumbnail" src="/sample-photo/202601-514500003616-L.jpg" onclick="inspectPhoto(3)">
-                    </td>
-                    <td class="cell-raw" style="font-family:'JetBrains Mono';">-</td>
-                    <td>
-                        <input type="text" class="input-table ai-field cell-argus" value="-" oninput="onArgusChange(3)">
-                        <div class="edit-badge-slot"></div>
-                    </td>
-                    <td class="cell-diff" style="font-family:'JetBrains Mono'; font-weight:700;">-</td>
-                    <td>
-                        <select class="select-status" onchange="onStatusSelectChange(3, this)">
-                            <option value="PENDING" selected>Belum Diaudit</option>
-                            <option value="MATCH">Sesuai Match</option>
-                            <option value="ROLLING">Rolling Digit</option>
-                            <option value="DIFF">Beda Stand</option>
-                            <option value="NIHIL">Bukan KWH / Nihil</option>
-                            <option value="TRIAGE">Perlu Tinjau Ulang</option>
-                        </select>
-                    </td>
-                    <td>
-                        <input type="text" class="input-notes" placeholder="Catatan auditor..." oninput="onFieldChange(3)">
-                    </td>
-                    <td class="cell-lat" style="font-family:'JetBrains Mono'; font-size:11.5px;">-</td>
-                    <td>
-                        <button class="btn-row-audit" onclick="auditSingleRow(3)"><i class="fas fa-bolt"></i> Audit</button>
-                    </td>
-                </tr>
-                <!-- Sample 5 -->
-                <tr id="row-4" data-idpel="514500004079" data-photo="202601-514500004079-L.jpg" data-status="PENDING">
-                    <td>5</td>
-                    <td class="idpel-code">514500004079</td>
-                    <td><strong>H NURCHASAN</strong></td>
-                    <td>R1 / 450 VA</td>
-                    <td>
-                        <input type="text" class="input-table" value="14244" oninput="onFieldChange(4)">
-                    </td>
-                    <td>
-                        <img class="photo-thumbnail" src="/sample-photo/202601-514500004079-L.jpg" onclick="inspectPhoto(4)">
-                    </td>
-                    <td class="cell-raw" style="font-family:'JetBrains Mono';">-</td>
-                    <td>
-                        <input type="text" class="input-table ai-field cell-argus" value="-" oninput="onArgusChange(4)">
-                        <div class="edit-badge-slot"></div>
-                    </td>
-                    <td class="cell-diff" style="font-family:'JetBrains Mono'; font-weight:700;">-</td>
-                    <td>
-                        <select class="select-status" onchange="onStatusSelectChange(4, this)">
-                            <option value="PENDING" selected>Belum Diaudit</option>
-                            <option value="MATCH">Sesuai Match</option>
-                            <option value="ROLLING">Rolling Digit</option>
-                            <option value="DIFF">Beda Stand</option>
-                            <option value="NIHIL">Bukan KWH / Nihil</option>
-                            <option value="TRIAGE">Perlu Tinjau Ulang</option>
-                        </select>
-                    </td>
-                    <td>
-                        <input type="text" class="input-notes" placeholder="Catatan auditor..." oninput="onFieldChange(4)">
-                    </td>
-                    <td class="cell-lat" style="font-family:'JetBrains Mono'; font-size:11.5px;">-</td>
-                    <td>
-                        <button class="btn-row-audit" onclick="auditSingleRow(4)"><i class="fas fa-bolt"></i> Audit</button>
+                <!-- EMPTY STATE & DROPZONE -->
+                <tr id="empty-state-row">
+                    <td colspan="13" class="empty-state-td">
+                        <div class="empty-dropzone" id="empty-dropzone" onclick="document.getElementById('folder-input').click()">
+                            <div class="empty-icon-circle">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <h3 class="empty-title">Antrean Audit Masih Kosong</h3>
+                            <p class="empty-subtitle">
+                                Seret dan jatuhkan (<strong>Drag & Drop</strong>) folder atau berkas foto meteran ke sini, atau klik tombol di bawah untuk memulai:
+                            </p>
+                            <div class="empty-actions">
+                                <button type="button" class="btn btn-upload-folder" onclick="event.stopPropagation(); document.getElementById('folder-input').click()">
+                                    <i class="fas fa-folder-plus"></i> Unggah Folder Foto
+                                </button>
+                                <button type="button" class="btn btn-upload-file" onclick="event.stopPropagation(); document.getElementById('file-input').click()">
+                                    <i class="fas fa-file-image"></i> Tambah File Foto
+                                </button>
+                                <button type="button" class="btn btn-upload-excel" onclick="event.stopPropagation(); document.getElementById('excel-input').click()">
+                                    <i class="fas fa-file-excel"></i> Impor Rekap ACMT (.xlsx / .csv)
+                                </button>
+                            </div>
+                            <div class="empty-hint">
+                                <i class="fas fa-shield-alt" style="color:var(--pln-blue);"></i> Dilengkapi Jaring Pengaman Anti-Duplikasi Foto & Auto-Pairing Data Pelanggan
+                            </div>
+                        </div>
                     </td>
                 </tr>
             </tbody>
