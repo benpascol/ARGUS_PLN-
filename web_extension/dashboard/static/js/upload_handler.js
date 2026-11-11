@@ -227,7 +227,9 @@ function resolveDuplicateAction(action) {
             const r = item.existingRow;
             const photoImg = r.querySelector('.photo-thumbnail');
             const objectUrl = URL.createObjectURL(item.file);
+            r._photoBlob = item.file;
             photoImg.src = objectUrl;
+            photoImg.setAttribute('onerror', `if(!this.src.includes('/sample-photo/')){this.src='/sample-photo/' + encodeURIComponent('${item.file.name}')}`);
             r.setAttribute('data-photo', item.file.name);
             r.setAttribute('data-status', 'PENDING');
             r.querySelector('.cell-raw').textContent = '-';
@@ -275,6 +277,7 @@ function appendFilesToTable(files) {
 
         const newRow = document.createElement('tr');
         newRow.id = `row-${rowIdx}`;
+        newRow._photoBlob = file;
         newRow.setAttribute('data-idpel', idpel);
         newRow.setAttribute('data-photo', file.name);
         newRow.setAttribute('data-status', 'PENDING');
@@ -286,7 +289,7 @@ function appendFilesToTable(files) {
             <td>${tarifDayaDisplay}</td>
             <td><input type="text" class="input-table" value="${stanLapValue}" oninput="onFieldChange(${rowIdx})"></td>
             <td>
-                <img class="photo-thumbnail" src="${objectUrl}" onclick="inspectPhoto(${rowIdx})" alt="Foto Meter">
+                <img class="photo-thumbnail" src="${objectUrl}" onerror="if(!this.src.includes('/sample-photo/')){this.src='/sample-photo/' + encodeURIComponent('${file.name}')}" onclick="inspectPhoto(${rowIdx})" alt="Foto Meter">
             </td>
             <td class="cell-raw" style="font-family:'JetBrains Mono';">-</td>
             <td>

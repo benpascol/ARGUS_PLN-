@@ -135,12 +135,29 @@ def get_favicon():
         return FileResponse(str(fav_path), media_type="image/svg+xml")
     raise HTTPException(status_code=404, detail="Favicon tidak ditemukan.")
 
-@app.get("/sample-photo/{filename}")
+@app.get("/sample-photo/{filename:path}")
 def get_sample_photo(filename: str):
-    """Menyajikan foto sampel meteran asli dari Docs/DOkumentasi LBKB."""
-    photo_path = BASE_DIR / "Docs" / "DOkumentasi LBKB" / filename
+    """Menyajikan foto sampel meteran asli dari Docs/DOkumentasi LBKB dengan fallback pencarian cerdas."""
+    photo_dir = BASE_DIR / "Docs" / "DOkumentasi LBKB"
+    photo_path = photo_dir / filename
     if not photo_path.is_file():
-        raise HTTPException(status_code=404, detail=f"Foto {filename} tidak ditemukan.")
+        clean_name = Path(filename).name
+        photo_path = photo_dir / clean_name
+    if not photo_path.is_file():
+        # Coba wildcard jika ada prefix/suffix
+        matched = list(photo_dir.glob(f"*{clean_name}*"))
+        if not matched and "-" in clean_name:
+            # Ekstrak idpel dari format seperti 202601-514500001376-L.jpg
+            parts = clean_name.replace(".jpg", "").replace(".jpeg", "").replace(".png", "").split("-")
+            for p in parts:
+                if len(p) >= 10 and p.isdigit():
+                    matched = list(photo_dir.glob(f"*{p}*.jpg"))
+                    if matched:
+                        break
+        if matched and matched[0].is_file():
+            photo_path = matched[0]
+        else:
+            raise HTTPException(status_code=404, detail=f"Foto {filename} tidak ditemukan di {photo_dir}.")
     return FileResponse(str(photo_path), media_type="image/jpeg")
 
 @app.post("/predict")

@@ -25,15 +25,35 @@ function extractIntegerStand(rawVal) {
     return parseInt(s, 10);
 }
 
-async function imageToBase64(url) {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-    });
+async function imageToBase64(url, fallbackFilename) {
+    try {
+        if (!url || url.startsWith('blob:null')) throw new Error("Invalid blob URL");
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const blob = await response.blob();
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    } catch (err) {
+        // Fallback tangguh ke server endpoint jika blob URL hangus setelah reload (F5 / Ctrl+F5)
+        if (fallbackFilename) {
+            const fbUrl = `/sample-photo/${encodeURIComponent(fallbackFilename)}`;
+            const fbResp = await fetch(fbUrl);
+            if (fbResp.ok) {
+                const blob = await fbResp.blob();
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+            }
+        }
+        throw err;
+    }
 }
 
 async function auditSingleRow(rowIndex) {
@@ -41,6 +61,7 @@ async function auditSingleRow(rowIndex) {
     if (!row) return;
 
     const photoImg = row.querySelector('.photo-thumbnail');
+    const photoName = row.getAttribute('data-photo') || '';
     const stanLapInput = row.querySelectorAll('.input-table')[0];
     const stanArgusInput = row.querySelector('.cell-argus');
     const cellRaw = row.querySelector('.cell-raw');
@@ -53,13 +74,13 @@ async function auditSingleRow(rowIndex) {
     btnAudit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Audit...';
 
     try {
-        const b64 = await imageToBase64(photoImg.src);
+        const b64 = await imageToBase64(photoImg ? photoImg.src : '', photoName);
         const resp = await fetch('/predict-base64', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 image_base64: b64,
-                filename: row.getAttribute('data-photo')
+                filename: photoName
             })
         });
 

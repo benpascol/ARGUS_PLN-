@@ -41,11 +41,13 @@ async function persistCurrentSession() {
         for (let i = 0; i < rows.length; i++) {
             const r = rows[i];
             const img = r.querySelector('.photo-thumbnail');
+            const photoName = r.getAttribute('data-photo') || '';
             sessionData.push({
                 index: i,
                 idpel: r.getAttribute('data-idpel') || '',
-                photo_name: r.getAttribute('data-photo') || '',
-                photo_src: img ? img.src : '',
+                photo_name: photoName,
+                photo_blob: r._photoBlob || null,
+                photo_src: (img && img.src && !img.src.startsWith('blob:')) ? img.src : `/sample-photo/${encodeURIComponent(photoName)}`,
                 nama: r.querySelector('strong') ? r.querySelector('strong').textContent : '',
                 tarif_daya: r.cells[3] ? r.cells[3].textContent : '',
                 stan_lapangan: r.querySelectorAll('.input-table')[0] ? r.querySelectorAll('.input-table')[0].value : '',
@@ -125,13 +127,27 @@ async function restoreSessionOnStartup() {
                         tr.classList.add('row-edited');
                     }
 
+                    let resolvedSrc = '';
+                    if (data.photo_blob) {
+                        try {
+                            tr._photoBlob = data.photo_blob;
+                            resolvedSrc = URL.createObjectURL(data.photo_blob);
+                        } catch (e) {
+                            resolvedSrc = `/sample-photo/${encodeURIComponent(data.photo_name)}`;
+                        }
+                    } else if (data.photo_src && !data.photo_src.startsWith('blob:')) {
+                        resolvedSrc = data.photo_src;
+                    } else {
+                        resolvedSrc = `/sample-photo/${encodeURIComponent(data.photo_name)}`;
+                    }
+
                     tr.innerHTML = `
                         <td>${i + 1}</td>
                         <td class="idpel-code">${data.idpel}</td>
                         <td><strong>${data.nama}</strong></td>
                         <td>${data.tarif_daya}</td>
                         <td><input type="text" class="input-table" value="${data.stan_lapangan}" oninput="onFieldChange(${i})"></td>
-                        <td><img class="photo-thumbnail" src="${data.photo_src}" onclick="inspectPhoto(${i})" alt="Foto Meter"></td>
+                        <td><img class="photo-thumbnail" src="${resolvedSrc}" onerror="if(!this.src.includes('/sample-photo/')){this.src='/sample-photo/' + encodeURIComponent('${data.photo_name}')}" onclick="inspectPhoto(${i})" alt="Foto Meter"></td>
                         <td class="cell-raw" style="font-family:'JetBrains Mono';">${data.raw_display}</td>
                         <td>
                             <input type="text" class="input-table ai-field cell-argus" value="${data.stan_argus}" oninput="onArgusChange(${i})">
