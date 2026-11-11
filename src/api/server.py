@@ -180,6 +180,134 @@ async def predict_base64(payload: Base64PredictRequest):
 
     return JSONResponse(content=sanitize_for_json(result))
 
+@app.post("/api/parse-acmt-excel")
+async def parse_acmt_excel_endpoint(file: UploadFile = File(...)):
+    """
+    Solusi 2: Engine Parser Rekap ACMT / LBKB Excel (.xlsx, .xls) & CSV.
+    Mengekstrak IDPEL, NAMA, TARIF, DAYA, STAN_BACA / STAN_LAPANGAN,
+    dan NAMA FILE untuk mekanisme pemasangan otomatis (auto-pairing).
+    Lead Engineer: Pascol
+    """
+    import re
+    import csv
+
+    filename = file.filename or ""
+    lower_fn = filename.lower()
+    if not (lower_fn.endswith(".xlsx") or lower_fn.endswith(".xls") or lower_fn.endswith(".csv")):
+        raise HTTPException(status_code=400, detail="Format berkas harus .xlsx, .xls, atau .csv.")
+
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="Berkas kosong.")
+
+    records = []
+    detected_cols = {}
+
+    try:
+        if lower_fn.endswith(".csv"):
+            text_data = content.decode("utf-8", errors="replace")
+            sample_chunk = text_data[:4096]
+            try:
+                dialect = csv.Sniffer().sniff(sample_chunk, delimiters=",;\t|")
+                delimiter = dialect.delimiter
+            except Exception:
+                delimiter = ";" if ";" in sample_chunk else ","
+
+            reader = csv.reader(io.StringIO(text_data), delimiter=delimiter)
+            all_rows = list(reader)
+        else:
+            import openpyxl
+            wb = openpyxl.load_workbook(io.BytesIO(content), read_only=True, data_only=True)
+            sheet = wb.active
+            all_rows = list(sheet.iter_rows(values_only=True))
+
+        header_row = None
+        header_idx = -1
+
+        for idx, row in enumerate(all_rows[:15]):
+            if not row or all(v is None or str(v).strip() == "" for v in row):
+                continue
+            row_str = [str(v).strip().upper() if v is not None else "" for v in row]
+            if any("IDPEL" in col or "NOMOR PELANGGAN" in col or "ID_PEL" in col for col in row_str):
+                header_row = row_str
+                header_idx = idx
+                break
+
+        if not header_row:
+            raise HTTPException(status_code=400, detail="Header kolom IDPEL / Nomor Pelanggan tidak ditemukan dalam dokumen.")
+
+        def find_col_idx(patterns):
+            for p in patterns:
+                for i, col in enumerate(header_row):
+                    if re.search(p, col, re.IGNORECASE):
+                        return i
+            return None
+
+        idpel_col = find_col_idx([r"\bIDPEL\b", r"ID.*PEL", r"NO.*PEL"])
+        nama_col = find_col_idx([r"\bNAMA\b", r"NAMA.*PEL", r"CUSTOMER"])
+        tarif_col = find_col_idx([r"\bTARIF\b", r"\bTARIP\b"])
+        daya_col = find_col_idx([r"\bDAYA\b"])
+        stan_col = find_col_idx([r"STAN.*BACA", r"STAN.*METER", r"STAN.*LAP", r"\bSTAND\b", r"\bSTAN\b"])
+        file_col = find_col_idx([r"NAMA.*FILE", r"\bPHOTO\b", r"\bFOTO\b", r"\bGAMBAR\b"])
+        alamat_col = find_col_idx([r"\bALAMAT\b"])
+
+        detected_cols = {
+            "idpel": idpel_col,
+            "nama": nama_col,
+            "tarif": tarif_col,
+            "daya": daya_col,
+            "stan": stan_col,
+            "file": file_col
+        }
+
+        for r in all_rows[header_idx + 1:]:
+            if not r or all(v is None or str(v).strip() == "" for v in r):
+                continue
+
+            raw_idpel = str(r[idpel_col]).strip() if idpel_col is not None and r[idpel_col] is not None else ""
+            m_idpel = re.search(r"\d{10,13}", raw_idpel)
+            if not m_idpel:
+                continue
+            idpel = m_idpel.group(0)
+
+            nama = str(r[nama_col]).strip() if nama_col is not None and r[nama_col] is not None else ""
+            tarif = str(r[tarif_col]).strip() if tarif_col is not None and r[tarif_col] is not None else ""
+            daya = str(r[daya_col]).strip() if daya_col is not None and r[daya_col] is not None else ""
+            tarif_daya = f"{tarif} / {daya} VA" if tarif and daya else (tarif or daya or "-")
+
+            stan = ""
+            if stan_col is not None and r[stan_col] is not None:
+                raw_stan = str(r[stan_col]).strip()
+                sm = re.search(r"\d+", raw_stan)
+                stan = sm.group(0) if sm else raw_stan
+
+            photo_name = str(r[file_col]).strip() if file_col is not None and r[file_col] is not None else ""
+            alamat = str(r[alamat_col]).strip() if alamat_col is not None and r[alamat_col] is not None else ""
+
+            records.append({
+                "idpel": idpel,
+                "nama": nama,
+                "tarif": tarif,
+                "daya": daya,
+                "tarif_daya": tarif_daya,
+                "stan_lapangan": stan,
+                "nama_file": photo_name,
+                "alamat": alamat
+            })
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Gagal memproses file Excel: {str(e)}")
+
+    return JSONResponse(content={
+        "status": "success",
+        "filename": filename,
+        "total_records": len(records),
+        "detected_columns": detected_cols,
+        "records": records
+    })
+
 class AuditRowItem(BaseModel):
     no: int
     idpel: str
