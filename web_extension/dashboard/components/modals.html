@@ -1,0 +1,58 @@
+<!-- MODAL INSPECTOR HD -->
+<div class="modal-backdrop" id="modal-inspector" onclick="closeInspector()">
+    <div class="modal-window" onclick="event.stopPropagation()">
+        <div class="modal-bar">
+            <h3 id="modal-title"><i class="fas fa-search-plus" style="color: var(--pln-blue);"></i> Pratinjau Stand KWH Meter</h3>
+            <button class="btn btn-secondary" style="padding: 4px 10px;" onclick="closeInspector()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body-grid">
+            <div class="modal-image-box">
+                <img id="modal-photo-src" src="">
+            </div>
+            <div class="modal-info-list">
+                <div class="info-card">
+                    <div class="info-card-label">IDPEL & Nama Pelanggan</div>
+                    <div class="info-card-val" id="modal-idpel" style="font-size: 15px; color: var(--pln-blue);">-</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-label">Stand Lapangan (Petugas Cater)</div>
+                    <div class="info-card-val" id="modal-stan-lap">-</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-label">Stand Hasil AI ARGUS (V5)</div>
+                    <div class="info-card-val" id="modal-stan-ai" style="color: #16A34A;">-</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-label">Status Verifikasi</div>
+                    <div class="info-card-val" id="modal-status-text" style="font-size: 13.5px;">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DUPLICATE CONFIRMATION -->
+<div class="modal-backdrop" id="modal-duplicate" style="display:none;" onclick="event.stopPropagation()">
+    <div class="modal-window" style="max-width: 480px; padding: 24px;">
+        <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
+            <div style="width:42px; height:42px; border-radius:50%; background:#FEF3C7; color:#D97706; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;">
+                <i class="fas fa-clone"></i>
+            </div>
+            <div>
+                <h4 style="font-size:15px; font-weight:700; color:var(--text-heading);">Deteksi Foto Duplikat</h4>
+                <p style="font-size:12px; color:var(--text-muted);" id="dup-modal-desc">Ditemukan foto yang sudah ada di antrean.</p>
+            </div>
+        </div>
+        <p style="font-size:12.5px; color:var(--text-body); margin-bottom:20px; line-height:1.5;">
+            Beberapa berkas foto yang Anda unggah sudah ada di dalam tabel antrean. Anda dapat melewati berkas duplikat agar data tidak ganda, atau menimpa berkas yang lama.
+        </p>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+            <button class="btn btn-secondary" onclick="resolveDuplicateAction('skip')">
+                <i class="fas fa-forward"></i> Lewati Duplikat (Skip)
+            </button>
+            <button class="btn btn-run" style="background:#0284C7;" onclick="resolveDuplicateAction('overwrite')">
+                <i class="fas fa-sync-alt"></i> Timpa / Perbarui (Overwrite)
+            </button>
+        </div>
+    </div>
+</div>
