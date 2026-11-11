@@ -46,7 +46,12 @@ async function auditSingleRow(rowIndex) {
         const data = await resp.json();
 
         cellRaw.textContent = data.raw_display || '-';
-        stanArgusInput.value = data.stand_baca || '-';
+        const isAlreadyEdited = row.getAttribute('data-edited') === 'true';
+
+        // Lindungi hasil koreksi manual auditor: Jangan timpa stanArgus jika sudah diedit manual
+        if (!isAlreadyEdited) {
+            stanArgusInput.value = data.stand_baca || '-';
+        }
         cellLat.textContent = `${data.latency_ms || 0} ms`;
 
         row.setAttribute('data-blur', data.blur_score || 0);
@@ -55,11 +60,14 @@ async function auditSingleRow(rowIndex) {
 
         const stanPlnRaw = stanLapInput.value.trim();
         const stanPlnVal = stanPlnRaw.replace(/\D/g, '');
-        const stanAiVal = (data.stand_baca || '').trim().replace(/\D/g, '');
+        const stanAiVal = (isAlreadyEdited ? stanArgusInput.value : (data.stand_baca || '')).trim().replace(/\D/g, '');
         const isMandiriMode = (typeof currentAuditMode !== 'undefined' && currentAuditMode === 'MANDIRI') ||
                               (stanPlnVal === '' || stanPlnRaw === '-');
 
-        if (data.status === 'FAIL_COUNTER_NOT_FOUND') {
+        if (isAlreadyEdited) {
+            // Jika sudah dikoreksi auditor, pertahankan koreksi dan hitung ulang selisihnya
+            recalculateRowDiffAndStatus(row);
+        } else if (data.status === 'FAIL_COUNTER_NOT_FOUND') {
             cellDiff.textContent = '-';
             statusSelect.value = 'NIHIL';
             row.setAttribute('data-status', 'NIHIL');
@@ -121,16 +129,30 @@ async function auditAllRows() {
     }
 
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses Semua Data...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses Batch...';
+
+    let processedCount = 0;
+    let protectedCount = 0;
 
     for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        // Human-in-the-Loop Guard: Jangan menimpa baris yang telah dikoreksi manual oleh auditor
+        if (row.getAttribute('data-edited') === 'true') {
+            protectedCount++;
+            continue;
+        }
         await auditSingleRow(i);
+        processedCount++;
     }
 
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-check-double"></i> Selesai Diaudit';
     if (typeof showToast === 'function') {
-        showToast("Proses batch audit berhasil diselesaikan.", "success");
+        if (protectedCount > 0) {
+            showToast(`Batch audit selesai: ${processedCount} diproses, ${protectedCount} hasil koreksi manual tetap terlindungi.`, "success");
+        } else {
+            showToast(`Proses batch audit berhasil diselesaikan (${processedCount} data).`, "success");
+        }
     }
     setTimeout(() => {
         btn.innerHTML = '<i class="fas fa-play"></i> Mulai Audit Batch';
