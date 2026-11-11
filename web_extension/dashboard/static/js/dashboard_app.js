@@ -188,28 +188,6 @@ function closeInspector() {
     if (modal) modal.style.display = 'none';
 }
 
-function resetTable() {
-    const rows = document.querySelectorAll('#table-body tr');
-    rows.forEach(r => {
-        r.className = '';
-        r.removeAttribute('data-edited');
-        r.setAttribute('data-status', 'PENDING');
-        r.querySelector('.cell-raw').textContent = '-';
-        r.querySelector('.cell-argus').value = '-';
-        r.querySelector('.cell-diff').textContent = '-';
-        r.querySelector('.cell-lat').textContent = '-';
-        const slot = r.querySelector('.edit-badge-slot');
-        if (slot) slot.innerHTML = '';
-        const sel = r.querySelector('.select-status');
-        sel.value = 'PENDING';
-        if (typeof updateSelectStyle === 'function') updateSelectStyle(sel);
-        const btn = r.querySelector('.btn-row-audit');
-        btn.innerHTML = '<i class="fas fa-bolt"></i> Audit';
-        btn.disabled = false;
-    });
+document.addEventListener('DOMContentLoaded', () => {
     updateKPIs();
-    filterByStatus('ALL');
-    if (typeof showToast === 'function') {
-        showToast("Tabel berhasil direset ke kondisi awal.", "info");
-    }
-}
+});
