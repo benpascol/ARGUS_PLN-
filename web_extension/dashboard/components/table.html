@@ -22,16 +22,16 @@
             <tbody id="table-body">
                 <!-- EMPTY STATE & DROPZONE -->
                 <tr id="empty-state-row">
-                    <td colspan="13" class="empty-state-td" style="white-space: normal !important; text-align: center !important;">
-                        <div class="empty-dropzone" id="empty-dropzone" onclick="document.getElementById('folder-input').click()" style="text-align: center !important; margin: 0 auto !important;">
-                            <div class="empty-icon-circle">
-                                <i class="fas fa-cloud-upload-alt"></i>
+                    <td colspan="13" class="empty-state-td" style="white-space: normal !important; text-align: center !important; padding: 50px 20px !important;">
+                        <div class="empty-dropzone" id="empty-dropzone" onclick="document.getElementById('folder-input').click()" style="text-align: center !important; margin: 0 auto !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important;">
+                            <div class="empty-icon-circle" style="margin: 0 auto 16px auto !important; display: flex !important; align-items: center !important; justify-content: center !important;">
+                                <i class="fas fa-cloud-upload-alt" style="margin: 0 !important; line-height: 1 !important;"></i>
                             </div>
-                            <h3 class="empty-title" style="text-align: center !important; width: 100% !important;">Antrean Audit Masih Kosong</h3>
-                            <p class="empty-subtitle" style="text-align: center !important; width: 100% !important; max-width: 100% !important; margin: 0 auto 22px auto !important; white-space: normal !important;">
-                                Seret dan jatuhkan (<strong>Drag & Drop</strong>) folder atau berkas foto meteran ke sini, atau klik tombol di bawah untuk memulai:
+                            <h3 class="empty-title" style="text-align: center !important; width: 100% !important; margin: 0 auto 8px auto !important;">Antrean Audit Masih Kosong</h3>
+                            <p class="empty-subtitle" style="text-align: center !important; width: 100% !important; max-width: 580px !important; margin: 0 auto 20px auto !important; white-space: normal !important; display: block !important;">
+                                Seret dan jatuhkan (<strong>Drag & Drop</strong>) berkas foto ke sini, atau klik tombol di bawah untuk memulai:
                             </p>
-                            <div class="empty-actions" style="justify-content: center !important;">
+                            <div class="empty-actions" style="display: flex !important; justify-content: center !important; align-items: center !important; gap: 10px !important; margin: 0 auto 16px auto !important; width: 100% !important;">
                                 <button type="button" class="btn btn-upload-folder" onclick="event.stopPropagation(); document.getElementById('folder-input').click()">
                                     <i class="fas fa-folder-plus"></i> Unggah Folder Foto
                                 </button>
@@ -39,10 +39,10 @@
                                     <i class="fas fa-file-image"></i> Tambah File Foto
                                 </button>
                                 <button type="button" class="btn btn-upload-excel" onclick="event.stopPropagation(); document.getElementById('excel-input').click()">
-                                    <i class="fas fa-file-excel"></i> Impor Rekap ACMT (.xlsx / .csv)
+                                    <i class="fas fa-file-excel"></i> Impor Rekap ACMT
                                 </button>
                             </div>
-                            <div class="empty-hint" style="justify-content: center !important;">
+                            <div class="empty-hint" style="display: inline-flex !important; justify-content: center !important; align-items: center !important; margin: 0 auto !important; text-align: center !important;">
                                 <i class="fas fa-shield-alt" style="color:var(--pln-blue);"></i> Dilengkapi Jaring Pengaman Anti-Duplikasi Foto & Auto-Pairing Data Pelanggan
                             </div>
                         </div>
