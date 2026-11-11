@@ -1,0 +1,33 @@
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toast-box"></div>
+
+<!-- TOOLBAR -->
+<div class="toolbar-panel">
+    <div class="toolbar-group">
+        <button class="btn btn-run" id="btn-run-all" onclick="auditAllRows()">
+            <i class="fas fa-play"></i> Mulai Audit Batch
+        </button>
+        <button class="btn btn-upload-folder" onclick="document.getElementById('folder-input').click()">
+            <i class="fas fa-folder-plus"></i> Unggah Folder Foto
+        </button>
+        <input type="file" id="folder-input" webkitdirectory directory multiple style="display:none;" onchange="handleFolderUpload(event)">
+        
+        <button class="btn btn-upload-file" onclick="document.getElementById('file-input').click()">
+            <i class="fas fa-file-image"></i> Tambah File Foto
+        </button>
+        <input type="file" id="file-input" accept="image/*" multiple style="display:none;" onchange="handleFileUpload(event)">
+
+        <button class="btn btn-export-excel" id="btn-export-excel" onclick="exportOfficialExcel()">
+            <i class="fas fa-file-excel"></i> Unduh Laporan Excel Resmi (.xlsx)
+        </button>
+        <button class="btn btn-secondary" onclick="resetTable()">
+            <i class="fas fa-redo-alt"></i> Reset Tabel
+        </button>
+    </div>
+    <div class="toolbar-group">
+        <div class="search-field">
+            <i class="fas fa-search"></i>
+            <input type="text" id="search-input" placeholder="Cari IDPEL / Nama..." oninput="searchRows(this.value)">
+        </div>
+    </div>
+</div>
