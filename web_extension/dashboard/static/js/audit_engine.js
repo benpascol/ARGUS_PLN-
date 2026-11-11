@@ -53,8 +53,11 @@ async function auditSingleRow(rowIndex) {
         row.setAttribute('data-glare', data.glare_percentage || 0);
         row.setAttribute('data-tier', data.tier_color || 'GREEN');
 
-        const stanPlnVal = stanLapInput.value.trim().replace(/\D/g, '');
+        const stanPlnRaw = stanLapInput.value.trim();
+        const stanPlnVal = stanPlnRaw.replace(/\D/g, '');
         const stanAiVal = (data.stand_baca || '').trim().replace(/\D/g, '');
+        const isMandiriMode = (typeof currentAuditMode !== 'undefined' && currentAuditMode === 'MANDIRI') ||
+                              (stanPlnVal === '' || stanPlnRaw === '-');
 
         if (data.status === 'FAIL_COUNTER_NOT_FOUND') {
             cellDiff.textContent = '-';
@@ -65,20 +68,22 @@ async function auditSingleRow(rowIndex) {
             statusSelect.value = 'TRIAGE';
             row.setAttribute('data-status', 'TRIAGE');
         } else if (data.stand_baca) {
-            if (stanPlnVal === '') {
-                cellDiff.textContent = '0';
+            if (isMandiriMode) {
+                // Mode Ekstraksi Mandiri (Murni AI): Tidak ada vonis salah 'BEDA STAND' karena tidak membandingkan dengan 0
+                cellDiff.textContent = '-';
                 statusSelect.value = 'MATCH';
                 row.setAttribute('data-status', 'MATCH');
             } else {
+                // Mode Komparasi Lapangan: Hitung selisih angka riil terhadap stan lapangan
                 const numPln = parseInt(stanPlnVal) || 0;
                 const numAi = parseInt(stanAiVal) || 0;
-                const diff = Math.abs(numPln - numAi);
-                cellDiff.textContent = diff === 0 ? '0' : (numAi - numPln);
+                const diff = numAi - numPln;
+                cellDiff.textContent = diff === 0 ? '0' : diff;
 
                 if (diff === 0) {
                     statusSelect.value = 'MATCH';
                     row.setAttribute('data-status', 'MATCH');
-                } else if (diff <= 2) {
+                } else if (Math.abs(diff) <= 2) {
                     statusSelect.value = 'ROLLING';
                     row.setAttribute('data-status', 'ROLLING');
                 } else {
@@ -175,24 +180,33 @@ function recalculateRowDiffAndStatus(row) {
     const cellDiff = row.querySelector('.cell-diff');
     const statusSelect = row.querySelector('.select-status');
 
-    const pStr = stanLapInput.value.trim().replace(/\D/g, '');
+    const pRaw = stanLapInput.value.trim();
+    const pStr = pRaw.replace(/\D/g, '');
     const aStr = stanArgusInput.value.trim().replace(/\D/g, '');
+    const isMandiri = (typeof currentAuditMode !== 'undefined' && currentAuditMode === 'MANDIRI') ||
+                      (pStr === '' || pRaw === '-');
 
-    if (pStr !== '' && aStr !== '') {
-        const numPln = parseInt(pStr) || 0;
-        const numAi = parseInt(aStr) || 0;
-        const diff = numAi - numPln;
-        cellDiff.textContent = diff;
-
-        if (Math.abs(diff) === 0) {
+    if (aStr !== '') {
+        if (isMandiri) {
+            cellDiff.textContent = '-';
             statusSelect.value = 'MATCH';
             row.setAttribute('data-status', 'MATCH');
-        } else if (Math.abs(diff) <= 2) {
-            statusSelect.value = 'ROLLING';
-            row.setAttribute('data-status', 'ROLLING');
         } else {
-            statusSelect.value = 'DIFF';
-            row.setAttribute('data-status', 'DIFF');
+            const numPln = parseInt(pStr) || 0;
+            const numAi = parseInt(aStr) || 0;
+            const diff = numAi - numPln;
+            cellDiff.textContent = diff === 0 ? '0' : diff;
+
+            if (diff === 0) {
+                statusSelect.value = 'MATCH';
+                row.setAttribute('data-status', 'MATCH');
+            } else if (Math.abs(diff) <= 2) {
+                statusSelect.value = 'ROLLING';
+                row.setAttribute('data-status', 'ROLLING');
+            } else {
+                statusSelect.value = 'DIFF';
+                row.setAttribute('data-status', 'DIFF');
+            }
         }
     }
     updateSelectStyle(statusSelect);

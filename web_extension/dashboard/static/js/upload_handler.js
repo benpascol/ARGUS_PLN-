@@ -1,9 +1,14 @@
 /**
  * Module: upload_handler.js
  * Deskripsi: Penanganan unggah berkas dual-mode (folder/file), ekstraksi IDPEL,
- *            dan jaring pengaman anti-duplikasi foto (Deduplication Guard).
+ *            jaring pengaman anti-duplikasi foto (Deduplication Guard),
+ *            serta mekanisme pemasangan otomatis rekap ACMT Excel (Auto-Pairing).
  * Lead Engineer: Pascol
  */
+
+// Global State
+let excelRecordsMap = new Map(); // Map IDPEL -> { nama, tarif, daya, tarif_daya, stan_lapangan, nama_file, alamat }
+let currentAuditMode = 'AUTO'; // 'AUTO', 'MANDIRI', 'KOMPARASI'
 
 // Toast Notification System
 function showToast(message, type = 'info') {
@@ -35,6 +40,105 @@ function extractIdpelFromFilename(filename) {
     if (m2) return m2[0];
     // Fallback: sanitized clean base filename
     return filename.replace(/\.[^/.]+$/, "").substring(0, 16);
+}
+
+// SOLUSI 2: Engine Impor Rekap ACMT & Auto-Pairing
+async function handleExcelUpload(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    const btn = document.getElementById('btn-upload-excel');
+    const origHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengimpor ACMT...';
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const resp = await fetch('/api/parse-acmt-excel', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!resp.ok) {
+            const errData = await resp.json().catch(() => ({}));
+            throw new Error(errData.detail || `Gagal membaca berkas Excel (HTTP ${resp.status})`);
+        }
+
+        const data = await resp.json();
+        const records = data.records || [];
+
+        let matchedPhotos = 0;
+        records.forEach(rec => {
+            if (rec.idpel) excelRecordsMap.set(rec.idpel, rec);
+            if (rec.nama_file) excelRecordsMap.set(rec.nama_file, rec);
+        });
+
+        // Auto-pairing dengan foto yang sudah ada di tabel
+        const rows = document.querySelectorAll('#table-body tr');
+        rows.forEach(row => {
+            const idpel = row.getAttribute('data-idpel');
+            const photoName = row.getAttribute('data-photo') || '';
+            const rec = excelRecordsMap.get(idpel) || excelRecordsMap.get(photoName.replace(/\.[^/.]+$/, ""));
+
+            if (rec) {
+                matchedPhotos++;
+                // Update nama pelanggan
+                const strong = row.querySelector('strong');
+                if (strong && rec.nama) strong.textContent = rec.nama;
+
+                // Update tarif / daya (kolom ke-4)
+                if (row.cells[3] && rec.tarif_daya) {
+                    row.cells[3].textContent = rec.tarif_daya;
+                }
+
+                // Update Stan Lapangan
+                const stanInput = row.querySelectorAll('.input-table')[0];
+                if (stanInput && rec.stan_lapangan) {
+                    stanInput.value = rec.stan_lapangan;
+                }
+
+                // Jika baris sudah pernah diaudit, hitung ulang selisih
+                if (row.getAttribute('data-status') !== 'PENDING' && typeof recalculateRowDiffAndStatus === 'function') {
+                    recalculateRowDiffAndStatus(row);
+                }
+            }
+        });
+
+        showToast(`Berhasil membaca ${records.length} data ACMT. ${matchedPhotos} foto berhasil dipasangkan otomatis!`, "success");
+        if (typeof updateKPIs === 'function') updateKPIs();
+    } catch (err) {
+        console.error('Error importing ACMT Excel:', err);
+        showToast(`Gagal impor ACMT: ${err.message}`, "danger");
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+        }
+        event.target.value = '';
+    }
+}
+
+// SOLUSI 3: Pemilihan Mode Audit
+function changeAuditMode(mode) {
+    currentAuditMode = mode;
+    let label = 'Auto (Sesuai Ketersediaan Data)';
+    if (mode === 'MANDIRI') label = 'Ekstraksi Mandiri (Murni AI - Tanpa Rekap Lapangan)';
+    else if (mode === 'KOMPARASI') label = 'Komparasi Rekap ACMT Lapangan';
+
+    showToast(`Mode audit beralih ke: ${label}`, "info");
+
+    // Hitung ulang baris yang sudah terisi stan ARGUS
+    const rows = document.querySelectorAll('#table-body tr');
+    rows.forEach(row => {
+        if (row.getAttribute('data-status') !== 'PENDING' && typeof recalculateRowDiffAndStatus === 'function') {
+            recalculateRowDiffAndStatus(row);
+        }
+    });
+    if (typeof updateKPIs === 'function') updateKPIs();
 }
 
 let pendingUploadData = null;
@@ -140,6 +244,12 @@ function appendFilesToTable(files) {
         const idpel = extractIdpelFromFilename(file.name);
         const objectUrl = URL.createObjectURL(file);
 
+        // Auto-pairing jika file Excel ACMT sudah pernah diunggah lebih dulu
+        const excelData = excelRecordsMap.get(idpel) || excelRecordsMap.get(file.name.replace(/\.[^/.]+$/, ""));
+        const namaDisplay = excelData && excelData.nama ? excelData.nama : file.name.replace(/\.[^/.]+$/, "").substring(0, 20);
+        const tarifDayaDisplay = excelData && excelData.tarif_daya ? excelData.tarif_daya : 'R1 / 900 VA';
+        const stanLapValue = (excelData && excelData.stan_lapangan !== undefined && excelData.stan_lapangan !== '') ? excelData.stan_lapangan : '-';
+
         const newRow = document.createElement('tr');
         newRow.id = `row-${rowIdx}`;
         newRow.setAttribute('data-idpel', idpel);
@@ -149,9 +259,9 @@ function appendFilesToTable(files) {
         newRow.innerHTML = `
             <td>${rowIdx + 1}</td>
             <td class="idpel-code">${idpel}</td>
-            <td><strong>${file.name.replace(/\.[^/.]+$/, "").substring(0, 20)}</strong></td>
-            <td>R1 / 900 VA</td>
-            <td><input type="text" class="input-table" value="0" oninput="onFieldChange(${rowIdx})"></td>
+            <td><strong>${namaDisplay}</strong></td>
+            <td>${tarifDayaDisplay}</td>
+            <td><input type="text" class="input-table" value="${stanLapValue}" oninput="onFieldChange(${rowIdx})"></td>
             <td>
                 <img class="photo-thumbnail" src="${objectUrl}" onclick="inspectPhoto(${rowIdx})">
             </td>
