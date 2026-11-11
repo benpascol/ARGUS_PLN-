@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Simulator Portal ACMT PLN & ARGUS Vision Engine - UP3 Mojokerto</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --pln-blue: #00A2E9;
+            --pln-blue-dark: #007BB5;
+            --pln-yellow: #FDB913;
+            --pln-red: #ED1C24;
+            --bg-dark: #0f172a;
+            --surface: #1e293b;
+            --surface-card: #243248;
+            --border: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 24px;
+            line-height: 1.5;
+        }
+
+        /* TOP NAVIGATION */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #007BB5 0%, #004d73 100%);
+            padding: 16px 24px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-brand .logo-bolt {
+            background: var(--pln-yellow);
+            color: #000;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 900;
+            box-shadow: 0 0 15px rgba(253, 185, 19, 0.6);
+        }
+
+        .header-title h1 {
+            font-size: 19px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .header-title p {
+            font-size: 12px;
+            color: rgba(255,255,255,0.85);
+            font-weight: 500;
+        }
+
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.35);
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.15);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--success);
+            animation: pulse 1.8s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.85); }
+        }
+
+        /* KPI STATS CARDS */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 16px 20px;
+            border-radius: var(--radius-md);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--pln-blue);
+        }
+
+        .kpi-card.success::before { background: var(--success); }
+        .kpi-card.warning::before { background: var(--warning); }
+        .kpi-card.danger::before { background: var(--danger); }
+
+        .kpi-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .kpi-value {
+            font-size: 26px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.02em;
+        }
+
+        /* CONTROLS & ACTIONS */
+        .action-bar {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 16px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+
+        .action-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.1);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--pln-blue) 0%, var(--pln-blue-dark) 100%);
+            color: white;
+            box-shadow: 0 4px 14px rgba(0, 162, 233, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--surface-card);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+
+        .btn-outline:hover {
+            color: #fff;
+            border-color: #64748b;
+        }
+
+        /* TABLE CONTAINER */
+        .table-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        }
+
+        .table-scroll {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 13px;
+        }
+
+        th {
+            background: var(--surface-card);
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 14px 16px;
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        tr:hover td {
+            background: rgba(255,255,255,0.02);
+        }
+
+        tr.row-match td { background: rgba(16, 185, 129, 0.08); }
+        tr.row-rolling td { background: rgba(245, 158, 11, 0.08); }
+        tr.row-diff td { background: rgba(239, 68, 68, 0.08); }
+
+        .idpel-cell {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: var(--pln-yellow);
+        }
+
+        .photo-thumb {
+            width: 80px;
+            height: 60px;
+            border-radius: 6px;
+            object-fit: cover;
+            border: 2px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #000;
+        }
+
+        .photo-thumb:hover {
+            transform: scale(1.08);
+            border-color: var(--pln-blue);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        .stand-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        .badge-pending { background: #334155; color: #cbd5e1; }
+        .badge-success { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+        .badge-warning { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+        .badge-danger { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+
+        .btn-audit-row {
+            padding: 6px 12px;
+            font-size: 11px;
+            background: var(--surface-card);
+            color: var(--pln-blue);
+            border: 1px solid var(--pln-blue);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.15s;
+        }
+
+        .btn-audit-row:hover {
+            background: var(--pln-blue);
+            color: #fff;
+        }
+
+        /* MODAL PREVIEW */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            z-index: 99999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            max-width: 90vw;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+
+        .modal-body {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: #000;
+            border-radius: 8px;
+            max-height: 70vh;
+        }
+
+        .modal-body img {
+            max-width: 100%;
+            max-height: 65vh;
+            object-fit: contain;
+        }
+
+        /* DRAG DROP ZONE */
+        .dropzone-container {
+            margin-top: 24px;
+            background: var(--surface);
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .dropzone-container:hover {
+            border-color: var(--pln-blue);
+            background: rgba(0, 162, 233, 0.05);
+        }
+
+        .dropzone-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .dropzone-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOP HEADER -->
+    <header class="header">
+        <div class="header-brand">
+            <div class="logo-bolt">⚡</div>
+            <div class="header-title">
+                <h1>PT PLN (PERSERO) UP3 MOJOKERTO</h1>
+                <p>SIMULATOR PORTAL ACMT & UJI AUDIT VISION AI (PROJECT ARGUS V5)</p>
+            </div>
+        </div>
+        <div class="header-status">
+            <div class="status-dot"></div>
+            <span>ARGUS ENGINE: <strong style="color: #38bdf8;">127.0.0.1:8000 (V5 Production)</strong></span>
+        </div>
+    </header>
+
+    <!-- KPI STATS -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <span class="kpi-label">Total Sampel Uji</span>
+            <span class="kpi-value" id="kpi-total">5</span>
+        </div>
+        <div class="kpi-card success">
+            <span class="kpi-label">Sesuai / Match (100%)</span>
+            <span class="kpi-value" id="kpi-match" style="color: #34d399;">0</span>
+        </div>
+        <div class="kpi-card warning">
+            <span class="kpi-label">Rolling Digit (±1 kWh)</span>
+            <span class="kpi-value" id="kpi-rolling" style="color: #fbbf24;">0</span>
+        </div>
+        <div class="kpi-card danger">
+            <span class="kpi-label">Beda Stand / Non-Meter</span>
+            <span class="kpi-value" id="kpi-anomali" style="color: #f87171;">0</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-label">Rata-rata Latensi AI</span>
+            <span class="kpi-value" id="kpi-latency" style="color: #38bdf8;">-</span>
+        </div>
+    </div>
+
+    <!-- ACTION BAR -->
+    <div class="action-bar">
+        <div class="action-left">
+            <button class="btn btn-primary" id="btn-sim-run-all" onclick="runAllAudit()">
+                <i class="fas fa-robot"></i> ⚡ OCR SEMUA DATA (AUDIT OTOMATIS)
+            </button>
+            <button class="btn btn-secondary" onclick="resetAll()">
+                <i class="fas fa-sync-alt"></i> Reset Tabel
+            </button>
+        </div>
+        <div>
+            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">
+                <i class="fas fa-info-circle"></i> Mode Uji: Menyimulasikan aliran kerja verifikasi foto LBKB harian PLN.
+            </span>
+        </div>
+    </div>
+
+    <!-- MAIN TABLE -->
+    <div class="table-card">
+        <div class="table-scroll">
+            <table id="simulator-table">
+                <thead>
+                    <tr>
+                        <th>NO</th>
+                        <th>IDPEL</th>
+                        <th>NAMA PELANGGAN</th>
+                        <th>TARIF / DAYA</th>
+                        <th>STAN LALU</th>
+                        <th>STAN LAPANGAN</th>
+                        <th>FOTO METERAN</th>
+                        <th>RAW DISPLAY AI</th>
+                        <th>STAN ARGUS</th>
+                        <th>SELISIH (kWh)</th>
+                        <th>VONIS AUDIT</th>
+                        <th>LATENSI</th>
+                        <th>AKSI</th>
+                    </tr>
+                </thead>
+                <tbody id="simulator-tbody">
+                    <!-- Sample 1 -->
+                    <tr id="row-0" data-idpel="514500001376" data-photo="202601-514500001376-L.jpg" data-stan="1">
+                        <td>1</td>
+                        <td class="idpel-cell">514500001376</td>
+                        <td><strong>SAMAN</strong></td>
+                        <td>R1 / 450 VA</td>
+                        <td>1</td>
+                        <td><span class="stand-val">1</span></td>
+                        <td>
+                            <img class="photo-thumb" src="/sample-photo/202601-514500001376-L.jpg" onclick="zoomPhoto(this.src, '514500001376 - SAMAN')">
+                        </td>
+                        <td class="cell-raw">-</td>
+                        <td class="cell-argus"><span class="stand-val">-</span></td>
+                        <td class="cell-diff">-</td>
+                        <td class="cell-vonis"><span class="badge badge-pending"><i class="fas fa-clock"></i> Belum Diaudit</span></td>
+                        <td class="cell-lat">-</td>
+                        <td><button class="btn-audit-row" onclick="auditSingleRow(0)"><i class="fas fa-bolt"></i> Audit</button></td>
+                    </tr>
+                    <!-- Sample 2 -->
+                    <tr id="row-1" data-idpel="514500003050" data-photo="202601-514500003050-L.jpg" data-stan="7501">
+                        <td>2</td>
+                        <td class="idpel-cell">514500003050</td>
+                        <td><strong>ROCHMAD</strong></td>
+                        <td>R1M / 900 VA</td>
+                        <td>7501</td>
+                        <td><span class="stand-val">7501</span></td>
+                        <td>
+                            <img class="photo-thumb" src="/sample-photo/202601-514500003050-L.jpg" onclick="zoomPhoto(this.src, '514500003050 - ROCHMAD')">
+                        </td>
+                        <td class="cell-raw">-</td>
+                        <td class="cell-argus"><span class="stand-val">-</span></td>
+                        <td class="cell-diff">-</td>
+                        <td class="cell-vonis"><span class="badge badge-pending"><i class="fas fa-clock"></i> Belum Diaudit</span></td>
+                        <td class="cell-lat">-</td>
+                        <td><button class="btn-audit-row" onclick="auditSingleRow(1)"><i class="fas fa-bolt"></i> Audit</button></td>
+                    </tr>
+                    <!-- Sample 3 -->
+                    <tr id="row-2" data-idpel="514500003587" data-photo="202601-514500003587-L.jpg" data-stan="22962">
+                        <td>3</td>
+                        <td class="idpel-cell">514500003587</td>
+                        <td><strong>KANT URUSAN AGAMA</strong></td>
+                        <td>P1 / 900 VA</td>
+                        <td>23119</td>
+                        <td><span class="stand-val">22962</span></td>
+                        <td>
+                            <img class="photo-thumb" src="/sample-photo/202601-514500003587-L.jpg" onclick="zoomPhoto(this.src, '514500003587 - KUA (Pintu Terkunci)')">
+                        </td>
+                        <td class="cell-raw">-</td>
+                        <td class="cell-argus"><span class="stand-val">-</span></td>
+                        <td class="cell-diff">-</td>
+                        <td class="cell-vonis"><span class="badge badge-pending"><i class="fas fa-clock"></i> Belum Diaudit</span></td>
+                        <td class="cell-lat">-</td>
+                        <td><button class="btn-audit-row" onclick="auditSingleRow(2)"><i class="fas fa-bolt"></i> Audit</button></td>
+                    </tr>
+                    <!-- Sample 4 -->
+                    <tr id="row-3" data-idpel="514500003616" data-photo="202601-514500003616-L.jpg" data-stan="5013">
+                        <td>4</td>
+                        <td class="idpel-cell">514500003616</td>
+                        <td><strong>USMAN</strong></td>
+                        <td>R1 / 450 VA</td>
+                        <td>5017</td>
+                        <td><span class="stand-val">5013</span></td>
+                        <td>
+                            <img class="photo-thumb" src="/sample-photo/202601-514500003616-L.jpg" onclick="zoomPhoto(this.src, '514500003616 - USMAN')">
+                        </td>
+                        <td class="cell-raw">-</td>
+                        <td class="cell-argus"><span class="stand-val">-</span></td>
+                        <td class="cell-diff">-</td>
+                        <td class="cell-vonis"><span class="badge badge-pending"><i class="fas fa-clock"></i> Belum Diaudit</span></td>
+                        <td class="cell-lat">-</td>
+                        <td><button class="btn-audit-row" onclick="auditSingleRow(3)"><i class="fas fa-bolt"></i> Audit</button></td>
+                    </tr>
+                    <!-- Sample 5 -->
+                    <tr id="row-4" data-idpel="514500004079" data-photo="202601-514500004079-L.jpg" data-stan="14244">
+                        <td>5</td>
+                        <td class="idpel-cell">514500004079</td>
+                        <td><strong>H NURCHASAN</strong></td>
+                        <td>R1 / 450 VA</td>
+                        <td>14244</td>
+                        <td><span class="stand-val">14244</span></td>
+                        <td>
+                            <img class="photo-thumb" src="/sample-photo/202601-514500004079-L.jpg" onclick="zoomPhoto(this.src, '514500004079 - H NURCHASAN')">
+                        </td>
+                        <td class="cell-raw">-</td>
+                        <td class="cell-argus"><span class="stand-val">-</span></td>
+                        <td class="cell-diff">-</td>
+                        <td class="cell-vonis"><span class="badge badge-pending"><i class="fas fa-clock"></i> Belum Diaudit</span></td>
+                        <td class="cell-lat">-</td>
+                        <td><button class="btn-audit-row" onclick="auditSingleRow(4)"><i class="fas fa-bolt"></i> Audit</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- DROPZONE TEST CUSTOM PHOTO -->
+    <div class="dropzone-container" onclick="document.getElementById('custom-file-input').click()">
+        <input type="file" id="custom-file-input" style="display:none;" accept="image/*" onchange="handleCustomPhoto(event)">
+        <i class="fas fa-cloud-upload-alt" style="font-size: 32px; color: var(--pln-blue); margin-bottom: 8px;"></i>
+        <div class="dropzone-title">Uji Foto Meteran Bebas (Drag & Drop atau Klik di Sini)</div>
+        <div class="dropzone-desc">Unggah sembarang foto meteran dari komputermu untuk diuji langsung oleh Model V5 secara live.</div>
+    </div>
+
+    <!-- MODAL PREVIEW -->
+    <div class="modal-overlay" id="zoom-modal" onclick="closeModal()">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="modal-title" style="font-size: 15px; font-weight: 700;">Pratinjau Foto Meteran</h3>
+                <button class="btn btn-outline" style="padding: 4px 10px;" onclick="closeModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <img id="modal-img-src" src="">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isAuditingAll = false;
+
+        async function imageToBase64(url) {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        async function auditSingleRow(rowIndex) {
+            const row = document.getElementById(`row-${rowIndex}`);
+            if (!row) return;
+
+            const photoImg = row.querySelector('.photo-thumb');
+            const stanLap = row.getAttribute('data-stan');
+            const cellRaw = row.querySelector('.cell-raw');
+            const cellArgus = row.querySelector('.cell-argus');
+            const cellDiff = row.querySelector('.cell-diff');
+            const cellVonis = row.querySelector('.cell-vonis');
+            const cellLat = row.querySelector('.cell-lat');
+            const btnAudit = row.querySelector('.btn-audit-row');
+
+            btnAudit.disabled = true;
+            btnAudit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Audit...';
+            cellVonis.innerHTML = '<span class="badge badge-pending"><i class="fas fa-spinner fa-spin"></i> AI Vision...</span>';
+
+            try {
+                const b64 = await imageToBase64(photoImg.src);
+                const resp = await fetch('/predict-base64', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        image_base64: b64,
+                        filename: row.getAttribute('data-photo')
+                    })
+                });
+
+                const data = await resp.json();
+
+                // Isi Hasil AI
+                const rawDisplay = data.raw_display || '-';
+                const standArgus = data.stand_baca || '-';
+                const latMs = data.latency_ms || 0;
+
+                cellRaw.textContent = rawDisplay;
+                cellArgus.innerHTML = `<span class="stand-val" style="color: #38bdf8;">${standArgus}</span>`;
+                cellLat.textContent = `${latMs} ms`;
+
+                // Evaluasi Vonis
+                const stanPlnNum = parseInt(stanLap.replace(/\D/g, '')) || 0;
+                let stanAiNum = parseInt(standArgus.replace(/\D/g, '')) || 0;
+
+                row.className = '';
+                if (data.status === 'FAIL_COUNTER_NOT_FOUND') {
+                    cellDiff.textContent = '-';
+                    cellVonis.innerHTML = '<span class="badge badge-danger"><i class="fas fa-times-circle"></i> BUKAN KWH / NIHIL</span>';
+                    row.classList.add('row-diff');
+                } else if (data.status === 'FOTO_BURAM') {
+                    cellDiff.textContent = '-';
+                    cellVonis.innerHTML = '<span class="badge badge-danger"><i class="fas fa-eye-slash"></i> FOTO BURAM</span>';
+                    row.classList.add('row-diff');
+                } else if (data.stand_baca) {
+                    const cleanDigitsPln = stanLap ? stanLap.replace(/\D/g, '') : '';
+                    if (cleanDigitsPln === '') {
+                        // Jika tidak ada data stand pembanding (Custom upload)
+                        cellDiff.textContent = '0 (Acuan AI)';
+                        cellVonis.innerHTML = `<span class="badge badge-success"><i class="fas fa-check-circle"></i> TERBACA: ${standArgus}</span>`;
+                        row.classList.add('row-match');
+                    } else {
+                        const stanPlnNum = parseInt(cleanDigitsPln) || 0;
+                        let stanAiNum = parseInt(standArgus.replace(/\D/g, '')) || 0;
+                        const diff = Math.abs(stanPlnNum - stanAiNum);
+                        cellDiff.textContent = diff === 0 ? '0' : (stanAiNum - stanPlnNum);
+
+                        if (diff === 0) {
+                            cellVonis.innerHTML = '<span class="badge badge-success"><i class="fas fa-check-circle"></i> SESUAI MATCH</span>';
+                            row.classList.add('row-match');
+                        } else if (diff <= 2) {
+                            cellVonis.innerHTML = '<span class="badge badge-warning"><i class="fas fa-sync-alt"></i> ROLLING DIGIT</span>';
+                            row.classList.add('row-rolling');
+                        } else {
+                            cellVonis.innerHTML = '<span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> BEDA STAND</span>';
+                            row.classList.add('row-diff');
+                        }
+                    }
+                } else {
+                    cellDiff.textContent = '-';
+                    cellVonis.innerHTML = '<span class="badge badge-warning"><i class="fas fa-question-circle"></i> TINJAU ULANG</span>';
+                    row.classList.add('row-rolling');
+                }
+
+                updateKPIs();
+            } catch (err) {
+                console.error(err);
+                cellVonis.innerHTML = '<span class="badge badge-danger"><i class="fas fa-exclamation"></i> Gagal Koneksi</span>';
+            } finally {
+                btnAudit.disabled = false;
+                btnAudit.innerHTML = '<i class="fas fa-redo"></i> Re-Audit';
+            }
+        }
+
+        async function runAllAudit() {
+            const btn = document.getElementById('btn-sim-run-all');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> MEMPROSES SEMUA BARIS...';
+
+            const rows = document.querySelectorAll('#simulator-tbody tr');
+            for (let i = 0; i < rows.length; i++) {
+                await auditSingleRow(i);
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check-circle"></i> SEMUA BARIS SELESAI DIAUDIT';
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-robot"></i> ⚡ OCR SEMUA DATA (AUDIT OTOMATIS)';
+            }, 3000);
+        }
+
+        function updateKPIs() {
+            const rows = document.querySelectorAll('#simulator-tbody tr');
+            let match = 0, rolling = 0, anomali = 0, totalLat = 0, auditedCount = 0;
+
+            rows.forEach(r => {
+                if (r.classList.contains('row-match')) match++;
+                else if (r.classList.contains('row-rolling')) rolling++;
+                else if (r.classList.contains('row-diff')) anomali++;
+
+                const latText = r.querySelector('.cell-lat').textContent;
+                if (latText && latText.includes('ms')) {
+                    totalLat += parseFloat(latText);
+                    auditedCount++;
+                }
+            });
+
+            document.getElementById('kpi-total').textContent = rows.length;
+            document.getElementById('kpi-match').textContent = match;
+            document.getElementById('kpi-rolling').textContent = rolling;
+            document.getElementById('kpi-anomali').textContent = anomali;
+            document.getElementById('kpi-latency').textContent = auditedCount > 0 ? (totalLat / auditedCount).toFixed(1) + ' ms' : '-';
+        }
+
+        function resetAll() {
+            const rows = document.querySelectorAll('#simulator-tbody tr');
+            rows.forEach(r => {
+                r.className = '';
+                r.querySelector('.cell-raw').textContent = '-';
+                r.querySelector('.cell-argus').innerHTML = '<span class="stand-val">-</span>';
+                r.querySelector('.cell-diff').textContent = '-';
+                r.querySelector('.cell-vonis').innerHTML = '<span class="badge badge-pending"><i class="fas fa-clock"></i> Belum Diaudit</span>';
+                r.querySelector('.cell-lat').textContent = '-';
+                const btn = r.querySelector('.btn-audit-row');
+                btn.innerHTML = '<i class="fas fa-bolt"></i> Audit';
+                btn.disabled = false;
+            });
+            updateKPIs();
+        }
+
+        function zoomPhoto(src, title) {
+            document.getElementById('modal-img-src').src = src;
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('zoom-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('zoom-modal').style.display = 'none';
+        }
+
+        async function handleCustomPhoto(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const inputStan = prompt(`Foto "${file.name}" berhasil diunggah!\n\nMasukkan angka STAN LAPANGAN yang ingin dibandingkan (atau biarkan kosong jika hanya ingin melihat hasil bacaan AI):`, "");
+            const stanLapVal = (inputStan !== null && inputStan.trim() !== "") ? inputStan.trim() : "";
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const b64 = e.target.result;
+                const tbody = document.getElementById('simulator-tbody');
+                const rowCount = tbody.querySelectorAll('tr').length;
+                const newRow = document.createElement('tr');
+                newRow.id = `row-${rowCount}`;
+                newRow.setAttribute('data-idpel', '514599999999');
+                newRow.setAttribute('data-photo', file.name);
+                newRow.setAttribute('data-stan', stanLapVal);
+
+                newRow.innerHTML = `
+                    <td>${rowCount + 1}</td>
+                    <td class="idpel-cell">514599999999</td>
+                    <td><strong>CUSTOM UPLOAD</strong></td>
+                    <td>R1 / 900 VA</td>
+                    <td>-</td>
+                    <td>
+                        <input type="text" class="custom-stan-input" value="${stanLapVal}" placeholder="Stan Lapangan" 
+                               onchange="updateStanCustom(this, ${rowCount})"
+                               style="width: 85px; padding: 4px 6px; background: #0f172a; border: 1px solid var(--pln-blue); color: #fff; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-weight: 700; text-align: center;">
+                    </td>
+                    <td>
+                        <img class="photo-thumb" src="${b64}" onclick="zoomPhoto('${b64}', 'Custom: ${file.name}')">
+                    </td>
+                    <td class="cell-raw">-</td>
+                    <td class="cell-argus"><span class="stand-val">-</span></td>
+                    <td class="cell-diff">-</td>
+                    <td class="cell-vonis"><span class="badge badge-pending"><i class="fas fa-clock"></i> Belum Diaudit</span></td>
+                    <td class="cell-lat">-</td>
+                    <td><button class="btn-audit-row" onclick="auditSingleRow(${rowCount})"><i class="fas fa-bolt"></i> Audit</button></td>
+                `;
+                tbody.appendChild(newRow);
+                updateKPIs();
+                auditSingleRow(rowCount);
+            };
+            reader.readAsDataURL(file);
+            event.target.value = '';
+        }
+
+        function updateStanCustom(inputElem, rowIndex) {
+            const row = document.getElementById(`row-${rowIndex}`);
+            if (row) {
+                row.setAttribute('data-stan', inputElem.value.trim());
+                auditSingleRow(rowIndex);
+            }
+        }
+    </script>
+</body>
+</html>
+

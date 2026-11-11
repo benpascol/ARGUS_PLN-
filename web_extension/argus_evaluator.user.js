@@ -4,7 +4,9 @@
 // @version      89.00
 // @description  High-Performance, Modular Dashboard with ARGUS 100% Local AI Vision Engine
 // @author       703703 & Pascol (Tim ARGUS PLN UP3 Mojokerto)
-// @match        https://portalapp.iconpln.co.id/*
+// @match        https://portalapp.iconpln.co.id/*
+// @match        http://127.0.0.1:8000/simulator*
+// @match        http://localhost:8000/simulator*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_setValue
 // @grant        GM_getValue

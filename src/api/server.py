@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Optional, Any
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
 from pydantic import BaseModel
 
 # Fix Windows console UTF-8 encoding
@@ -101,6 +101,30 @@ def root():
         "version": "1.0.0"
     }
 
+@app.get("/simulator", response_class=HTMLResponse)
+def get_simulator():
+    """Halaman Simulator Portal ACMT PLN untuk Uji Coba Evaluasi & Tampermonkey."""
+    sim_path = BASE_DIR / "web_extension" / "simulator.html"
+    if not sim_path.is_file():
+        raise HTTPException(status_code=404, detail="Berkas simulator.html tidak ditemukan.")
+    return HTMLResponse(content=sim_path.read_text(encoding="utf-8"))
+
+@app.get("/dashboard", response_class=HTMLResponse)
+def get_dashboard():
+    """Halaman Standalone Web Dashboard ARGUS (Human-in-the-Loop & Interactive KPI)."""
+    dash_path = BASE_DIR / "web_extension" / "dashboard.html"
+    if not dash_path.is_file():
+        raise HTTPException(status_code=404, detail="Berkas dashboard.html tidak ditemukan.")
+    return HTMLResponse(content=dash_path.read_text(encoding="utf-8"))
+
+@app.get("/sample-photo/{filename}")
+def get_sample_photo(filename: str):
+    """Menyajikan foto sampel meteran asli dari Docs/DOkumentasi LBKB."""
+    photo_path = BASE_DIR / "Docs" / "DOkumentasi LBKB" / filename
+    if not photo_path.is_file():
+        raise HTTPException(status_code=404, detail=f"Foto {filename} tidak ditemukan.")
+    return FileResponse(str(photo_path), media_type="image/jpeg")
+
 @app.post("/predict")
 async def predict_file(file: UploadFile = File(...)):
     """
@@ -145,6 +169,130 @@ async def predict_base64(payload: Base64PredictRequest):
     result["latency_ms"] = latency_ms
 
     return JSONResponse(content=sanitize_for_json(result))
+
+class AuditRowItem(BaseModel):
+    no: int
+    idpel: str
+    nama: str
+    tarif_daya: str
+    kdbaca: Optional[str] = "F"
+    stan_lapangan: str
+    raw_display: Optional[str] = "-"
+    stan_argus: Optional[str] = "-"
+    selisih: Optional[str] = "0"
+    verdict: str
+    diagnosa_detail: Optional[str] = ""
+    tier_color: Optional[str] = "GREEN"
+    latency_ms: Optional[float] = 0.0
+    blur_score: Optional[float] = 0.0
+    glare_ratio: Optional[float] = 0.0
+    filename: str
+    is_edited: Optional[bool] = False
+    notes: Optional[str] = ""
+
+class ExportExcelRequest(BaseModel):
+    rows: list[AuditRowItem]
+
+@app.post("/api/export-audit-excel")
+async def export_audit_excel_endpoint(payload: ExportExcelRequest):
+    """
+    Ekspor Laporan Audit Excel Resmi PLN UP3 Mojokerto ber-Hyperlink
+    memanfaatkan langsung engine openpyxl di src.audit_excel.
+    """
+    from src.audit_excel import export_audit_excel_file
+    
+    photo_dir = BASE_DIR / "Docs" / "DOkumentasi LBKB"
+    annotated_dir = BASE_DIR / "data" / "audit_results" / "annotated_samples"
+    
+    audit_results = []
+    stats = {
+        "MATCH": 0, "ROLLING": 0, "TRIAGE": 0, "MISMATCH": 0,
+        "GLARE": 0, "BLUR": 0, "FRAUD": 0, "total_latency_ms": 0.0
+    }
+    
+    for item in payload.rows:
+        photo_path = photo_dir / item.filename
+        if not photo_path.is_file():
+            matched = list(photo_dir.glob(f"*{item.idpel}*.jpg"))
+            abs_photo = matched[0].resolve() if matched else photo_path.resolve()
+        else:
+            abs_photo = photo_path.resolve()
+            
+        annotated_file = annotated_dir / f"result_crop_{item.filename}"
+        abs_annotated = annotated_file.resolve() if annotated_file.is_file() else None
+        
+        diag = item.diagnosa_detail or ""
+        if item.is_edited and item.notes:
+            diag = f"[KOREKSI AUDITOR: {item.notes}] {diag}".strip()
+        elif item.is_edited:
+            diag = f"[KOREKSI AUDITOR] {diag}".strip()
+            
+        v = (item.verdict or "").upper()
+        if "MATCH" in v or "SESUAI" in v:
+            stats["MATCH"] += 1
+            verdict_clean = "SESUAI_MATCH"
+        elif "ROLLING" in v:
+            stats["ROLLING"] += 1
+            verdict_clean = "ROLLING_DIGIT"
+        elif any(k in v for k in ("BUKAN", "NIHIL", "FRAUD")):
+            stats["FRAUD"] += 1
+            verdict_clean = "TIDAK_TERDETEKSI_KWH"
+        elif "DIFF" in v or "BEDA" in v:
+            stats["MISMATCH"] += 1
+            verdict_clean = "BEDA_STAND"
+        elif "BURAM" in v or "BLUR" in v:
+            stats["BLUR"] += 1
+            verdict_clean = "FOTO_BURAM"
+        elif "SILAU" in v or "GLARE" in v:
+            stats["GLARE"] += 1
+            verdict_clean = "FOTO_SILAU"
+        else:
+            stats["TRIAGE"] += 1
+            verdict_clean = "PERLU_TINJAU_ULANG"
+            
+        stats["total_latency_ms"] += (item.latency_ms or 0.0)
+        
+        audit_results.append({
+            "no": item.no,
+            "idpel": item.idpel,
+            "nama": item.nama,
+            "tarif_daya": item.tarif_daya,
+            "kdbaca": item.kdbaca or "F",
+            "stan_lapangan": item.stan_lapangan,
+            "raw_display": item.raw_display or "-",
+            "stan_argus": item.stan_argus or "-",
+            "selisih": item.selisih or "0",
+            "verdict": verdict_clean,
+            "diagnosa_detail": diag or "Audit Mandiri Dashboard V5",
+            "tier_color": item.tier_color or "GREEN",
+            "latency_ms": item.latency_ms or 0.0,
+            "blur_score": item.blur_score or 0.0,
+            "glare_ratio": item.glare_ratio or 0.0,
+            "filename": item.filename,
+            "abs_photo_path": abs_photo,
+            "ai_annotated_file": abs_annotated,
+            "harvest_crop_file": None
+        })
+        
+    out_dir = BASE_DIR / "data" / "audit_results"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_excel = out_dir / f"Audit_LBKB_Result_Dashboard_V5_{int(time.time())}.xlsx"
+    
+    export_audit_excel_file(
+        output_excel=out_excel,
+        audit_results=audit_results,
+        total_found=len(audit_results),
+        stats=stats,
+        total_time_s=1.0,
+        annotated_dir=annotated_dir,
+        harvest=False
+    )
+    
+    return FileResponse(
+        str(out_excel),
+        filename="Audit_LBKB_Result_ARGUS_V5_Official.xlsx",
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
 if __name__ == "__main__":
     import uvicorn
