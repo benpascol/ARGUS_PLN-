@@ -109,7 +109,20 @@ async function handleExcelUpload(event) {
         });
 
         showToast(`Berhasil membaca ${records.length} data ACMT. ${matchedPhotos} foto berhasil dipasangkan otomatis!`, "success");
+        
+        // Tampilkan modal hasil impor Excel yang informatif (UX 3)
+        const resFn = document.getElementById('excel-res-filename');
+        const resTot = document.getElementById('excel-res-total');
+        const resMat = document.getElementById('excel-res-matched');
+        const resModal = document.getElementById('modal-excel-result');
+
+        if (resFn) resFn.textContent = `Berkas: ${file.name}`;
+        if (resTot) resTot.textContent = `${records.length.toLocaleString('id-ID')} Baris Data`;
+        if (resMat) resMat.textContent = `${matchedPhotos} Foto Terpasang`;
+        if (resModal) resModal.style.display = 'flex';
+
         if (typeof updateKPIs === 'function') updateKPIs();
+        if (typeof persistCurrentSession === 'function') persistCurrentSession();
     } catch (err) {
         console.error('Error importing ACMT Excel:', err);
         showToast(`Gagal impor ACMT: ${err.message}`, "danger");
@@ -120,6 +133,11 @@ async function handleExcelUpload(event) {
         }
         event.target.value = '';
     }
+}
+
+function closeExcelModal() {
+    const modal = document.getElementById('modal-excel-result');
+    if (modal) modal.style.display = 'none';
 }
 
 // SOLUSI 3: Pemilihan Mode Audit
@@ -234,7 +252,12 @@ function resolveDuplicateAction(action) {
 function appendFilesToTable(files) {
     if (!files || files.length === 0) return;
     const tbody = document.getElementById('table-body');
-    let currentCount = tbody.querySelectorAll('tr').length;
+
+    // Hapus empty state row jika masih ada
+    const emptyRow = document.getElementById('empty-state-row');
+    if (emptyRow) emptyRow.remove();
+
+    let currentCount = tbody.querySelectorAll('tr:not(#empty-state-row)').length;
 
     const fragment = document.createDocumentFragment();
 
@@ -263,7 +286,7 @@ function appendFilesToTable(files) {
             <td>${tarifDayaDisplay}</td>
             <td><input type="text" class="input-table" value="${stanLapValue}" oninput="onFieldChange(${rowIdx})"></td>
             <td>
-                <img class="photo-thumbnail" src="${objectUrl}" onclick="inspectPhoto(${rowIdx})">
+                <img class="photo-thumbnail" src="${objectUrl}" onclick="inspectPhoto(${rowIdx})" alt="Foto Meter">
             </td>
             <td class="cell-raw" style="font-family:'JetBrains Mono';">-</td>
             <td>
@@ -290,4 +313,112 @@ function appendFilesToTable(files) {
 
     tbody.appendChild(fragment);
     if (typeof updateKPIs === 'function') updateKPIs();
+    if (typeof persistCurrentSession === 'function') persistCurrentSession();
 }
+
+// Reset Table dengan Konfirmasi Aman
+function resetTable() {
+    const rows = document.querySelectorAll('#table-body tr:not(#empty-state-row)');
+    if (rows.length === 0) {
+        showToast("Tabel antrean audit sudah kosong.", "info");
+        return;
+    }
+    const modal = document.getElementById('modal-reset-confirm');
+    if (modal) modal.style.display = 'flex';
+    else executeResetTable();
+}
+
+function executeResetTable() {
+    const modal = document.getElementById('modal-reset-confirm');
+    if (modal) modal.style.display = 'none';
+
+    const tbody = document.getElementById('table-body');
+    tbody.innerHTML = `
+        <tr id="empty-state-row">
+            <td colspan="13" class="empty-state-td">
+                <div class="empty-dropzone" id="empty-dropzone" onclick="document.getElementById('folder-input').click()">
+                    <div class="empty-icon-circle">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <h3 class="empty-title">Antrean Audit Masih Kosong</h3>
+                    <p class="empty-subtitle">
+                        Seret dan jatuhkan (<strong>Drag & Drop</strong>) folder atau berkas foto meteran ke sini, atau klik tombol di bawah untuk memulai:
+                    </p>
+                    <div class="empty-actions">
+                        <button type="button" class="btn btn-upload-folder" onclick="event.stopPropagation(); document.getElementById('folder-input').click()">
+                            <i class="fas fa-folder-plus"></i> Unggah Folder Foto
+                        </button>
+                        <button type="button" class="btn btn-upload-file" onclick="event.stopPropagation(); document.getElementById('file-input').click()">
+                            <i class="fas fa-file-image"></i> Tambah File Foto
+                        </button>
+                        <button type="button" class="btn btn-upload-excel" onclick="event.stopPropagation(); document.getElementById('excel-input').click()">
+                            <i class="fas fa-file-excel"></i> Impor Rekap ACMT (.xlsx / .csv)
+                        </button>
+                    </div>
+                    <div class="empty-hint">
+                        <i class="fas fa-shield-alt" style="color:var(--pln-blue);"></i> Dilengkapi Jaring Pengaman Anti-Duplikasi Foto & Auto-Pairing Data Pelanggan
+                    </div>
+                </div>
+            </td>
+        </tr>
+    `;
+    setupDropzoneEvents();
+    if (typeof updateKPIs === 'function') updateKPIs();
+    if (typeof clearPersistedSession === 'function') clearPersistedSession();
+    showToast("Tabel antrean audit telah dibersihkan.", "info");
+}
+
+// DRAG & DROP SUPPORT (UX ENHANCEMENT)
+function setupDropzoneEvents() {
+    const dropzone = document.getElementById('empty-dropzone');
+    const tableContainer = document.querySelector('.table-container');
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (dropzone) dropzone.classList.add('drag-over');
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (dropzone) dropzone.classList.remove('drag-over');
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (dropzone) dropzone.classList.remove('drag-over');
+        const dt = e.dataTransfer;
+        const files = Array.from(dt.files || []);
+        if (files.length > 0) {
+            const excelFile = files.find(f => /\.(xlsx|xls|csv)$/i.test(f.name));
+            if (excelFile && files.length === 1) {
+                handleExcelUpload({ target: { files: [excelFile], value: '' } });
+            } else {
+                processIncomingFiles(files, "dragdrop");
+            }
+        }
+    };
+
+    window.addEventListener('dragover', (e) => e.preventDefault());
+    window.addEventListener('drop', (e) => e.preventDefault());
+
+    if (dropzone) {
+        dropzone.addEventListener('dragover', handleDragOver);
+        dropzone.addEventListener('dragleave', handleDragLeave);
+        dropzone.addEventListener('drop', handleDrop);
+    }
+    if (tableContainer) {
+        tableContainer.addEventListener('dragover', handleDragOver);
+        tableContainer.addEventListener('dragleave', handleDragLeave);
+        tableContainer.addEventListener('drop', handleDrop);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    setupDropzoneEvents();
+    if (typeof restoreSessionOnStartup === 'function') {
+        restoreSessionOnStartup();
+    }
+});
