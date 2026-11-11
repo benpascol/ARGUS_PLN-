@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Audit Stand KWH Meter ARGUS V5 - PT PLN (Persero) UP3 Mojokerto</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --pln-blue: #007BB5;
+            --pln-blue-dark: #005A87;
+            --pln-blue-light: #E0F2FE;
+            --pln-yellow: #FDB913;
+            --pln-red: #ED1C24;
+            --bg-page: #F1F5F9;
+            --bg-card: #FFFFFF;
+            --text-heading: #0F172A;
+            --text-body: #334155;
+            --text-muted: #64748B;
+            --border-color: #CBD5E1;
+            --border-light: #E2E8F0;
+            --success-bg: #DCFCE7;
+            --success-border: #86EFAC;
+            --success-text: #166534;
+            --warning-bg: #FEF3C7;
+            --warning-border: #FDE68A;
+            --warning-text: #92400E;
+            --danger-bg: #FEE2E2;
+            --danger-border: #FECACA;
+            --danger-text: #991B1B;
+            --purple-bg: #F3E8FF;
+            --purple-border: #D8B4FE;
+            --purple-text: #6B21A8;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.04);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-page);
+            color: var(--text-body);
+            min-height: 100vh;
+            padding: 24px;
+            line-height: 1.5;
+        }
+
+        /* TOP HEADER CORPORATE PLN */
+        .pln-header {
+            background: linear-gradient(135deg, var(--pln-blue) 0%, var(--pln-blue-dark) 100%);
+            color: #FFFFFF;
+            padding: 18px 26px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 6px 18px rgba(0, 123, 181, 0.25);
+            margin-bottom: 22px;
+            border-bottom: 4px solid var(--pln-yellow);
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .pln-logo-badge {
+            background: var(--pln-yellow);
+            color: #000000;
+            width: 46px;
+            height: 46px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 900;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .header-titles h1 {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+            margin-bottom: 2px;
+        }
+
+        .header-titles p {
+            font-size: 12px;
+            color: #E2E8F0;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .engineer-badge {
+            background: rgba(0, 0, 0, 0.25);
+            color: #FEF08A;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            border: 1px solid rgba(254, 240, 138, 0.3);
+        }
+
+        .header-status-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .online-dot {
+            width: 9px;
+            height: 9px;
+            background: #22C55E;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #22C55E;
+        }
+
+        /* KPI INTERACTIVE FILTER CARDS (LIGHT THEME) */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px 18px;
+            box-shadow: var(--shadow-sm);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--border-color);
+        }
+
+        .kpi-card.all::before { background: var(--pln-blue); }
+        .kpi-card.match::before { background: #16A34A; }
+        .kpi-card.rolling::before { background: #D97706; }
+        .kpi-card.diff::before { background: var(--pln-red); }
+        .kpi-card.nihil::before { background: #64748B; }
+        .kpi-card.edited::before { background: #9333EA; }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: #94A3B8;
+        }
+
+        .kpi-card.active {
+            border: 2px solid var(--pln-blue);
+            background: #F0F9FF;
+            box-shadow: 0 4px 12px rgba(0, 123, 181, 0.15);
+        }
+
+        .kpi-card.active::after {
+            content: 'FILTER AKTIF';
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            font-size: 9px;
+            font-weight: 800;
+            background: var(--pln-blue);
+            color: #FFFFFF;
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 0.04em;
+        }
+
+        .kpi-title {
+            font-size: 11.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .kpi-number {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--text-heading);
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .kpi-pct-badge {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        /* NOTICE BANNER */
+        .info-strip {
+            background: #EFF6FF;
+            border: 1px solid #BFDBFE;
+            border-left: 4px solid var(--pln-blue);
+            padding: 12px 18px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 18px;
+            font-size: 13px;
+            color: #1E3A8A;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* TOOLBAR */
+        .toolbar-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 14px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-sm);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12.5px;
+            font-weight: 700;
+            padding: 9px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            filter: brightness(0.95);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-run {
+            background: #16A34A;
+            color: #FFFFFF;
+            font-size: 13px;
+            padding: 9px 18px;
+            box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3);
+        }
+
+        .btn-run:hover {
+            background: #15803D;
+        }
+
+        .btn-upload-folder {
+            background: var(--pln-blue);
+            color: #FFFFFF;
+            box-shadow: 0 2px 4px rgba(0, 123, 181, 0.2);
+        }
+
+        .btn-upload-folder:hover {
+            background: var(--pln-blue-dark);
+        }
+
+        .btn-upload-file {
+            background: #FFFFFF;
+            color: var(--text-heading);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-upload-file:hover {
+            background: #F8FAFC;
+            border-color: var(--pln-blue);
+            color: var(--pln-blue);
+        }
+
+        .btn-export-excel {
+            background: #0284C7;
+            color: #FFFFFF;
+        }
+
+        .btn-export-excel:hover {
+            background: #0369A1;
+        }
+
+        .btn-secondary {
+            background: #FFFFFF;
+            color: var(--text-body);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: #F8FAFC;
+            border-color: #94A3B8;
+        }
+
+        /* TOAST NOTIFICATION */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 24px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast-item {
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--pln-blue);
+            padding: 12px 18px;
+            border-radius: 6px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-heading);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            pointer-events: auto;
+            animation: slideInRight 0.25s ease;
+            max-width: 380px;
+        }
+
+        .toast-item.toast-success { border-left-color: #16A34A; }
+        .toast-item.toast-warning { border-left-color: #D97706; }
+        .toast-item.toast-danger { border-left-color: var(--pln-red); }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .search-field {
+            position: relative;
+        }
+
+        .search-field input {
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            padding: 8px 12px 8px 34px;
+            border-radius: 6px;
+            font-size: 12.5px;
+            color: var(--text-heading);
+            width: 220px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .search-field input:focus {
+            border-color: var(--pln-blue);
+            width: 260px;
+            box-shadow: 0 0 0 3px rgba(0, 123, 181, 0.15);
+        }
+
+        .search-field i {
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        /* TABLE VIEW */
+        .table-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .table-scroll {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 12.5px;
+        }
+
+        th {
+            background: var(--pln-blue);
+            color: #FFFFFF;
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 12px 14px;
+            border-right: 1px solid rgba(255,255,255,0.15);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-light);
+            border-right: 1px solid var(--border-light);
+            vertical-align: middle;
+            white-space: nowrap;
+            color: var(--text-body);
+        }
+
+        tr:nth-child(even) td { background: #FAFAFA; }
+        tr:hover td { background: #F1F5F9; }
+
+        tr.row-match td { background: #F0FDF4 !important; }
+        tr.row-rolling td { background: #FFFBEB !important; }
+        tr.row-diff td { background: #FEF2F2 !important; }
+        tr.row-edited td { background: #FAF5FF !important; }
+
+        .idpel-code {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: var(--pln-blue);
+        }
+
+        .photo-thumbnail {
+            width: 75px;
+            height: 55px;
+            border-radius: 4px;
+            object-fit: cover;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            background: #E2E8F0;
+            display: block;
+        }
+
+        .photo-thumbnail:hover {
+            transform: scale(1.08);
+            border-color: var(--pln-blue);
+            box-shadow: var(--shadow-md);
+        }
+
+        .input-table {
+            width: 80px;
+            padding: 5px 8px;
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 12.5px;
+            text-align: center;
+            color: var(--text-heading);
+            outline: none;
+            transition: border-color 0.15s ease;
+        }
+
+        .input-table:focus {
+            border-color: var(--pln-blue);
+            box-shadow: 0 0 0 2px rgba(0, 123, 181, 0.15);
+        }
+
+        .input-table.ai-field {
+            color: var(--pln-blue);
+            background: #F8FAFC;
+        }
+
+        .input-notes {
+            width: 140px;
+            padding: 5px 8px;
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 11.5px;
+            outline: none;
+            color: var(--text-heading);
+        }
+
+        .input-notes:focus {
+            border-color: #9333EA;
+        }
+
+        /* STATUS BADGE SELECT */
+        .select-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11.5px;
+            font-weight: 700;
+            cursor: pointer;
+            outline: none;
+            border: 1px solid var(--border-color);
+            background: #FFFFFF;
+            color: var(--text-heading);
+        }
+
+        .select-status.status-match { background: var(--success-bg); color: var(--success-text); border-color: var(--success-border); }
+        .select-status.status-rolling { background: var(--warning-bg); color: var(--warning-text); border-color: var(--warning-border); }
+        .select-status.status-diff { background: var(--danger-bg); color: var(--danger-text); border-color: var(--danger-border); }
+        .select-status.status-nihil { background: #F1F5F9; color: #475569; border-color: #CBD5E1; }
+        .select-status.status-triage { background: var(--purple-bg); color: var(--purple-text); border-color: var(--purple-border); }
+
+        .tag-manual {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--purple-bg);
+            color: var(--purple-text);
+            border: 1px solid var(--purple-border);
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 9.5px;
+            font-weight: 700;
+            margin-top: 3px;
+        }
+
+        .btn-row-audit {
+            padding: 5px 10px;
+            font-size: 11.5px;
+            font-weight: 700;
+            background: #FFFFFF;
+            color: var(--pln-blue);
+            border: 1px solid var(--pln-blue);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-row-audit:hover {
+            background: var(--pln-blue);
+            color: #FFFFFF;
+        }
+
+        /* MODAL INSPECTOR LIGHT */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 99999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-window {
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            width: min(840px, 94vw);
+            max-height: 90vh;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-bar {
+            background: #F8FAFC;
+            border-bottom: 1px solid var(--border-color);
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-bar h3 {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--text-heading);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-body-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal-image-box {
+            background: #F8FAFC;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 280px;
+            overflow: hidden;
+        }
+
+        .modal-image-box img {
+            max-width: 100%;
+            max-height: 350px;
+            object-fit: contain;
+        }
+
+        .modal-info-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .info-card {
+            background: #F8FAFC;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+        }
+
+        .info-card-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 2px;
+        }
+
+        .info-card-val {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text-heading);
+            font-family: 'JetBrains Mono', monospace;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOP HEADER -->
+    <header class="pln-header">
+        <div class="header-brand">
+            <div class="pln-logo-badge">⚡</div>
+            <div class="header-titles">
+                <h1>PT PLN (PERSERO) UNIT INDUK DISTRIBUSI JAWA TIMUR</h1>
+                <p>
+                    UP3 MOJOKERTO — SISTEM AUDIT STAND KWH METER (LBKB)
+                    <span class="engineer-badge">Lead Engineer: Pascol</span>
+                </p>
+            </div>
+        </div>
+        <div class="header-status-box">
+            <div class="online-dot"></div>
+            <span>ENGINE: <strong>ARGUS AI V5 (RTX 4060 GPU)</strong></span>
+        </div>
+    </header>
+
+    <!-- INTERACTIVE KPI FILTER CARDS -->
+    <div class="kpi-row">
+        <div class="kpi-card all active" id="kpi-all" onclick="filterByStatus('ALL')">
+            <div class="kpi-title"><i class="fas fa-layer-group" style="color: var(--pln-blue);"></i> Total Sampel</div>
+            <div class="kpi-number" id="stat-total">5</div>
+        </div>
+        <div class="kpi-card match" id="kpi-match" onclick="filterByStatus('MATCH')">
+            <div class="kpi-title"><i class="fas fa-check-circle" style="color: #16A34A;"></i> Sesuai Match</div>
+            <div class="kpi-number" style="color: #16A34A;" id="stat-match">0 <span class="kpi-pct-badge" id="pct-match">(0%)</span></div>
+        </div>
+        <div class="kpi-card rolling" id="kpi-rolling" onclick="filterByStatus('ROLLING')">
+            <div class="kpi-title"><i class="fas fa-sync-alt" style="color: #D97706;"></i> Rolling Digit</div>
+            <div class="kpi-number" style="color: #D97706;" id="stat-rolling">0 <span class="kpi-pct-badge" id="pct-rolling">(0%)</span></div>
+        </div>
+        <div class="kpi-card diff" id="kpi-diff" onclick="filterByStatus('DIFF')">
+            <div class="kpi-title"><i class="fas fa-exclamation-triangle" style="color: var(--pln-red);"></i> Beda Stand</div>
+            <div class="kpi-number" style="color: var(--pln-red);" id="stat-diff">0 <span class="kpi-pct-badge" id="pct-diff">(0%)</span></div>
+        </div>
+        <div class="kpi-card nihil" id="kpi-nihil" onclick="filterByStatus('NIHIL')">
+            <div class="kpi-title"><i class="fas fa-times-circle" style="color: #64748B;"></i> Bukan KWH / Nihil</div>
+            <div class="kpi-number" style="color: #64748B;" id="stat-nihil">0</div>
+        </div>
+        <div class="kpi-card edited" id="kpi-edited" onclick="filterByStatus('EDITED')">
+            <div class="kpi-title"><i class="fas fa-user-edit" style="color: #9333EA;"></i> Dikoreksi Auditor</div>
+            <div class="kpi-number" style="color: #9333EA;" id="stat-edited">0</div>
+        </div>
+    </div>
+
+
+    <!-- NOTICE STRIP -->
+    <div class="info-strip">
+        <span>
+            <i class="fas fa-info-circle" style="margin-right: 6px;"></i>
+            <strong>Mode Human-in-the-Loop Aktif:</strong> Anda dapat mengedit langsung angka <em>Stand ARGUS</em>, memilih ulang <em>Vonis Audit</em>, dan memberikan <em>Catatan Khusus</em> pada baris mana pun.
+        </span>
+        <span style="font-weight: 600; font-size: 12px; color: var(--pln-blue);">
+            Klik kartu di atas untuk memfilter tabel secara instan.
+        </span>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div class="toast-container" id="toast-box"></div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar-panel">
+        <div class="toolbar-group">
+            <button class="btn btn-run" id="btn-run-all" onclick="auditAllRows()">
+                <i class="fas fa-play"></i> Mulai Audit Batch
+            </button>
+            <button class="btn btn-upload-folder" onclick="document.getElementById('folder-input').click()">
+                <i class="fas fa-folder-plus"></i> Unggah Folder Foto
+            </button>
+            <input type="file" id="folder-input" webkitdirectory directory multiple style="display:none;" onchange="handleFolderUpload(event)">
+            
+            <button class="btn btn-upload-file" onclick="document.getElementById('file-input').click()">
+                <i class="fas fa-file-image"></i> Tambah File Foto
+            </button>
+            <input type="file" id="file-input" accept="image/*" multiple style="display:none;" onchange="handleFileUpload(event)">
+
+            <button class="btn btn-export-excel" id="btn-export-excel" onclick="exportOfficialExcel()">
+                <i class="fas fa-file-excel"></i> Unduh Laporan Excel Resmi (.xlsx)
+            </button>
+            <button class="btn btn-secondary" onclick="resetTable()">
+                <i class="fas fa-redo-alt"></i> Reset Tabel
+            </button>
+        </div>
+        <div class="toolbar-group">
+            <div class="search-field">
+                <i class="fas fa-search"></i>
+                <input type="text" id="search-input" placeholder="Cari IDPEL / Nama..." oninput="searchRows(this.value)">
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MAIN TABLE -->
+    <div class="table-container">
+        <div class="table-scroll">
+            <table id="main-table">
+                <thead>
+                    <tr>
+                        <th>NO</th>
+                        <th>IDPEL</th>
+                        <th>NAMA PELANGGAN</th>
+                        <th>TARIF / DAYA</th>
+                        <th>STAN LAPANGAN</th>
+                        <th>FOTO METERAN</th>
+                        <th>RAW DISPLAY AI</th>
+                        <th>STAN ARGUS (EDITABLE)</th>
+                        <th>SELISIH (kWh)</th>
+                        <th>VONIS AUDIT</th>
+                        <th>CATATAN AUDITOR</th>
+                        <th>LATENSI</th>
+                        <th>AKSI</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <!-- Sample 1 -->
+                    <tr id="row-0" data-idpel="514500001376" data-photo="202601-514500001376-L.jpg" data-status="PENDING">
+                        <td>1</td>
+                        <td class="idpel-code">514500001376</td>
+                        <td><strong>SAMAN</strong></td>
+                        <td>R1 / 450 VA</td>
+                        <td>
+                            <input type="text" class="input-table" value="1" oninput="onFieldChange(0)">
+                        </td>
+                        <td>
+                            <img class="photo-thumbnail" src="/sample-photo/202601-514500001376-L.jpg" onclick="inspectPhoto(0)">
+                        </td>
+                        <td class="cell-raw" style="font-family:'JetBrains Mono';">-</td>
+                        <td>
+                            <input type="text" class="input-table ai-field cell-argus" value="-" oninput="onArgusChange(0)">
+                            <div class="edit-badge-slot"></div>
+                        </td>
+                        <td class="cell-diff" style="font-family:'JetBrains Mono'; font-weight:700;">-</td>
+                        <td>
+                            <select class="select-status" onchange="onStatusSelectChange(0, this)">
+                                <option value="PENDING" selected>Belum Diaudit</option>
+                                <option value="MATCH">Sesuai Match</option>
+                                <option value="ROLLING">Rolling Digit</option>
+                                <option value="DIFF">Beda Stand</option>
+                                <option value="NIHIL">Bukan KWH / Nihil</option>
+                                <option value="TRIAGE">Perlu Tinjau Ulang</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="text" class="input-notes" placeholder="Catatan auditor..." oninput="onFieldChange(0)">
+                        </td>
+                        <td class="cell-lat" style="font-family:'JetBrains Mono'; font-size:11.5px;">-</td>
+                        <td>
+                            <button class="btn-row-audit" onclick="auditSingleRow(0)"><i class="fas fa-bolt"></i> Audit</button>
+                        </td>
+                    </tr>
+                    <!-- Sample 2 -->
+                    <tr id="row-1" data-idpel="514500003050" data-photo="202601-514500003050-L.jpg" data-status="PENDING">
+                        <td>2</td>
+                        <td class="idpel-code">514500003050</td>
+                        <td><strong>ROCHMAD</strong></td>
+                        <td>R1M / 900 VA</td>
+                        <td>
+                            <input type="text" class="input-table" value="7501" oninput="onFieldChange(1)">
+                        </td>
+                        <td>
+                            <img class="photo-thumbnail" src="/sample-photo/202601-514500003050-L.jpg" onclick="inspectPhoto(1)">
+                        </td>
+                        <td class="cell-raw" style="font-family:'JetBrains Mono';">-</td>
+                        <td>
+                            <input type="text" class="input-table ai-field cell-argus" value="-" oninput="onArgusChange(1)">
+                            <div class="edit-badge-slot"></div>
+                        </td>
+                        <td class="cell-diff" style="font-family:'JetBrains Mono'; font-weight:700;">-</td>
+                        <td>
+                            <select class="select-status" onchange="onStatusSelectChange(1, this)">
+                                <option value="PENDING" selected>Belum Diaudit</option>
+                                <option value="MATCH">Sesuai Match</option>
+                                <option value="ROLLING">Rolling Digit</option>
+                                <option value="DIFF">Beda Stand</option>
+                                <option value="NIHIL">Bukan KWH / Nihil</option>
+                                <option value="TRIAGE">Perlu Tinjau Ulang</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="text" class="input-notes" placeholder="Catatan auditor..." oninput="onFieldChange(1)">
+                        </td>
+                        <td class="cell-lat" style="font-family:'JetBrains Mono'; font-size:11.5px;">-</td>
+                        <td>
+                            <button class="btn-row-audit" onclick="auditSingleRow(1)"><i class="fas fa-bolt"></i> Audit</button>
+                        </td>
+                    </tr>
+                    <!-- Sample 3 -->
+                    <tr id="row-2" data-idpel="514500003587" data-photo="202601-514500003587-L.jpg" data-status="PENDING">
+                        <td>3</td>
+                        <td class="idpel-code">514500003587</td>
+                        <td><strong>KANT URUSAN AGAMA</strong></td>
+                        <td>P1 / 900 VA</td>
+                        <td>
+                            <input type="text" class="input-table" value="22962" oninput="onFieldChange(2)">
+                        </td>
+                        <td>
+                            <img class="photo-thumbnail" src="/sample-photo/202601-514500003587-L.jpg" onclick="inspectPhoto(2)">
+                        </td>
+                        <td class="cell-raw" style="font-family:'JetBrains Mono';">-</td>
+                        <td>
+                            <input type="text" class="input-table ai-field cell-argus" value="-" oninput="onArgusChange(2)">
+                            <div class="edit-badge-slot"></div>
+                        </td>
+                        <td class="cell-diff" style="font-family:'JetBrains Mono'; font-weight:700;">-</td>
+                        <td>
+                            <select class="select-status" onchange="onStatusSelectChange(2, this)">
+                                <option value="PENDING" selected>Belum Diaudit</option>
+                                <option value="MATCH">Sesuai Match</option>
+                                <option value="ROLLING">Rolling Digit</option>
+                                <option value="DIFF">Beda Stand</option>
+                                <option value="NIHIL">Bukan KWH / Nihil</option>
+                                <option value="TRIAGE">Perlu Tinjau Ulang</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="text" class="input-notes" placeholder="Catatan auditor..." oninput="onFieldChange(2)">
+                        </td>
+                        <td class="cell-lat" style="font-family:'JetBrains Mono'; font-size:11.5px;">-</td>
+                        <td>
+                            <button class="btn-row-audit" onclick="auditSingleRow(2)"><i class="fas fa-bolt"></i> Audit</button>
+                        </td>
+                    </tr>
+                    <!-- Sample 4 -->
+                    <tr id="row-3" data-idpel="514500003616" data-photo="202601-514500003616-L.jpg" data-status="PENDING">
+                        <td>4</td>
+                        <td class="idpel-code">514500003616</td>
+                        <td><strong>USMAN</strong></td>
+                        <td>R1 / 450 VA</td>
+                        <td>
+                            <input type="text" class="input-table" value="5013" oninput="onFieldChange(3)">
+                        </td>
+                        <td>
+                            <img class="photo-thumbnail" src="/sample-photo/202601-514500003616-L.jpg" onclick="inspectPhoto(3)">
+                        </td>
+                        <td class="cell-raw" style="font-family:'JetBrains Mono';">-</td>
+                        <td>
+                            <input type="text" class="input-table ai-field cell-argus" value="-" oninput="onArgusChange(3)">
+                            <div class="edit-badge-slot"></div>
+                        </td>
+                        <td class="cell-diff" style="font-family:'JetBrains Mono'; font-weight:700;">-</td>
+                        <td>
+                            <select class="select-status" onchange="onStatusSelectChange(3, this)">
+                                <option value="PENDING" selected>Belum Diaudit</option>
+                                <option value="MATCH">Sesuai Match</option>
+                                <option value="ROLLING">Rolling Digit</option>
+                                <option value="DIFF">Beda Stand</option>
+                                <option value="NIHIL">Bukan KWH / Nihil</option>
+                                <option value="TRIAGE">Perlu Tinjau Ulang</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="text" class="input-notes" placeholder="Catatan auditor..." oninput="onFieldChange(3)">
+                        </td>
+                        <td class="cell-lat" style="font-family:'JetBrains Mono'; font-size:11.5px;">-</td>
+                        <td>
+                            <button class="btn-row-audit" onclick="auditSingleRow(3)"><i class="fas fa-bolt"></i> Audit</button>
+                        </td>
+                    </tr>
+                    <!-- Sample 5 -->
+                    <tr id="row-4" data-idpel="514500004079" data-photo="202601-514500004079-L.jpg" data-status="PENDING">
+                        <td>5</td>
+                        <td class="idpel-code">514500004079</td>
+                        <td><strong>H NURCHASAN</strong></td>
+                        <td>R1 / 450 VA</td>
+                        <td>
+                            <input type="text" class="input-table" value="14244" oninput="onFieldChange(4)">
+                        </td>
+                        <td>
+                            <img class="photo-thumbnail" src="/sample-photo/202601-514500004079-L.jpg" onclick="inspectPhoto(4)">
+                        </td>
+                        <td class="cell-raw" style="font-family:'JetBrains Mono';">-</td>
+                        <td>
+                            <input type="text" class="input-table ai-field cell-argus" value="-" oninput="onArgusChange(4)">
+                            <div class="edit-badge-slot"></div>
+                        </td>
+                        <td class="cell-diff" style="font-family:'JetBrains Mono'; font-weight:700;">-</td>
+                        <td>
+                            <select class="select-status" onchange="onStatusSelectChange(4, this)">
+                                <option value="PENDING" selected>Belum Diaudit</option>
+                                <option value="MATCH">Sesuai Match</option>
+                                <option value="ROLLING">Rolling Digit</option>
+                                <option value="DIFF">Beda Stand</option>
+                                <option value="NIHIL">Bukan KWH / Nihil</option>
+                                <option value="TRIAGE">Perlu Tinjau Ulang</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="text" class="input-notes" placeholder="Catatan auditor..." oninput="onFieldChange(4)">
+                        </td>
+                        <td class="cell-lat" style="font-family:'JetBrains Mono'; font-size:11.5px;">-</td>
+                        <td>
+                            <button class="btn-row-audit" onclick="auditSingleRow(4)"><i class="fas fa-bolt"></i> Audit</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+    <!-- MODAL INSPECTOR -->
+    <div class="modal-backdrop" id="modal-inspector" onclick="closeInspector()">
+        <div class="modal-window" onclick="event.stopPropagation()">
+            <div class="modal-bar">
+                <h3 id="modal-title"><i class="fas fa-search-plus" style="color: var(--pln-blue);"></i> Pratinjau Stand KWH Meter</h3>
+                <button class="btn btn-secondary" style="padding: 4px 10px;" onclick="closeInspector()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body-grid">
+                <div class="modal-image-box">
+                    <img id="modal-photo-src" src="">
+                </div>
+                <div class="modal-info-list">
+                    <div class="info-card">
+                        <div class="info-card-label">IDPEL & Nama Pelanggan</div>
+                        <div class="info-card-val" id="modal-idpel" style="font-size: 15px; color: var(--pln-blue);">-</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-label">Stand Lapangan (Petugas Cater)</div>
+                        <div class="info-card-val" id="modal-stan-lap">-</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-label">Stand Hasil AI ARGUS (V5)</div>
+                        <div class="info-card-val" id="modal-stan-ai" style="color: #16A34A;">-</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-label">Status Verifikasi</div>
+                        <div class="info-card-val" id="modal-status-text" style="font-size: 13.5px;">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DUPLICATE CONFIRMATION -->
+    <div class="modal-backdrop" id="modal-duplicate" style="display:none;" onclick="event.stopPropagation()">
+        <div class="modal-window" style="max-width: 480px; padding: 24px;">
+            <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
+                <div style="width:42px; height:42px; border-radius:50%; background:#FEF3C7; color:#D97706; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;">
+                    <i class="fas fa-clone"></i>
+                </div>
+                <div>
+                    <h4 style="font-size:15px; font-weight:700; color:var(--text-heading);">Deteksi Foto Duplikat</h4>
+                    <p style="font-size:12px; color:var(--text-muted);" id="dup-modal-desc">Ditemukan foto yang sudah ada di antrean.</p>
+                </div>
+            </div>
+            <p style="font-size:12.5px; color:var(--text-body); margin-bottom:20px; line-height:1.5;">
+                Beberapa berkas foto yang Anda unggah sudah ada di dalam tabel antrean. Anda dapat melewati berkas duplikat agar data tidak ganda, atau menimpa berkas yang lama.
+            </p>
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button class="btn btn-secondary" onclick="resolveDuplicateAction('skip')">
+                    <i class="fas fa-forward"></i> Lewati Duplikat (Skip)
+                </button>
+                <button class="btn btn-run" style="background:#0284C7;" onclick="resolveDuplicateAction('overwrite')">
+                    <i class="fas fa-sync-alt"></i> Timpa / Perbarui (Overwrite)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFilter = 'ALL';
+
+        async function imageToBase64(url) {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        async function auditSingleRow(rowIndex) {
+            const row = document.getElementById(`row-${rowIndex}`);
+            if (!row) return;
+
+            const photoImg = row.querySelector('.photo-thumbnail');
+            const stanLapInput = row.querySelectorAll('.input-table')[0];
+            const stanArgusInput = row.querySelector('.cell-argus');
+            const cellRaw = row.querySelector('.cell-raw');
+            const cellDiff = row.querySelector('.cell-diff');
+            const statusSelect = row.querySelector('.select-status');
+            const cellLat = row.querySelector('.cell-lat');
+            const btnAudit = row.querySelector('.btn-row-audit');
+
+            btnAudit.disabled = true;
+            btnAudit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Audit...';
+
+            try {
+                const b64 = await imageToBase64(photoImg.src);
+                const resp = await fetch('/predict-base64', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        image_base64: b64,
+                        filename: row.getAttribute('data-photo')
+                    })
+                });
+
+                const data = await resp.json();
+
+                cellRaw.textContent = data.raw_display || '-';
+                stanArgusInput.value = data.stand_baca || '-';
+                cellLat.textContent = `${data.latency_ms || 0} ms`;
+
+                row.setAttribute('data-blur', data.blur_score || 0);
+                row.setAttribute('data-glare', data.glare_percentage || 0);
+                row.setAttribute('data-tier', data.tier_color || 'GREEN');
+
+                const stanPlnVal = stanLapInput.value.trim().replace(/\D/g, '');
+                const stanAiVal = (data.stand_baca || '').trim().replace(/\D/g, '');
+
+                if (data.status === 'FAIL_COUNTER_NOT_FOUND') {
+                    cellDiff.textContent = '-';
+                    statusSelect.value = 'NIHIL';
+                    row.setAttribute('data-status', 'NIHIL');
+                } else if (data.status === 'FOTO_BURAM') {
+                    cellDiff.textContent = '-';
+                    statusSelect.value = 'TRIAGE';
+                    row.setAttribute('data-status', 'TRIAGE');
+                } else if (data.stand_baca) {
+                    if (stanPlnVal === '') {
+                        cellDiff.textContent = '0';
+                        statusSelect.value = 'MATCH';
+                        row.setAttribute('data-status', 'MATCH');
+                    } else {
+                        const numPln = parseInt(stanPlnVal) || 0;
+                        const numAi = parseInt(stanAiVal) || 0;
+                        const diff = Math.abs(numPln - numAi);
+                        cellDiff.textContent = diff === 0 ? '0' : (numAi - numPln);
+
+                        if (diff === 0) {
+                            statusSelect.value = 'MATCH';
+                            row.setAttribute('data-status', 'MATCH');
+                        } else if (diff <= 2) {
+                            statusSelect.value = 'ROLLING';
+                            row.setAttribute('data-status', 'ROLLING');
+                        } else {
+                            statusSelect.value = 'DIFF';
+                            row.setAttribute('data-status', 'DIFF');
+                        }
+                    }
+                } else {
+                    cellDiff.textContent = '-';
+                    statusSelect.value = 'TRIAGE';
+                    row.setAttribute('data-status', 'TRIAGE');
+                }
+
+                updateSelectStyle(statusSelect);
+                updateRowStyle(row);
+                updateKPIs();
+            } catch (err) {
+                console.error(err);
+                statusSelect.value = 'TRIAGE';
+                updateSelectStyle(statusSelect);
+            } finally {
+                btnAudit.disabled = false;
+                btnAudit.innerHTML = '<i class="fas fa-redo-alt"></i> Re-Audit';
+            }
+        }
+
+        async function auditAllRows() {
+            const btn = document.getElementById('btn-run-all');
+            const rows = document.querySelectorAll('#table-body tr');
+            if (rows.length === 0) {
+                showToast("Tidak ada antrean foto untuk diaudit. Silakan unggah folder atau file foto terlebih dahulu.", "warning");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses Semua Data...';
+
+            for (let i = 0; i < rows.length; i++) {
+                await auditSingleRow(i);
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check-double"></i> Selesai Diaudit';
+            showToast("Proses batch audit berhasil diselesaikan.", "success");
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-play"></i> Mulai Audit Batch';
+            }, 3000);
+        }
+
+        function onArgusChange(rowIndex) {
+            const row = document.getElementById(`row-${rowIndex}`);
+            if (!row) return;
+
+            markRowAsEdited(row);
+            recalculateRowDiffAndStatus(row);
+            updateKPIs();
+        }
+
+        function onFieldChange(rowIndex) {
+            const row = document.getElementById(`row-${rowIndex}`);
+            if (!row) return;
+
+            recalculateRowDiffAndStatus(row);
+            updateKPIs();
+        }
+
+        function onStatusSelectChange(rowIndex, selectElem) {
+            const row = document.getElementById(`row-${rowIndex}`);
+            if (!row) return;
+
+            row.setAttribute('data-status', selectElem.value);
+            markRowAsEdited(row);
+            updateSelectStyle(selectElem);
+            updateRowStyle(row);
+            updateKPIs();
+        }
+
+        function markRowAsEdited(row) {
+            row.setAttribute('data-edited', 'true');
+            row.classList.add('row-edited');
+            const slot = row.querySelector('.edit-badge-slot');
+            if (slot && !slot.innerHTML) {
+                slot.innerHTML = '<span class="tag-manual"><i class="fas fa-pen"></i> Dikoreksi</span>';
+            }
+        }
+
+        function recalculateRowDiffAndStatus(row) {
+            const stanLapInput = row.querySelectorAll('.input-table')[0];
+            const stanArgusInput = row.querySelector('.cell-argus');
+            const cellDiff = row.querySelector('.cell-diff');
+            const statusSelect = row.querySelector('.select-status');
+
+            const pStr = stanLapInput.value.trim().replace(/\D/g, '');
+            const aStr = stanArgusInput.value.trim().replace(/\D/g, '');
+
+            if (pStr !== '' && aStr !== '') {
+                const numPln = parseInt(pStr) || 0;
+                const numAi = parseInt(aStr) || 0;
+                const diff = numAi - numPln;
+                cellDiff.textContent = diff;
+
+                if (Math.abs(diff) === 0) {
+                    statusSelect.value = 'MATCH';
+                    row.setAttribute('data-status', 'MATCH');
+                } else if (Math.abs(diff) <= 2) {
+                    statusSelect.value = 'ROLLING';
+                    row.setAttribute('data-status', 'ROLLING');
+                } else {
+                    statusSelect.value = 'DIFF';
+                    row.setAttribute('data-status', 'DIFF');
+                }
+            }
+            updateSelectStyle(statusSelect);
+            updateRowStyle(row);
+        }
+
+        function updateSelectStyle(sel) {
+            sel.className = 'select-status';
+            if (sel.value === 'MATCH') sel.classList.add('status-match');
+            else if (sel.value === 'ROLLING') sel.classList.add('status-rolling');
+            else if (sel.value === 'DIFF') sel.classList.add('status-diff');
+            else if (sel.value === 'NIHIL') sel.classList.add('status-nihil');
+            else if (sel.value === 'TRIAGE') sel.classList.add('status-triage');
+        }
+
+        function updateRowStyle(row) {
+            const st = row.getAttribute('data-status');
+            row.classList.remove('row-match', 'row-rolling', 'row-diff');
+            if (st === 'MATCH') row.classList.add('row-match');
+            else if (st === 'ROLLING') row.classList.add('row-rolling');
+            else if (st === 'DIFF' || st === 'NIHIL') row.classList.add('row-diff');
+        }
+
+        function updateKPIs() {
+            const rows = document.querySelectorAll('#table-body tr');
+            let match = 0, rolling = 0, diff = 0, nihil = 0, edited = 0;
+
+            rows.forEach(r => {
+                const st = r.getAttribute('data-status');
+                if (st === 'MATCH') match++;
+                else if (st === 'ROLLING') rolling++;
+                else if (st === 'DIFF') diff++;
+                else if (st === 'NIHIL') nihil++;
+
+                if (r.getAttribute('data-edited') === 'true') edited++;
+            });
+
+            const total = rows.length;
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-match').innerHTML = `${match} <span class="kpi-pct-badge">(${total ? Math.round(match/total*100) : 0}%)</span>`;
+            document.getElementById('stat-rolling').innerHTML = `${rolling} <span class="kpi-pct-badge">(${total ? Math.round(rolling/total*100) : 0}%)</span>`;
+            document.getElementById('stat-diff').innerHTML = `${diff} <span class="kpi-pct-badge">(${total ? Math.round(diff/total*100) : 0}%)</span>`;
+            document.getElementById('stat-nihil').textContent = nihil;
+            document.getElementById('stat-edited').textContent = edited;
+        }
+
+        function filterByStatus(statusType) {
+            currentFilter = statusType;
+            document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('active'));
+
+            if (statusType === 'ALL') document.getElementById('kpi-all').classList.add('active');
+            else if (statusType === 'MATCH') document.getElementById('kpi-match').classList.add('active');
+            else if (statusType === 'ROLLING') document.getElementById('kpi-rolling').classList.add('active');
+            else if (statusType === 'DIFF') document.getElementById('kpi-diff').classList.add('active');
+            else if (statusType === 'NIHIL') document.getElementById('kpi-nihil').classList.add('active');
+            else if (statusType === 'EDITED') document.getElementById('kpi-edited').classList.add('active');
+
+            const rows = document.querySelectorAll('#table-body tr');
+            rows.forEach(r => {
+                const st = r.getAttribute('data-status');
+                const isEdited = r.getAttribute('data-edited') === 'true';
+
+                if (statusType === 'ALL') r.style.display = '';
+                else if (statusType === 'EDITED') r.style.display = isEdited ? '' : 'none';
+                else r.style.display = (st === statusType) ? '' : 'none';
+            });
+        }
+
+        function searchRows(query) {
+            const q = query.toLowerCase();
+            const rows = document.querySelectorAll('#table-body tr');
+            rows.forEach(r => {
+                const text = r.textContent.toLowerCase();
+                r.style.display = text.includes(q) ? '' : 'none';
+            });
+        }
+
+        function inspectPhoto(rowIndex) {
+            const row = document.getElementById(`row-${rowIndex}`);
+            if (!row) return;
+
+            const photoImg = row.querySelector('.photo-thumbnail');
+            const idpel = row.querySelector('.idpel-code').textContent;
+            const nama = row.querySelector('strong').textContent;
+            const stanLap = row.querySelectorAll('.input-table')[0].value;
+            const stanAi = row.querySelector('.cell-argus').value;
+            const statusSel = row.querySelector('.select-status');
+
+            document.getElementById('modal-photo-src').src = photoImg.src;
+            document.getElementById('modal-idpel').textContent = `${idpel} - ${nama}`;
+            document.getElementById('modal-stan-lap').textContent = stanLap || '-';
+            document.getElementById('modal-stan-ai').textContent = stanAi || '-';
+            document.getElementById('modal-status-text').textContent = statusSel.options[statusSel.selectedIndex].text;
+            document.getElementById('modal-inspector').style.display = 'flex';
+        }
+
+        function closeInspector() {
+            document.getElementById('modal-inspector').style.display = 'none';
+        }
+
+        function resetTable() {
+            const rows = document.querySelectorAll('#table-body tr');
+            rows.forEach(r => {
+                r.className = '';
+                r.removeAttribute('data-edited');
+                r.setAttribute('data-status', 'PENDING');
+                r.querySelector('.cell-raw').textContent = '-';
+                r.querySelector('.cell-argus').value = '-';
+                r.querySelector('.cell-diff').textContent = '-';
+                r.querySelector('.cell-lat').textContent = '-';
+                const slot = r.querySelector('.edit-badge-slot');
+                if (slot) slot.innerHTML = '';
+                const sel = r.querySelector('.select-status');
+                sel.value = 'PENDING';
+                updateSelectStyle(sel);
+                const btn = r.querySelector('.btn-row-audit');
+                btn.innerHTML = '<i class="fas fa-bolt"></i> Audit';
+                btn.disabled = false;
+            });
+            updateKPIs();
+            filterByStatus('ALL');
+        }
+
+        // Toast Notification System
+        function showToast(message, type = 'info') {
+            const box = document.getElementById('toast-box');
+            if (!box) return;
+            const item = document.createElement('div');
+            item.className = `toast-item toast-${type}`;
+            let icon = 'info-circle';
+            if (type === 'success') icon = 'check-circle';
+            else if (type === 'warning') icon = 'exclamation-triangle';
+            else if (type === 'danger') icon = 'times-circle';
+            item.innerHTML = `<i class="fas fa-${icon}" style="font-size:15px;"></i><span>${message}</span>`;
+            box.appendChild(item);
+            setTimeout(() => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateX(100%)';
+                item.style.transition = 'all 0.3s ease';
+                setTimeout(() => item.remove(), 300);
+            }, 3500);
+        }
+
+        // Helper to extract clean IDPEL from filename (bukan random number)
+        function extractIdpelFromFilename(filename) {
+            // Pattern 1: match 5145 followed by 7-8 digits (standard PLN UP3 Mojokerto)
+            const m = filename.match(/(?:^|\D)(5145\d{7,8})(?:\D|$)/);
+            if (m) return m[1];
+            // Pattern 2: any 11-12 consecutive digits
+            const m2 = filename.match(/\b\d{11,12}\b/);
+            if (m2) return m2[0];
+            // Fallback: sanitized clean base filename
+            return filename.replace(/\.[^/.]+$/, "").substring(0, 16);
+        }
+
+        let pendingUploadData = null;
+
+        function handleFolderUpload(event) {
+            const files = Array.from(event.target.files || []);
+            processIncomingFiles(files, "folder");
+            event.target.value = '';
+        }
+
+        function handleFileUpload(event) {
+            const files = Array.from(event.target.files || []);
+            processIncomingFiles(files, "file");
+            event.target.value = '';
+        }
+
+        function processIncomingFiles(files, source) {
+            // Filter image files only
+            const imageFiles = files.filter(f => f.type.startsWith('image/') || /\.(jpe?g|png|webp|bmp)$/i.test(f.name));
+            if (imageFiles.length === 0) {
+                showToast("Tidak ada berkas gambar yang valid ditemukan.", "warning");
+                return;
+            }
+
+            // Map existing photos in table
+            const existingRows = document.querySelectorAll('#table-body tr');
+            const existingPhotoMap = new Map();
+            existingRows.forEach(r => {
+                const photoName = r.getAttribute('data-photo');
+                if (photoName) existingPhotoMap.set(photoName, r);
+            });
+
+            const newFiles = [];
+            const duplicateFiles = [];
+
+            imageFiles.forEach(file => {
+                if (existingPhotoMap.has(file.name)) {
+                    duplicateFiles.push({ file, existingRow: existingPhotoMap.get(file.name) });
+                } else {
+                    newFiles.push(file);
+                }
+            });
+
+            if (duplicateFiles.length > 0) {
+                pendingUploadData = { newFiles, duplicateFiles };
+                document.getElementById('dup-modal-desc').textContent = 
+                    `Terdeteksi ${duplicateFiles.length} foto duplikat dan ${newFiles.length} foto baru.`;
+                document.getElementById('modal-duplicate').style.display = 'flex';
+            } else {
+                appendFilesToTable(newFiles);
+                showToast(`Berhasil menambahkan ${newFiles.length} foto ke antrean audit.`, "success");
+            }
+        }
+
+        function resolveDuplicateAction(action) {
+            document.getElementById('modal-duplicate').style.display = 'none';
+            if (!pendingUploadData) return;
+
+            const { newFiles, duplicateFiles } = pendingUploadData;
+
+            if (action === 'overwrite') {
+                // Update duplicates
+                duplicateFiles.forEach(item => {
+                    const r = item.existingRow;
+                    const photoImg = r.querySelector('.photo-thumbnail');
+                    const objectUrl = URL.createObjectURL(item.file);
+                    photoImg.src = objectUrl;
+                    r.setAttribute('data-photo', item.file.name);
+                    r.setAttribute('data-status', 'PENDING');
+                    r.querySelector('.cell-raw').textContent = '-';
+                    r.querySelector('.cell-argus').value = '-';
+                    r.querySelector('.cell-diff').textContent = '-';
+                    r.querySelector('.cell-lat').textContent = '-';
+                    const sel = r.querySelector('.select-status');
+                    sel.value = 'PENDING';
+                    updateSelectStyle(sel);
+                });
+                appendFilesToTable(newFiles);
+                showToast(`Berhasil menimpa ${duplicateFiles.length} foto dan menambahkan ${newFiles.length} foto baru.`, "success");
+            } else {
+                // Skip duplicates
+                appendFilesToTable(newFiles);
+                showToast(`Berhasil menambahkan ${newFiles.length} foto baru (${duplicateFiles.length} duplikat dilewati).`, "info");
+            }
+
+            pendingUploadData = null;
+        }
+
+        function appendFilesToTable(files) {
+            if (!files || files.length === 0) return;
+            const tbody = document.getElementById('table-body');
+            let currentCount = tbody.querySelectorAll('tr').length;
+
+            const fragment = document.createDocumentFragment();
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const rowIdx = currentCount + i;
+                const idpel = extractIdpelFromFilename(file.name);
+                const objectUrl = URL.createObjectURL(file);
+
+                const newRow = document.createElement('tr');
+                newRow.id = `row-${rowIdx}`;
+                newRow.setAttribute('data-idpel', idpel);
+                newRow.setAttribute('data-photo', file.name);
+                newRow.setAttribute('data-status', 'PENDING');
+
+                newRow.innerHTML = `
+                    <td>${rowIdx + 1}</td>
+                    <td class="idpel-code">${idpel}</td>
+                    <td><strong>${file.name.replace(/\.[^/.]+$/, "").substring(0, 20)}</strong></td>
+                    <td>R1 / 900 VA</td>
+                    <td><input type="text" class="input-table" value="0" oninput="onFieldChange(${rowIdx})"></td>
+                    <td>
+                        <img class="photo-thumbnail" src="${objectUrl}" onclick="inspectPhoto(${rowIdx})">
+                    </td>
+                    <td class="cell-raw" style="font-family:'JetBrains Mono';">-</td>
+                    <td>
+                        <input type="text" class="input-table ai-field cell-argus" value="-" oninput="onArgusChange(${rowIdx})">
+                        <div class="edit-badge-slot"></div>
+                    </td>
+                    <td class="cell-diff" style="font-family:'JetBrains Mono'; font-weight:700;">-</td>
+                    <td>
+                        <select class="select-status" onchange="onStatusSelectChange(${rowIdx}, this)">
+                            <option value="PENDING" selected>Belum Diaudit</option>
+                            <option value="MATCH">Sesuai Match</option>
+                            <option value="ROLLING">Rolling Digit</option>
+                            <option value="DIFF">Beda Stand</option>
+                            <option value="NIHIL">Bukan KWH / Nihil</option>
+                            <option value="TRIAGE">Perlu Tinjau Ulang</option>
+                        </select>
+                    </td>
+                    <td><input type="text" class="input-notes" placeholder="Catatan auditor..." oninput="onFieldChange(${rowIdx})"></td>
+                    <td class="cell-lat" style="font-family:'JetBrains Mono'; font-size:11.5px;">-</td>
+                    <td><button class="btn-row-audit" onclick="auditSingleRow(${rowIdx})"><i class="fas fa-bolt"></i> Audit</button></td>
+                `;
+                fragment.appendChild(newRow);
+            }
+
+            tbody.appendChild(fragment);
+            updateKPIs();
+        }
+
+        async function exportOfficialExcel() {
+            const btn = document.getElementById('btn-export-excel');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyusun Excel Resmi...';
+
+            const rows = document.querySelectorAll('#table-body tr');
+            const payloadRows = [];
+
+            rows.forEach((r, idx) => {
+                const idpel = r.querySelector('.idpel-code').textContent.trim();
+                const nama = r.querySelector('strong').textContent.trim();
+                const tarif = r.cells[3].textContent.trim();
+                const stanLap = r.querySelectorAll('.input-table')[0].value.trim();
+                const rawAi = r.querySelector('.cell-raw').textContent.trim();
+                const stanArgus = r.querySelector('.cell-argus').value.trim();
+                const diff = r.querySelector('.cell-diff').textContent.trim();
+                const sel = r.querySelector('.select-status');
+                const verdict = sel.value;
+                const isEdited = r.getAttribute('data-edited') === 'true';
+                const notes = r.querySelector('.input-notes').value.trim();
+                const lat = parseFloat(r.querySelector('.cell-lat').textContent) || 0.0;
+                const blur = parseFloat(r.getAttribute('data-blur')) || 0.0;
+                const glare = parseFloat(r.getAttribute('data-glare')) || 0.0;
+                const tier = r.getAttribute('data-tier') || 'GREEN';
+                const photoFile = r.getAttribute('data-photo');
+
+                payloadRows.push({
+                    no: idx + 1,
+                    idpel: idpel,
+                    nama: nama,
+                    tarif_daya: tarif,
+                    kdbaca: "F",
+                    stan_lapangan: stanLap,
+                    raw_display: rawAi,
+                    stan_argus: stanArgus,
+                    selisih: diff,
+                    verdict: verdict,
+                    diagnosa_detail: notes || (verdict === 'MATCH' ? 'SESUAI IDEAL (5 Digit)' : 'Audit Dashboard'),
+                    tier_color: tier,
+                    latency_ms: lat,
+                    blur_score: blur,
+                    glare_ratio: glare,
+                    filename: photoFile,
+                    is_edited: isEdited,
+                    notes: notes
+                });
+            });
+
+            try {
+                const resp = await fetch('/api/export-audit-excel', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rows: payloadRows })
+                });
+
+                if (!resp.ok) throw new Error("Gagal mengekspor laporan Excel");
+
+                const blob = await resp.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = `Audit_LBKB_Result_ARGUS_V5_Official_${new Date().toISOString().slice(0,10)}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(downloadUrl);
+            } catch (err) {
+                alert("Gagal mengunduh Excel resmi: " + err.message);
+                console.error(err);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        }
+    </script>
+</body>
+</html>
