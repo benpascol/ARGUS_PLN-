@@ -134,16 +134,34 @@ async function auditAllRows() {
 
     const pWrapper = document.getElementById('batch-progress-wrapper');
     const pFill = document.getElementById('batch-progress-fill');
+    const pEta = document.getElementById('batch-eta-badge');
     if (pWrapper) pWrapper.style.display = 'block';
     if (pFill) pFill.style.width = '0%';
+    if (pEta) pEta.innerHTML = '<i class="fas fa-hourglass-half"></i> Menyiapkan antrean...';
 
     let processedCount = 0;
     let protectedCount = 0;
     const totalCount = rows.length;
+    const tBatchStart = performance.now();
 
     for (let i = 0; i < totalCount; i++) {
         const row = rows[i];
-        if (pFill) pFill.style.width = `${Math.round(((i + 1) / totalCount) * 100)}%`;
+        const currentPhotoNum = i + 1;
+        const progressPct = Math.round((currentPhotoNum / totalCount) * 100);
+        if (pFill) pFill.style.width = `${progressPct}%`;
+
+        // Update Live ETA Counter
+        if (pEta) {
+            if (i === 0) {
+                pEta.innerHTML = `<i class="fas fa-hourglass-half"></i> Memproses foto 1 dari ${totalCount} (Menghitung estimasi...)`;
+            } else {
+                const elapsedSec = (performance.now() - tBatchStart) / 1000;
+                const avgSecPerPhoto = elapsedSec / i;
+                const remainingPhotos = totalCount - i;
+                const estRemainingSec = Math.max(1, Math.round(avgSecPerPhoto * remainingPhotos));
+                pEta.innerHTML = `<i class="fas fa-hourglass-half"></i> Memproses foto ${currentPhotoNum} dari ${totalCount} (Sisa ~${estRemainingSec} detik)`;
+            }
+        }
 
         // Human-in-the-Loop Guard: Jangan menimpa baris yang telah dikoreksi manual oleh auditor
         if (row.getAttribute('data-edited') === 'true') {
@@ -154,11 +172,16 @@ async function auditAllRows() {
         processedCount++;
     }
 
+    const totalBatchDuration = ((performance.now() - tBatchStart) / 1000).toFixed(1);
     if (pFill) pFill.style.width = '100%';
+    if (pEta) {
+        pEta.innerHTML = `<i class="fas fa-check-circle" style="color:#16A34A;"></i> Selesai ${totalCount} foto (${totalBatchDuration}s)`;
+    }
+
     setTimeout(() => {
         if (pWrapper) pWrapper.style.display = 'none';
         if (pFill) pFill.style.width = '0%';
-    }, 600);
+    }, 1200);
 
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-check-double"></i> Selesai Diaudit';
@@ -217,10 +240,23 @@ function onArgusChange(rowIndex) {
     if (typeof persistCurrentSession === 'function') persistCurrentSession();
 }
 
+function triggerRowPulseHighlight(row) {
+    if (!row) return;
+    row.classList.remove('row-just-edited');
+    void row.offsetWidth; // Force CSS reflow to restart animation reliably
+    row.classList.add('row-just-edited');
+    if (row._pulseTimer) clearTimeout(row._pulseTimer);
+    row._pulseTimer = setTimeout(() => {
+        row.classList.remove('row-just-edited');
+        delete row._pulseTimer;
+    }, 1250);
+}
+
 function onFieldChange(rowIndex) {
     const row = document.getElementById(`row-${rowIndex}`);
     if (!row) return;
 
+    markRowAsEdited(row);
     recalculateRowDiffAndStatus(row);
     if (typeof updateKPIs === 'function') updateKPIs();
     if (typeof persistCurrentSession === 'function') persistCurrentSession();
@@ -245,6 +281,7 @@ function markRowAsEdited(row) {
     if (slot && !slot.innerHTML) {
         slot.innerHTML = '<span class="tag-manual"><i class="fas fa-pen"></i> Dikoreksi</span>';
     }
+    triggerRowPulseHighlight(row);
 }
 
 function recalculateRowDiffAndStatus(row) {

@@ -45,7 +45,18 @@
     </div>
 </div>
 
-<!-- AUDIT PROGRESS BAR -->
+<!-- AUDIT PROGRESS BAR & LIVE ETA COUNTER -->
 <div class="batch-progress-wrapper" id="batch-progress-wrapper">
-    <div class="batch-progress-fill" id="batch-progress-fill"></div>
+    <div class="batch-progress-header">
+        <div class="batch-progress-title">
+            <i class="fas fa-microchip"></i>
+            <span id="batch-progress-label">Memproses Batch AI (Engine RTX 4080)...</span>
+        </div>
+        <div class="batch-eta-badge" id="batch-eta-badge">
+            <i class="fas fa-hourglass-half"></i> Menyiapkan antrean...
+        </div>
+    </div>
+    <div class="batch-progress-bar-track">
+        <div class="batch-progress-fill" id="batch-progress-fill"></div>
+    </div>
 </div>
