@@ -6,8 +6,16 @@
             <button class="btn btn-secondary" style="padding: 4px 10px;" onclick="closeInspector()"><i class="fas fa-times"></i></button>
         </div>
         <div class="modal-body-grid">
-            <div class="modal-image-box">
-                <img id="modal-photo-src" src="">
+            <div class="modal-image-box" id="inspector-image-container">
+                <div class="zoom-toolbar">
+                    <button type="button" class="zoom-btn" onclick="zoomIn()" title="Perbesar (Zoom In)"><i class="fas fa-search-plus"></i></button>
+                    <span class="zoom-level-badge" id="zoom-badge">100%</span>
+                    <button type="button" class="zoom-btn" onclick="zoomOut()" title="Perkecil (Zoom Out)"><i class="fas fa-search-minus"></i></button>
+                    <button type="button" class="zoom-btn" onclick="resetZoom()" title="Reset Ukuran (Fit)"><i class="fas fa-compress-arrows-alt"></i></button>
+                </div>
+                <div class="zoom-viewport" id="zoom-viewport" onwheel="handleWheelZoom(event)" onmousedown="startPan(event)">
+                    <img id="modal-photo-src" src="" alt="Pratinjau KWH Meter">
+                </div>
             </div>
             <div class="modal-info-list">
                 <div class="info-card">

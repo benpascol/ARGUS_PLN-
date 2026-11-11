@@ -85,9 +85,81 @@ function searchRows(query) {
     });
 }
 
+// INTERACTIVE HD ZOOM & PAN STATE
+let currentZoom = 1;
+let panX = 0;
+let panY = 0;
+let isPanning = false;
+let startX = 0;
+let startY = 0;
+
+function applyTransform() {
+    const img = document.getElementById('modal-photo-src');
+    const badge = document.getElementById('zoom-badge');
+    if (!img) return;
+    img.style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom})`;
+    if (badge) badge.textContent = `${Math.round(currentZoom * 100)}%`;
+}
+
+function zoomIn() {
+    currentZoom = Math.min(5, Math.round((currentZoom + 0.3) * 10) / 10);
+    applyTransform();
+}
+
+function zoomOut() {
+    currentZoom = Math.max(0.5, Math.round((currentZoom - 0.3) * 10) / 10);
+    if (currentZoom <= 1) { panX = 0; panY = 0; }
+    applyTransform();
+}
+
+function resetZoom() {
+    currentZoom = 1;
+    panX = 0;
+    panY = 0;
+    applyTransform();
+}
+
+function handleWheelZoom(event) {
+    event.preventDefault();
+    if (event.deltaY < 0) {
+        currentZoom = Math.min(5, Math.round((currentZoom + 0.2) * 10) / 10);
+    } else {
+        currentZoom = Math.max(0.5, Math.round((currentZoom - 0.2) * 10) / 10);
+        if (currentZoom <= 1) { panX = 0; panY = 0; }
+    }
+    applyTransform();
+}
+
+function startPan(event) {
+    if (event.button !== 0) return; // Left click only
+    if (currentZoom <= 1) return;
+    isPanning = true;
+    startX = event.clientX - panX;
+    startY = event.clientY - panY;
+    const vp = document.getElementById('zoom-viewport');
+    if (vp) vp.classList.add('grabbing');
+}
+
+window.addEventListener('mousemove', (event) => {
+    if (!isPanning) return;
+    panX = event.clientX - startX;
+    panY = event.clientY - startY;
+    applyTransform();
+});
+
+window.addEventListener('mouseup', () => {
+    if (isPanning) {
+        isPanning = false;
+        const vp = document.getElementById('zoom-viewport');
+        if (vp) vp.classList.remove('grabbing');
+    }
+});
+
 function inspectPhoto(rowIndex) {
     const row = document.getElementById(`row-${rowIndex}`);
     if (!row) return;
+
+    resetZoom();
 
     const photoImg = row.querySelector('.photo-thumbnail');
     const idpel = row.querySelector('.idpel-code').textContent;
