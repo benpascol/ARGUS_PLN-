@@ -7,9 +7,11 @@ import cv2
 import numpy as np
 from pathlib import Path
 from typing import Optional, Any
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
 # Fix Windows console UTF-8 encoding
@@ -109,13 +111,21 @@ def get_simulator():
         raise HTTPException(status_code=404, detail="Berkas simulator.html tidak ditemukan.")
     return HTMLResponse(content=sim_path.read_text(encoding="utf-8"))
 
+# Konfigurasi Aset Statis & Jinja2 Templates (Modular Dashboard)
+DASHBOARD_DIR = BASE_DIR / "web_extension" / "dashboard"
+if (DASHBOARD_DIR / "static").is_dir():
+    app.mount("/static", StaticFiles(directory=str(DASHBOARD_DIR / "static")), name="static")
+templates = Jinja2Templates(directory=str(DASHBOARD_DIR)) if DASHBOARD_DIR.is_dir() else None
+
 @app.get("/dashboard", response_class=HTMLResponse)
-def get_dashboard():
-    """Halaman Standalone Web Dashboard ARGUS (Human-in-the-Loop & Interactive KPI)."""
+def get_dashboard(request: Request):
+    """Halaman Standalone Web Dashboard ARGUS (Modular Component Architecture)."""
+    if templates and (DASHBOARD_DIR / "index.html").is_file():
+        return templates.TemplateResponse("index.html", {"request": request})
     dash_path = BASE_DIR / "web_extension" / "dashboard.html"
-    if not dash_path.is_file():
-        raise HTTPException(status_code=404, detail="Berkas dashboard.html tidak ditemukan.")
-    return HTMLResponse(content=dash_path.read_text(encoding="utf-8"))
+    if dash_path.is_file():
+        return HTMLResponse(content=dash_path.read_text(encoding="utf-8"))
+    raise HTTPException(status_code=404, detail="Berkas dashboard tidak ditemukan.")
 
 @app.get("/sample-photo/{filename}")
 def get_sample_photo(filename: str):
