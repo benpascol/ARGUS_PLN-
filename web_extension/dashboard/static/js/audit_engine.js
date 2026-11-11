@@ -5,6 +5,26 @@
  * Lead Engineer: Pascol
  */
 
+/**
+ * Ekstraksi angka bulat stan meter (kWh) bersih dari karakter desimal.
+ * Standar PLN: Digit setelah titik atau koma (seperti '201.63' atau '201,63')
+ * adalah angka putaran desimal (koma), yang diabaikan dalam komparasi stan kwh.
+ */
+function extractIntegerStand(rawVal) {
+    if (rawVal === undefined || rawVal === null) return null;
+    let s = String(rawVal).trim();
+    if (s === '' || s === '-' || s.toLowerCase() === 'null') return null;
+
+    // Jika mengandung titik atau koma desimal, potong hanya bagian integer di depan
+    if (s.includes('.') || s.includes(',')) {
+        s = s.split(/[.,]/)[0];
+    }
+    // Hapus karakter non-digit
+    s = s.replace(/\D/g, '');
+    if (s === '') return null;
+    return parseInt(s, 10);
+}
+
 async function imageToBase64(url) {
     const response = await fetch(url);
     const blob = await response.blob();
@@ -59,32 +79,30 @@ async function auditSingleRow(rowIndex) {
         row.setAttribute('data-tier', data.tier_color || 'GREEN');
 
         const stanPlnRaw = stanLapInput.value.trim();
-        const stanPlnVal = stanPlnRaw.replace(/\D/g, '');
-        const stanAiVal = (isAlreadyEdited ? stanArgusInput.value : (data.stand_baca || '')).trim().replace(/\D/g, '');
-        const isMandiriMode = (typeof currentAuditMode !== 'undefined' && currentAuditMode === 'MANDIRI') ||
-                              (stanPlnVal === '' || stanPlnRaw === '-');
+        const numPln = extractIntegerStand(stanPlnRaw);
+        const stanAiRaw = isAlreadyEdited ? stanArgusInput.value : (data.stand_baca || '');
+        const numAi = extractIntegerStand(stanAiRaw);
+        const isMandiriMode = (typeof currentAuditMode !== 'undefined' && currentAuditMode === 'MANDIRI') || (numPln === null);
 
         if (isAlreadyEdited) {
             // Jika sudah dikoreksi auditor, pertahankan koreksi dan hitung ulang selisihnya
             recalculateRowDiffAndStatus(row);
-        } else if (data.status === 'FAIL_COUNTER_NOT_FOUND') {
+        } else if (data.status === 'FAIL_COUNTER_NOT_FOUND' || data.status === 'TIDAK_TERDETEKSI_KWH') {
             cellDiff.textContent = '-';
             statusSelect.value = 'NIHIL';
             row.setAttribute('data-status', 'NIHIL');
-        } else if (data.status === 'FOTO_BURAM') {
+        } else if (data.status === 'FOTO_BURAM' || data.status === 'ANOMALI_GLARE_TERHALANG') {
             cellDiff.textContent = '-';
             statusSelect.value = 'TRIAGE';
             row.setAttribute('data-status', 'TRIAGE');
-        } else if (data.stand_baca) {
+        } else if (numAi !== null) {
             if (isMandiriMode) {
-                // Mode Ekstraksi Mandiri (Murni AI): Tidak ada vonis salah 'BEDA STAND' karena tidak membandingkan dengan 0
+                // Mode Ekstraksi Mandiri (Murni AI): Tidak ada komparasi terhadap 0
                 cellDiff.textContent = '-';
                 statusSelect.value = 'MATCH';
                 row.setAttribute('data-status', 'MATCH');
             } else {
                 // Mode Komparasi Lapangan: Hitung selisih angka riil terhadap stan lapangan
-                const numPln = parseInt(stanPlnVal) || 0;
-                const numAi = parseInt(stanAiVal) || 0;
                 const diff = numAi - numPln;
                 cellDiff.textContent = diff === 0 ? '0' : diff;
 
@@ -100,6 +118,7 @@ async function auditSingleRow(rowIndex) {
                 }
             }
         } else {
+            // Kotak tidak terbaca atau stan kosong: Selisih wajib '-'
             cellDiff.textContent = '-';
             statusSelect.value = 'TRIAGE';
             row.setAttribute('data-status', 'TRIAGE');
@@ -266,8 +285,34 @@ function onStatusSelectChange(rowIndex, selectElem) {
     const row = document.getElementById(`row-${rowIndex}`);
     if (!row) return;
 
-    row.setAttribute('data-status', selectElem.value);
+    const newStatus = selectElem.value;
+    row.setAttribute('data-status', newStatus);
     markRowAsEdited(row);
+
+    const cellDiff = row.querySelector('.cell-diff');
+    // Aturan Permintaan User:
+    // Jika vonis dinyatakan Bukan kwh/nihil atau Perlu tinjau ulang, selisih by default dihilangkan jadi '-'
+    if (newStatus === 'NIHIL' || newStatus === 'TRIAGE' || newStatus === 'PENDING') {
+        if (cellDiff) cellDiff.textContent = '-';
+    } else if (newStatus === 'MATCH') {
+        // Vonis Cocok / Sesuai Match: Selisih ideal 0
+        if (cellDiff) cellDiff.textContent = '0';
+    } else {
+        // ROLLING / DIFF: Hitung selisih angka riil jika kedua data numerik ada
+        const stanLapInput = row.querySelectorAll('.input-table')[0];
+        const stanArgusInput = row.querySelector('.cell-argus');
+        const numPln = extractIntegerStand(stanLapInput ? stanLapInput.value : '');
+        const numAi = extractIntegerStand(stanArgusInput ? stanArgusInput.value : '');
+        if (cellDiff) {
+            if (numPln !== null && numAi !== null) {
+                const diff = numAi - numPln;
+                cellDiff.textContent = diff === 0 ? '0' : diff;
+            } else {
+                cellDiff.textContent = '-';
+            }
+        }
+    }
+
     updateSelectStyle(selectElem);
     updateRowStyle(row);
     if (typeof updateKPIs === 'function') updateKPIs();
@@ -290,35 +335,57 @@ function recalculateRowDiffAndStatus(row) {
     const cellDiff = row.querySelector('.cell-diff');
     const statusSelect = row.querySelector('.select-status');
 
-    const pRaw = stanLapInput.value.trim();
-    const pStr = pRaw.replace(/\D/g, '');
-    const aStr = stanArgusInput.value.trim().replace(/\D/g, '');
-    const isMandiri = (typeof currentAuditMode !== 'undefined' && currentAuditMode === 'MANDIRI') ||
-                      (pStr === '' || pRaw === '-');
+    const numPln = extractIntegerStand(stanLapInput ? stanLapInput.value : '');
+    const numAi = extractIntegerStand(stanArgusInput ? stanArgusInput.value : '');
+    const currentStatus = statusSelect.value;
+    const isMandiri = (typeof currentAuditMode !== 'undefined' && currentAuditMode === 'MANDIRI') || (numPln === null);
 
-    if (aStr !== '') {
-        if (isMandiri) {
-            cellDiff.textContent = '-';
-            statusSelect.value = 'MATCH';
-            row.setAttribute('data-status', 'MATCH');
-        } else {
-            const numPln = parseInt(pStr) || 0;
-            const numAi = parseInt(aStr) || 0;
-            const diff = numAi - numPln;
-            cellDiff.textContent = diff === 0 ? '0' : diff;
-
-            if (diff === 0) {
-                statusSelect.value = 'MATCH';
-                row.setAttribute('data-status', 'MATCH');
-            } else if (Math.abs(diff) <= 2) {
-                statusSelect.value = 'ROLLING';
-                row.setAttribute('data-status', 'ROLLING');
-            } else {
-                statusSelect.value = 'DIFF';
-                row.setAttribute('data-status', 'DIFF');
-            }
-        }
+    // KASUS 1: Jika vonis audit adalah Bukan KWH/Nihil atau Perlu Tinjau Ulang,
+    // selisih HARUS '-' untuk menghindari angka ambigu
+    if (currentStatus === 'NIHIL' || currentStatus === 'TRIAGE') {
+        cellDiff.textContent = '-';
+        updateSelectStyle(statusSelect);
+        updateRowStyle(row);
+        return;
     }
+
+    // KASUS 2: Jika Stan ARGUS kosong / null / tidak terbaca
+    if (numAi === null) {
+        cellDiff.textContent = '-';
+        if (currentStatus !== 'NIHIL') {
+            statusSelect.value = 'TRIAGE';
+            row.setAttribute('data-status', 'TRIAGE');
+        }
+        updateSelectStyle(statusSelect);
+        updateRowStyle(row);
+        return;
+    }
+
+    // KASUS 3: Mode Mandiri (tidak membandingkan dengan stan lapangan)
+    if (isMandiri) {
+        cellDiff.textContent = '-';
+        statusSelect.value = 'MATCH';
+        row.setAttribute('data-status', 'MATCH');
+        updateSelectStyle(statusSelect);
+        updateRowStyle(row);
+        return;
+    }
+
+    // KASUS 4: Mode Komparasi Lapangan (Perhitungan Selisih Numerik Bebas Titik Desimal)
+    const diff = numAi - numPln;
+    cellDiff.textContent = diff === 0 ? '0' : diff;
+
+    if (diff === 0) {
+        statusSelect.value = 'MATCH';
+        row.setAttribute('data-status', 'MATCH');
+    } else if (Math.abs(diff) <= 2) {
+        statusSelect.value = 'ROLLING';
+        row.setAttribute('data-status', 'ROLLING');
+    } else {
+        statusSelect.value = 'DIFF';
+        row.setAttribute('data-status', 'DIFF');
+    }
+
     updateSelectStyle(statusSelect);
     updateRowStyle(row);
 }
@@ -334,8 +401,10 @@ function updateSelectStyle(sel) {
 
 function updateRowStyle(row) {
     const st = row.getAttribute('data-status');
-    row.classList.remove('row-match', 'row-rolling', 'row-diff');
+    row.classList.remove('row-match', 'row-rolling', 'row-diff', 'row-nihil', 'row-triage');
     if (st === 'MATCH') row.classList.add('row-match');
     else if (st === 'ROLLING') row.classList.add('row-rolling');
-    else if (st === 'DIFF' || st === 'NIHIL') row.classList.add('row-diff');
+    else if (st === 'DIFF') row.classList.add('row-diff');
+    else if (st === 'NIHIL') row.classList.add('row-nihil');
+    else if (st === 'TRIAGE') row.classList.add('row-triage');
 }

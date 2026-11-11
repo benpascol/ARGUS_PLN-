@@ -454,6 +454,8 @@ tr:hover td { background: #F1F5F9; }
 tr.row-match td { background: #F0FDF4 !important; }
 tr.row-rolling td { background: #FFFBEB !important; }
 tr.row-diff td { background: #FEF2F2 !important; }
+tr.row-nihil td { background: #FEF2F2 !important; }
+tr.row-triage td { background: #FFFBEB !important; }
 tr.row-edited td { background: #FAF5FF !important; }
 
 /* VISUAL HIGHLIGHT PULSE FOR NEWLY EDITED ROWS */
