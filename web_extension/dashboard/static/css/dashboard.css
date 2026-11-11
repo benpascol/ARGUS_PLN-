@@ -737,8 +737,9 @@ tr.row-edited td { background: #FAF5FF !important; }
 /* EMPTY STATE & DROPZONE (UX ENHANCEMENT) */
 .empty-state-td {
     padding: 60px 20px !important;
-    text-align: center;
+    text-align: center !important;
     background: #FFFFFF !important;
+    white-space: normal !important;
 }
 
 .empty-dropzone {
@@ -750,11 +751,12 @@ tr.row-edited td { background: #FAF5FF !important; }
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    text-align: center;
+    text-align: center !important;
     cursor: pointer;
     transition: all 0.2s ease;
     max-width: 820px;
-    margin: 0 auto;
+    margin: 0 auto !important;
+    white-space: normal !important;
 }
 
 .empty-dropzone:hover,
@@ -790,16 +792,20 @@ tr.row-edited td { background: #FAF5FF !important; }
     font-weight: 800;
     color: var(--text-heading);
     margin-bottom: 6px;
-    text-align: center;
+    text-align: center !important;
+    width: 100% !important;
 }
 
 .empty-subtitle {
     font-size: 13.5px;
     color: var(--text-muted);
-    max-width: 520px;
-    margin: 0 auto 22px auto;
-    text-align: center;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto 22px auto !important;
+    text-align: center !important;
     line-height: 1.5;
+    white-space: normal !important;
+    display: block !important;
 }
 
 .empty-actions {

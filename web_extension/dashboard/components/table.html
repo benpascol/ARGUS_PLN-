@@ -22,16 +22,16 @@
             <tbody id="table-body">
                 <!-- EMPTY STATE & DROPZONE -->
                 <tr id="empty-state-row">
-                    <td colspan="13" class="empty-state-td">
-                        <div class="empty-dropzone" id="empty-dropzone" onclick="document.getElementById('folder-input').click()">
+                    <td colspan="13" class="empty-state-td" style="white-space: normal !important; text-align: center !important;">
+                        <div class="empty-dropzone" id="empty-dropzone" onclick="document.getElementById('folder-input').click()" style="text-align: center !important; margin: 0 auto !important;">
                             <div class="empty-icon-circle">
                                 <i class="fas fa-cloud-upload-alt"></i>
                             </div>
-                            <h3 class="empty-title">Antrean Audit Masih Kosong</h3>
-                            <p class="empty-subtitle">
+                            <h3 class="empty-title" style="text-align: center !important; width: 100% !important;">Antrean Audit Masih Kosong</h3>
+                            <p class="empty-subtitle" style="text-align: center !important; width: 100% !important; max-width: 100% !important; margin: 0 auto 22px auto !important; white-space: normal !important;">
                                 Seret dan jatuhkan (<strong>Drag & Drop</strong>) folder atau berkas foto meteran ke sini, atau klik tombol di bawah untuk memulai:
                             </p>
-                            <div class="empty-actions">
+                            <div class="empty-actions" style="justify-content: center !important;">
                                 <button type="button" class="btn btn-upload-folder" onclick="event.stopPropagation(); document.getElementById('folder-input').click()">
                                     <i class="fas fa-folder-plus"></i> Unggah Folder Foto
                                 </button>
@@ -42,7 +42,7 @@
                                     <i class="fas fa-file-excel"></i> Impor Rekap ACMT (.xlsx / .csv)
                                 </button>
                             </div>
-                            <div class="empty-hint">
+                            <div class="empty-hint" style="justify-content: center !important;">
                                 <i class="fas fa-shield-alt" style="color:var(--pln-blue);"></i> Dilengkapi Jaring Pengaman Anti-Duplikasi Foto & Auto-Pairing Data Pelanggan
                             </div>
                         </div>
