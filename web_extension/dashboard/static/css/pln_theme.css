@@ -1,0 +1,43 @@
+/* PLN CORPORATE DESIGN TOKENS & TYPOGRAPHY */
+:root {
+    --pln-blue: #007BB5;
+    --pln-blue-dark: #005A87;
+    --pln-blue-light: #E0F2FE;
+    --pln-yellow: #FDB913;
+    --pln-red: #ED1C24;
+    --bg-page: #F1F5F9;
+    --bg-card: #FFFFFF;
+    --text-heading: #0F172A;
+    --text-body: #334155;
+    --text-muted: #64748B;
+    --border-color: #CBD5E1;
+    --border-light: #E2E8F0;
+    --success-bg: #DCFCE7;
+    --success-border: #86EFAC;
+    --success-text: #166534;
+    --warning-bg: #FEF3C7;
+    --warning-border: #FDE68A;
+    --warning-text: #92400E;
+    --danger-bg: #FEE2E2;
+    --danger-border: #FECACA;
+    --danger-text: #991B1B;
+    --purple-bg: #F3E8FF;
+    --purple-border: #D8B4FE;
+    --purple-text: #6B21A8;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.04);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-page);
+    color: var(--text-body);
+    min-height: 100vh;
+    padding: 24px;
+    line-height: 1.5;
+}
