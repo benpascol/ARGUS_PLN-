@@ -121,7 +121,7 @@ templates = Jinja2Templates(directory=str(DASHBOARD_DIR)) if DASHBOARD_DIR.is_di
 def get_dashboard(request: Request):
     """Halaman Standalone Web Dashboard ARGUS (Modular Component Architecture)."""
     if templates and (DASHBOARD_DIR / "index.html").is_file():
-        return templates.TemplateResponse("index.html", {"request": request})
+        return templates.TemplateResponse(request=request, name="index.html")
     dash_path = BASE_DIR / "web_extension" / "dashboard.html"
     if dash_path.is_file():
         return HTMLResponse(content=dash_path.read_text(encoding="utf-8"))
