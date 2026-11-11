@@ -89,20 +89,19 @@
 }
 
 .kpi-card {
-    background: #FFFFFF;
-    border: 2px solid var(--border-light);
     border-radius: 14px;
-    padding: 2px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    padding: 3px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     cursor: pointer;
     transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease;
     position: relative;
     user-select: none;
+    border: 2px solid;
 }
 
 .kpi-card-inner {
     position: relative;
-    border-radius: 11px;
+    border-radius: 10px;
     padding: 12px 14px;
     overflow: hidden;
     height: 100%;
@@ -115,13 +114,13 @@
 /* SUBTLE LARGE WATERMARK IN THE BACKGROUND */
 .kpi-watermark {
     position: absolute;
-    right: 6px;
-    bottom: -6px;
-    font-size: 34px;
+    right: 8px;
+    bottom: -2px;
+    font-size: 46px;
     font-weight: 900;
     letter-spacing: -0.04em;
-    line-height: 1;
-    opacity: 0.08;
+    line-height: 0.85;
+    opacity: 0.18;
     pointer-events: none;
     user-select: none;
     font-family: 'Inter', system-ui, sans-serif;
@@ -131,105 +130,111 @@
 /* FLOATING CLICK CURSOR BADGE (BOTTOM RIGHT CORNER) */
 .kpi-click-badge {
     position: absolute;
-    bottom: -6px;
-    right: -6px;
-    width: 26px;
-    height: 26px;
+    bottom: -7px;
+    right: -7px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     background: #FFFFFF;
     border: 2.5px solid #FFFFFF;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.16);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.22);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 10px;
+    font-size: 11px;
     transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
     z-index: 5;
 }
 
 .kpi-card:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
 }
 
 .kpi-card:hover .kpi-click-badge {
     transform: scale(1.18);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.26);
 }
 
-/* COLOR SCHEMES - PLN PRESERVED PALETTE */
+/* COLOR SCHEMES - PLN PRESERVED PALETTE WITH VIVID CONTRAST */
 
 /* 1. TOTAL SAMPEL (PLN BLUE) */
-.kpi-card.all { border-color: #BAE6FD; }
+.kpi-card.all { border-color: #38BDF8; background: #F0F9FF; }
+.kpi-card.all .kpi-card-inner { background: #F0F9FF; }
 .kpi-card.all .kpi-title { color: var(--pln-blue); }
 .kpi-card.all .kpi-number { color: var(--pln-blue); }
 .kpi-card.all .kpi-watermark { color: var(--pln-blue); }
 .kpi-card.all .kpi-click-badge { background: var(--pln-blue); color: #FFFFFF; }
 .kpi-card.all.active {
     border-color: var(--pln-blue);
-    box-shadow: 0 4px 14px rgba(0, 123, 181, 0.2);
+    box-shadow: 0 4px 16px rgba(0, 123, 181, 0.3);
 }
-.kpi-card.all.active .kpi-card-inner { background: #F0F9FF; }
+.kpi-card.all.active .kpi-card-inner { background: #E0F2FE; }
 
 /* 2. SESUAI MATCH (GREEN) */
-.kpi-card.match { border-color: #BBF7D0; }
+.kpi-card.match { border-color: #4ADE80; background: #F0FDF4; }
+.kpi-card.match .kpi-card-inner { background: #F0FDF4; }
 .kpi-card.match .kpi-title { color: #16A34A; }
 .kpi-card.match .kpi-number { color: #16A34A; }
 .kpi-card.match .kpi-watermark { color: #16A34A; }
 .kpi-card.match .kpi-click-badge { background: #16A34A; color: #FFFFFF; }
 .kpi-card.match.active {
     border-color: #16A34A;
-    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.2);
+    box-shadow: 0 4px 16px rgba(22, 163, 74, 0.3);
 }
-.kpi-card.match.active .kpi-card-inner { background: #F0FDF4; }
+.kpi-card.match.active .kpi-card-inner { background: #DCFCE7; }
 
 /* 3. ROLLING DIGIT (AMBER) */
-.kpi-card.rolling { border-color: #FED7AA; }
+.kpi-card.rolling { border-color: #FBBF24; background: #FFFBEB; }
+.kpi-card.rolling .kpi-card-inner { background: #FFFBEB; }
 .kpi-card.rolling .kpi-title { color: #D97706; }
 .kpi-card.rolling .kpi-number { color: #D97706; }
 .kpi-card.rolling .kpi-watermark { color: #D97706; }
 .kpi-card.rolling .kpi-click-badge { background: #D97706; color: #FFFFFF; }
 .kpi-card.rolling.active {
     border-color: #D97706;
-    box-shadow: 0 4px 14px rgba(217, 119, 6, 0.2);
+    box-shadow: 0 4px 16px rgba(217, 119, 6, 0.3);
 }
-.kpi-card.rolling.active .kpi-card-inner { background: #FFFBEB; }
+.kpi-card.rolling.active .kpi-card-inner { background: #FEF3C7; }
 
 /* 4. BEDA STAND (RED) */
-.kpi-card.diff { border-color: #FECACA; }
+.kpi-card.diff { border-color: #F87171; background: #FEF2F2; }
+.kpi-card.diff .kpi-card-inner { background: #FEF2F2; }
 .kpi-card.diff .kpi-title { color: var(--pln-red); }
 .kpi-card.diff .kpi-number { color: var(--pln-red); }
 .kpi-card.diff .kpi-watermark { color: var(--pln-red); }
 .kpi-card.diff .kpi-click-badge { background: var(--pln-red); color: #FFFFFF; }
 .kpi-card.diff.active {
     border-color: var(--pln-red);
-    box-shadow: 0 4px 14px rgba(237, 28, 36, 0.2);
+    box-shadow: 0 4px 16px rgba(237, 28, 36, 0.3);
 }
-.kpi-card.diff.active .kpi-card-inner { background: #FEF2F2; }
+.kpi-card.diff.active .kpi-card-inner { background: #FEE2E2; }
 
 /* 5. BUKAN KWH / NIHIL (SLATE) */
-.kpi-card.nihil { border-color: #E2E8F0; }
-.kpi-card.nihil .kpi-title { color: #64748B; }
-.kpi-card.nihil .kpi-number { color: #64748B; }
-.kpi-card.nihil .kpi-watermark { color: #64748B; }
+.kpi-card.nihil { border-color: #94A3B8; background: #F8FAFC; }
+.kpi-card.nihil .kpi-card-inner { background: #F8FAFC; }
+.kpi-card.nihil .kpi-title { color: #475569; }
+.kpi-card.nihil .kpi-number { color: #475569; }
+.kpi-card.nihil .kpi-watermark { color: #475569; }
 .kpi-card.nihil .kpi-click-badge { background: #64748B; color: #FFFFFF; }
 .kpi-card.nihil.active {
     border-color: #64748B;
-    box-shadow: 0 4px 14px rgba(100, 116, 139, 0.2);
+    box-shadow: 0 4px 16px rgba(100, 116, 139, 0.3);
 }
-.kpi-card.nihil.active .kpi-card-inner { background: #F8FAFC; }
+.kpi-card.nihil.active .kpi-card-inner { background: #E2E8F0; }
 
 /* 6. DIKOREKSI AUDITOR (PURPLE) */
-.kpi-card.edited { border-color: #DDD6FE; }
+.kpi-card.edited { border-color: #C084FC; background: #FAF5FF; }
+.kpi-card.edited .kpi-card-inner { background: #FAF5FF; }
 .kpi-card.edited .kpi-title { color: #9333EA; }
 .kpi-card.edited .kpi-number { color: #9333EA; }
 .kpi-card.edited .kpi-watermark { color: #9333EA; }
 .kpi-card.edited .kpi-click-badge { background: #9333EA; color: #FFFFFF; }
 .kpi-card.edited.active {
     border-color: #9333EA;
-    box-shadow: 0 4px 14px rgba(147, 51, 234, 0.2);
+    box-shadow: 0 4px 16px rgba(147, 51, 234, 0.3);
 }
-.kpi-card.edited.active .kpi-card-inner { background: #FAF5FF; }
+.kpi-card.edited.active .kpi-card-inner { background: #F3E8FF; }
 
 /* ACTIVE FILTER BADGE PILL (TOP RIGHT) */
 .kpi-card.active .kpi-card-inner::after {
@@ -240,10 +245,11 @@
     font-size: 8.5px;
     font-weight: 800;
     color: #FFFFFF;
-    padding: 2px 6px;
+    padding: 2.5px 7px;
     border-radius: 4px;
     letter-spacing: 0.04em;
     z-index: 2;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
 }
 .kpi-card.all.active .kpi-card-inner::after { background: var(--pln-blue); }
 .kpi-card.match.active .kpi-card-inner::after { background: #16A34A; }
