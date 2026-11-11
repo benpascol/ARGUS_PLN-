@@ -127,6 +127,14 @@ def get_dashboard(request: Request):
         return HTMLResponse(content=dash_path.read_text(encoding="utf-8"))
     raise HTTPException(status_code=404, detail="Berkas dashboard tidak ditemukan.")
 
+@app.get("/favicon.ico")
+def get_favicon():
+    """Menyajikan favicon SVG resmi ARGUS PLN."""
+    fav_path = DASHBOARD_DIR / "static" / "favicon.svg"
+    if fav_path.is_file():
+        return FileResponse(str(fav_path), media_type="image/svg+xml")
+    raise HTTPException(status_code=404, detail="Favicon tidak ditemukan.")
+
 @app.get("/sample-photo/{filename}")
 def get_sample_photo(filename: str):
     """Menyajikan foto sampel meteran asli dari Docs/DOkumentasi LBKB."""
