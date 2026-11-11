@@ -108,6 +108,7 @@ async function auditSingleRow(rowIndex) {
         updateSelectStyle(statusSelect);
         updateRowStyle(row);
         if (typeof updateKPIs === 'function') updateKPIs();
+        if (typeof persistCurrentSession === 'function') persistCurrentSession();
     } catch (err) {
         console.error(err);
         statusSelect.value = 'TRIAGE';
@@ -120,7 +121,7 @@ async function auditSingleRow(rowIndex) {
 
 async function auditAllRows() {
     const btn = document.getElementById('btn-run-all');
-    const rows = document.querySelectorAll('#table-body tr');
+    const rows = document.querySelectorAll('#table-body tr:not(#empty-state-row)');
     if (rows.length === 0) {
         if (typeof showToast === 'function') {
             showToast("Tidak ada antrean foto untuk diaudit. Silakan unggah folder atau file foto terlebih dahulu.", "warning");
@@ -131,11 +132,19 @@ async function auditAllRows() {
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses Batch...';
 
+    const pWrapper = document.getElementById('batch-progress-wrapper');
+    const pFill = document.getElementById('batch-progress-fill');
+    if (pWrapper) pWrapper.style.display = 'block';
+    if (pFill) pFill.style.width = '0%';
+
     let processedCount = 0;
     let protectedCount = 0;
+    const totalCount = rows.length;
 
-    for (let i = 0; i < rows.length; i++) {
+    for (let i = 0; i < totalCount; i++) {
         const row = rows[i];
+        if (pFill) pFill.style.width = `${Math.round(((i + 1) / totalCount) * 100)}%`;
+
         // Human-in-the-Loop Guard: Jangan menimpa baris yang telah dikoreksi manual oleh auditor
         if (row.getAttribute('data-edited') === 'true') {
             protectedCount++;
@@ -145,18 +154,57 @@ async function auditAllRows() {
         processedCount++;
     }
 
+    if (pFill) pFill.style.width = '100%';
+    setTimeout(() => {
+        if (pWrapper) pWrapper.style.display = 'none';
+        if (pFill) pFill.style.width = '0%';
+    }, 600);
+
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-check-double"></i> Selesai Diaudit';
-    if (typeof showToast === 'function') {
-        if (protectedCount > 0) {
-            showToast(`Batch audit selesai: ${processedCount} diproses, ${protectedCount} hasil koreksi manual tetap terlindungi.`, "success");
-        } else {
-            showToast(`Proses batch audit berhasil diselesaikan (${processedCount} data).`, "success");
-        }
+
+    // POP-UP MODAL SELESAI AUDIT BATCH (UX 6)
+    let match = 0, rolling = 0, diff = 0, nihil = 0, edited = 0;
+    rows.forEach(r => {
+        const st = r.getAttribute('data-status');
+        if (st === 'MATCH') match++;
+        else if (st === 'ROLLING') rolling++;
+        else if (st === 'DIFF') diff++;
+        else if (st === 'NIHIL' || st === 'TRIAGE') nihil++;
+        if (r.getAttribute('data-edited') === 'true') edited++;
+    });
+
+    const mTotal = document.getElementById('batch-modal-total');
+    const mMatch = document.getElementById('batch-modal-match');
+    const mRolling = document.getElementById('batch-modal-rolling');
+    const mDiff = document.getElementById('batch-modal-diff');
+    const mNihil = document.getElementById('batch-modal-nihil');
+    const mEdited = document.getElementById('batch-modal-edited');
+    const mNotes = document.getElementById('batch-modal-notes');
+    const modalComplete = document.getElementById('modal-batch-complete');
+
+    if (mTotal) mTotal.textContent = totalCount;
+    if (mMatch) mMatch.textContent = `${match} (${totalCount ? Math.round(match/totalCount*100) : 0}%)`;
+    if (mRolling) mRolling.textContent = `${rolling} (${totalCount ? Math.round(rolling/totalCount*100) : 0}%)`;
+    if (mDiff) mDiff.textContent = `${diff} (${totalCount ? Math.round(diff/totalCount*100) : 0}%)`;
+    if (mNihil) mNihil.textContent = nihil;
+    if (mEdited) mEdited.textContent = edited;
+    if (mNotes && protectedCount > 0) {
+        mNotes.textContent = `${processedCount} foto selesai diproses AI. ${protectedCount} hasil koreksi manual Anda tetap terlindungi aman.`;
     }
+
+    if (modalComplete) modalComplete.style.display = 'flex';
+
+    if (typeof persistCurrentSession === 'function') persistCurrentSession();
+
     setTimeout(() => {
         btn.innerHTML = '<i class="fas fa-play"></i> Mulai Audit Batch';
     }, 3000);
+}
+
+function closeBatchCompleteModal() {
+    const modal = document.getElementById('modal-batch-complete');
+    if (modal) modal.style.display = 'none';
 }
 
 function onArgusChange(rowIndex) {
@@ -166,6 +214,7 @@ function onArgusChange(rowIndex) {
     markRowAsEdited(row);
     recalculateRowDiffAndStatus(row);
     if (typeof updateKPIs === 'function') updateKPIs();
+    if (typeof persistCurrentSession === 'function') persistCurrentSession();
 }
 
 function onFieldChange(rowIndex) {
@@ -174,6 +223,7 @@ function onFieldChange(rowIndex) {
 
     recalculateRowDiffAndStatus(row);
     if (typeof updateKPIs === 'function') updateKPIs();
+    if (typeof persistCurrentSession === 'function') persistCurrentSession();
 }
 
 function onStatusSelectChange(rowIndex, selectElem) {
@@ -185,6 +235,7 @@ function onStatusSelectChange(rowIndex, selectElem) {
     updateSelectStyle(selectElem);
     updateRowStyle(row);
     if (typeof updateKPIs === 'function') updateKPIs();
+    if (typeof persistCurrentSession === 'function') persistCurrentSession();
 }
 
 function markRowAsEdited(row) {

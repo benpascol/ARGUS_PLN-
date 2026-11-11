@@ -8,7 +8,7 @@
 let currentFilter = 'ALL';
 
 function updateKPIs() {
-    const rows = document.querySelectorAll('#table-body tr');
+    const rows = document.querySelectorAll('#table-body tr:not(#empty-state-row)');
     let match = 0, rolling = 0, diff = 0, nihil = 0, edited = 0;
 
     rows.forEach(r => {
@@ -16,7 +16,7 @@ function updateKPIs() {
         if (st === 'MATCH') match++;
         else if (st === 'ROLLING') rolling++;
         else if (st === 'DIFF') diff++;
-        else if (st === 'NIHIL') nihil++;
+        else if (st === 'NIHIL' || st === 'TRIAGE') nihil++;
 
         if (r.getAttribute('data-edited') === 'true') edited++;
     });
@@ -65,20 +65,27 @@ function filterByStatus(statusType) {
     else if (statusType === 'NIHIL' && kpiNihil) kpiNihil.classList.add('active');
     else if (statusType === 'EDITED' && kpiEdited) kpiEdited.classList.add('active');
 
-    const rows = document.querySelectorAll('#table-body tr');
+    const emptyRow = document.getElementById('empty-state-row');
+    if (emptyRow) emptyRow.style.display = (statusType === 'ALL') ? '' : 'none';
+
+    const rows = document.querySelectorAll('#table-body tr:not(#empty-state-row)');
     rows.forEach(r => {
         const st = r.getAttribute('data-status');
         const isEdited = r.getAttribute('data-edited') === 'true';
 
         if (statusType === 'ALL') r.style.display = '';
         else if (statusType === 'EDITED') r.style.display = isEdited ? '' : 'none';
+        else if (statusType === 'NIHIL') r.style.display = (st === 'NIHIL' || st === 'TRIAGE') ? '' : 'none';
         else r.style.display = (st === statusType) ? '' : 'none';
     });
 }
 
 function searchRows(query) {
     const q = query.toLowerCase();
-    const rows = document.querySelectorAll('#table-body tr');
+    const rows = document.querySelectorAll('#table-body tr:not(#empty-state-row)');
+    const emptyRow = document.getElementById('empty-state-row');
+    if (emptyRow) emptyRow.style.display = q ? 'none' : '';
+
     rows.forEach(r => {
         const text = r.textContent.toLowerCase();
         r.style.display = text.includes(q) ? '' : 'none';
