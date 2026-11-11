@@ -37,7 +37,23 @@ body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--bg-page);
     color: var(--text-body);
-    min-height: 100vh;
-    padding: 24px;
+    height: 100vh;
+    padding: 16px 20px;
     line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+@media (max-height: 640px) {
+    body {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+    }
+    .table-container {
+        flex: none !important;
+        height: 450px !important;
+    }
 }

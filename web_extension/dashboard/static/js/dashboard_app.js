@@ -49,7 +49,15 @@ function updateKPIs() {
 
 function filterByStatus(statusType) {
     currentFilter = statusType;
-    document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.kpi-card').forEach(c => {
+        c.classList.remove('active');
+        const badgeIcon = c.querySelector('.kpi-click-badge i');
+        if (badgeIcon) {
+            badgeIcon.className = 'fas fa-arrow-pointer';
+        }
+        const badge = c.querySelector('.kpi-click-badge');
+        if (badge) badge.title = "Klik untuk memfilter";
+    });
 
     const kpiAll = document.getElementById('kpi-all');
     const kpiMatch = document.getElementById('kpi-match');
@@ -58,12 +66,23 @@ function filterByStatus(statusType) {
     const kpiNihil = document.getElementById('kpi-nihil');
     const kpiEdited = document.getElementById('kpi-edited');
 
-    if (statusType === 'ALL' && kpiAll) kpiAll.classList.add('active');
-    else if (statusType === 'MATCH' && kpiMatch) kpiMatch.classList.add('active');
-    else if (statusType === 'ROLLING' && kpiRolling) kpiRolling.classList.add('active');
-    else if (statusType === 'DIFF' && kpiDiff) kpiDiff.classList.add('active');
-    else if (statusType === 'NIHIL' && kpiNihil) kpiNihil.classList.add('active');
-    else if (statusType === 'EDITED' && kpiEdited) kpiEdited.classList.add('active');
+    let activeCard = null;
+    if (statusType === 'ALL') activeCard = kpiAll;
+    else if (statusType === 'MATCH') activeCard = kpiMatch;
+    else if (statusType === 'ROLLING') activeCard = kpiRolling;
+    else if (statusType === 'DIFF') activeCard = kpiDiff;
+    else if (statusType === 'NIHIL') activeCard = kpiNihil;
+    else if (statusType === 'EDITED') activeCard = kpiEdited;
+
+    if (activeCard) {
+        activeCard.classList.add('active');
+        const activeIcon = activeCard.querySelector('.kpi-click-badge i');
+        if (activeIcon) {
+            activeIcon.className = 'fas fa-check';
+        }
+        const badge = activeCard.querySelector('.kpi-click-badge');
+        if (badge) badge.title = "Filter Aktif";
+    }
 
     const emptyRow = document.getElementById('empty-state-row');
     if (emptyRow) emptyRow.style.display = (statusType === 'ALL') ? '' : 'none';
@@ -187,6 +206,30 @@ function closeInspector() {
     const modal = document.getElementById('modal-inspector');
     if (modal) modal.style.display = 'none';
 }
+
+// GLOBAL KEYBOARD SHORTCUTS (ESC TO CLOSE INSPECTOR & MODALS)
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' || e.key === 'Esc') {
+        const inspector = document.getElementById('modal-inspector');
+        if (inspector && inspector.style.display !== 'none' && getComputedStyle(inspector).display !== 'none') {
+            closeInspector();
+            return;
+        }
+
+        const otherModals = [
+            'modal-batch-complete',
+            'modal-excel-result',
+            'modal-duplicate',
+            'modal-reset-confirm'
+        ];
+        otherModals.forEach(id => {
+            const m = document.getElementById(id);
+            if (m && m.style.display !== 'none' && getComputedStyle(m).display !== 'none') {
+                m.style.display = 'none';
+            }
+        });
+    }
+});
 
 document.addEventListener('DOMContentLoaded', () => {
     updateKPIs();
