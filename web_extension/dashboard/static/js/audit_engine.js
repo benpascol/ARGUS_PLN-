@@ -358,22 +358,12 @@ function recalculateRowDiffAndStatus(row) {
 
     const numPln = extractIntegerStand(stanLapInput ? stanLapInput.value : '');
     const numAi = extractIntegerStand(stanArgusInput ? stanArgusInput.value : '');
-    const currentStatus = statusSelect.value;
     const isMandiri = (typeof currentAuditMode !== 'undefined' && currentAuditMode === 'MANDIRI') || (numPln === null);
 
-    // KASUS 1: Jika vonis audit adalah Bukan KWH/Nihil atau Perlu Tinjau Ulang,
-    // selisih HARUS '-' untuk menghindari angka ambigu
-    if (currentStatus === 'NIHIL' || currentStatus === 'TRIAGE') {
-        cellDiff.textContent = '-';
-        updateSelectStyle(statusSelect);
-        updateRowStyle(row);
-        return;
-    }
-
-    // KASUS 2: Jika Stan ARGUS kosong / null / tidak terbaca
+    // KASUS 1: Jika Stan ARGUS kosong / null / tidak terbaca
     if (numAi === null) {
         cellDiff.textContent = '-';
-        if (currentStatus !== 'NIHIL') {
+        if (statusSelect.value !== 'NIHIL') {
             statusSelect.value = 'TRIAGE';
             row.setAttribute('data-status', 'TRIAGE');
         }
@@ -382,7 +372,7 @@ function recalculateRowDiffAndStatus(row) {
         return;
     }
 
-    // KASUS 3: Mode Mandiri (tidak membandingkan dengan stan lapangan)
+    // KASUS 2: Mode Mandiri (tidak membandingkan dengan stan lapangan)
     if (isMandiri) {
         cellDiff.textContent = '-';
         statusSelect.value = 'MATCH';
@@ -392,7 +382,7 @@ function recalculateRowDiffAndStatus(row) {
         return;
     }
 
-    // KASUS 4: Mode Komparasi Lapangan (Perhitungan Selisih Numerik Bebas Titik Desimal)
+    // KASUS 3: Mode Komparasi Lapangan (Otomatis hitung selisih & vonis dari angka riil)
     const diff = numAi - numPln;
     cellDiff.textContent = diff === 0 ? '0' : diff;
 
