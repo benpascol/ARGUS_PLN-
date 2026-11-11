@@ -17,6 +17,11 @@
         </button>
         <input type="file" id="file-input" accept="image/*" multiple style="display:none;" onchange="handleFileUpload(event)">
 
+        <button class="btn btn-upload-excel" id="btn-upload-excel" onclick="document.getElementById('excel-input').click()" title="Unggah file rekap ACMT (.xlsx / .csv) untuk memasangkan data pelanggan dan stan lapangan otomatis">
+            <i class="fas fa-file-excel"></i> Impor Rekap ACMT (.xlsx / .csv)
+        </button>
+        <input type="file" id="excel-input" accept=".xlsx, .xls, .csv" style="display:none;" onchange="handleExcelUpload(event)">
+
         <button class="btn btn-export-excel" id="btn-export-excel" onclick="exportOfficialExcel()">
             <i class="fas fa-file-excel"></i> Unduh Laporan Excel Resmi (.xlsx)
         </button>
@@ -25,6 +30,14 @@
         </button>
     </div>
     <div class="toolbar-group">
+        <div class="audit-mode-selector" title="Pilih mode audit: Komparasi Stand Lapangan vs Ekstraksi Mandiri">
+            <span class="mode-label"><i class="fas fa-sliders-h"></i> Mode:</span>
+            <select id="audit-mode-select" class="select-mode" onchange="changeAuditMode(this.value)">
+                <option value="AUTO" selected>Auto (Sesuai Data)</option>
+                <option value="MANDIRI">Ekstraksi Mandiri (Murni AI)</option>
+                <option value="KOMPARASI">Komparasi ACMT Lapangan</option>
+            </select>
+        </div>
         <div class="search-field">
             <i class="fas fa-search"></i>
             <input type="text" id="search-input" placeholder="Cari IDPEL / Nama..." oninput="searchRows(this.value)">
