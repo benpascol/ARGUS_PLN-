@@ -335,10 +335,11 @@ function executeResetTable() {
     const modal = document.getElementById('modal-reset-confirm');
     if (modal) modal.style.display = 'none';
 
+    // 1. Kosongkan antrean baris tabel di DOM
     const tbody = document.getElementById('table-body');
     tbody.innerHTML = `
         <tr id="empty-state-row">
-            <td colspan="13" class="empty-state-td" style="white-space: normal !important; text-align: center !important; padding: 50px 20px !important;">
+            <td colspan="13" class="empty-state-td" style="white-space: normal !important; text-align: center !important; padding: 48px 20px !important;">
                 <div class="empty-dropzone" id="empty-dropzone" onclick="document.getElementById('folder-input').click()" style="text-align: center !important; margin: 0 auto !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important;">
                     <div class="empty-icon-circle" style="margin: 0 auto 16px auto !important; display: flex !important; align-items: center !important; justify-content: center !important;">
                         <i class="fas fa-cloud-upload-alt" style="margin: 0 !important; line-height: 1 !important;"></i>
@@ -365,10 +366,40 @@ function executeResetTable() {
             </td>
         </tr>
     `;
+
+    // 2. Bersihkan Total Memori Kamus Excel Rekap ACMT (RAM)
+    if (typeof excelRecordsMap !== 'undefined' && excelRecordsMap.clear) {
+        excelRecordsMap.clear();
+    }
+
+    // 3. Reset Seluruh Nilai Input Form Berkas & Pencarian
+    const folderInput = document.getElementById('folder-input');
+    if (folderInput) folderInput.value = '';
+    const fileInput = document.getElementById('file-input');
+    if (fileInput) fileInput.value = '';
+    const excelInput = document.getElementById('excel-input');
+    if (excelInput) excelInput.value = '';
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) searchInput.value = '';
+
+    // 4. Reset Mode Audit ke Default
+    const modeSelect = document.getElementById('audit-mode-select');
+    if (modeSelect) modeSelect.value = 'AUTO';
+    currentAuditMode = 'AUTO';
+
+    // 5. Reset Status Filter Kartu KPI ke 'ALL'
+    if (typeof filterByStatus === 'function') {
+        filterByStatus('ALL');
+    }
+
+    // 6. Inisialisasi Ulang Dropzone & Hitung Statistik KPI
     setupDropzoneEvents();
     if (typeof updateKPIs === 'function') updateKPIs();
+
+    // 7. Bersihkan Penyimpanan Database Persisten Lokal (IndexedDB)
     if (typeof clearPersistedSession === 'function') clearPersistedSession();
-    showToast("Tabel antrean audit telah dibersihkan.", "info");
+
+    showToast("Seluruh tabel, antrean foto, dan data impor Excel ACMT telah dibersihkan total.", "info");
 }
 
 // DRAG & DROP SUPPORT (UX ENHANCEMENT)
