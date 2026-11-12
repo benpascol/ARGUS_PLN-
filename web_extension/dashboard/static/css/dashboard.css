@@ -1388,3 +1388,43 @@ tr.row-just-edited td {
     width: 0%;
     transition: width 0.15s ease-out;
 }
+
+/* BOTTOM FOOTER CORPORATE PLN */
+.pln-footer {
+    margin-top: 18px;
+    margin-bottom: 8px;
+    padding: 12px 18px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: var(--radius-md);
+    color: #64748B;
+    font-size: 11.5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.pln-footer .footer-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+}
+
+.pln-footer .footer-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #94A3B8;
+    font-size: 11px;
+}
+
+.pln-footer .footer-bullet {
+    color: #CBD5E1;
+}
+
+.pln-footer .engineer-credit {
+    color: #475569;
+    font-weight: 600;
+}

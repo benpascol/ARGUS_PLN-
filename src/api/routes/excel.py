@@ -172,6 +172,8 @@ async def parse_acmt_excel_endpoint(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Gagal memproses file Excel: {str(e)}")
 
+    print(f"📁 [ACMT EXCEL] Berkas berhasil diunggah: {filename} ({len(records)} data pelanggan dipasangkan)")
+
     return JSONResponse(content={
         "status": "success",
         "filename": filename,
@@ -275,6 +277,8 @@ async def export_audit_excel_endpoint(payload: ExportExcelRequest):
         annotated_dir=annotated_dir,
         harvest=False
     )
+
+    print(f"📊 [EKSPOR EXCEL] Laporan resmi ber-Hyperlink berhasil dibuat: {out_excel.name} ({len(audit_results)} data)")
 
     return FileResponse(
         str(out_excel),

@@ -15,7 +15,11 @@ import sys
 from pathlib import Path
 
 # Pastikan root direktori proyek ARGUS masuk ke sys.path
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+if getattr(sys, 'frozen', False):
+    BASE_DIR = Path(sys.executable).resolve().parent
+else:
+    BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 

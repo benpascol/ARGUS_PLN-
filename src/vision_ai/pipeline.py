@@ -30,7 +30,11 @@ if sys.platform == "win32":
         pass
 
 # Pastikan root direktori proyek ARGUS masuk ke sys.path
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+if getattr(sys, 'frozen', False):
+    BASE_DIR = Path(sys.executable).resolve().parent
+else:
+    BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
@@ -62,7 +66,7 @@ class ArgusVisionPipeline:
         counter_model_path: Optional[Union[str, Path]] = None,
         digit_model_path: Optional[Union[str, Path]] = None
     ):
-        base_dir = Path(__file__).resolve().parent.parent.parent
+        base_dir = Path(sys.executable).resolve().parent if getattr(sys, 'frozen', False) else Path(__file__).resolve().parent.parent.parent
         v5_path = base_dir / "models" / "digit_ocr_detector_v5.pt"
         v4_path = base_dir / "models" / "digit_ocr_detector_v4.pt"
         default_digit = v5_path if v5_path.is_file() else (v4_path if v4_path.is_file() else (base_dir / "models" / "digit_ocr_detector.pt"))

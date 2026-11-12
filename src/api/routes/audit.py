@@ -55,6 +55,13 @@ async def predict_file(file: UploadFile = File(...)):
     result["image_name"] = file.filename
     result["latency_ms"] = latency_ms
 
+    fname = file.filename or "meter.jpg"
+    stand = result.get("stand_baca") or "-"
+    tier = result.get("tier_color") or "RED"
+    status = result.get("status") or "-"
+    icon = "🟢" if tier == "GREEN" else ("🟡" if tier == "YELLOW" else "🔴")
+    print(f"🤖 [AUDIT AI] {icon} {fname[:24]:<24} | Stand: {stand:<6} | {status:<18} ({latency_ms:.0f} ms)")
+
     return JSONResponse(content=sanitize_for_json(result))
 
 
@@ -79,5 +86,12 @@ async def predict_base64(payload: Base64PredictRequest):
     latency_ms = round((time.time() - t0) * 1000, 2)
     result["image_name"] = payload.filename
     result["latency_ms"] = latency_ms
+
+    fname = payload.filename or "meter.jpg"
+    stand = result.get("stand_baca") or "-"
+    tier = result.get("tier_color") or "RED"
+    status = result.get("status") or "-"
+    icon = "🟢" if tier == "GREEN" else ("🟡" if tier == "YELLOW" else "🔴")
+    print(f"🤖 [AUDIT AI] {icon} {fname[:24]:<24} | Stand: {stand:<6} | {status:<18} ({latency_ms:.0f} ms)")
 
     return JSONResponse(content=sanitize_for_json(result))

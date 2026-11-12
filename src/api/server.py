@@ -13,6 +13,9 @@ Inisialisasi server FastAPI ramping:
 
 import io
 import sys
+import time
+import threading
+import webbrowser
 from pathlib import Path
 from contextlib import asynccontextmanager
 
@@ -33,23 +36,51 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from src.api.dependencies import DASHBOARD_DIR, set_pipeline
+from src.api.dependencies import DASHBOARD_DIR, set_pipeline, get_hardware_info
 from src.vision_ai.pipeline import ArgusVisionPipeline
 from src.api.routes import audit, excel, views
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("=" * 60)
-    print("🚀 MEMULAI ARGUS LOCAL REST API SERVER (MODULAR ARCHITECTURE)...")
-    print("=" * 60)
+    # Deteksi hardware komputasi riil
+    hw = get_hardware_info()
+    dev_name = hw.get("device_name", "GPU / CPU")
+
+    print("\n" + "=" * 78)
+    print("⚡ PT PLN (PERSERO) UNIT INDUK DISTRIBUSI JAWA TIMUR")
+    print("   UP3 MOJOKERTO — SISTEM AUDIT STAND KWH METER (ARGUS AI V5)")
+    print("=" * 78)
+    print(f"🔧 [KOMPUTASI] : {dev_name}")
+    print("🔒 [MODE]      : 100% Pure Local & Offline (Host: 127.0.0.1:8000)")
+    print("🔄 Memuat Model AI Vision ke Memori...")
+
     pipeline = ArgusVisionPipeline()
     set_pipeline(pipeline)
-    print("✅ ArgusVisionPipeline Siap Menerima Permintaan di http://127.0.0.1:8000")
-    print("📄 Dokumentasi Interaktif (Swagger UI): http://127.0.0.1:8000/docs")
-    print("=" * 60)
+
+    print("✅ Model AI Siap Menerima Pemeriksaan Meteran!")
+    print("\n🌐 Membuka Dashboard Mandiri di browser default Anda...")
+    print("   URL: http://127.0.0.1:8000/dashboard")
+    print("-" * 78)
+    print("💡 PETUNJUK PENGOPERASIAN:")
+    print("   • Biarkan jendela terminal ini tetap terbuka selama proses audit berlangsung.")
+    print("   • Untuk mematikan server dengan aman, tekan [Ctrl+C] atau tutup jendela ini.")
+    print("-" * 78)
+    print("   Sistem Pengawasan Visual Otomatis LBKB | Lead Engineer: Benedictus Pascal")
+    print("=" * 78 + "\n")
+
+    # Auto-launch browser di thread terpisah
+    def open_browser():
+        time.sleep(1.2)
+        try:
+            webbrowser.open("http://127.0.0.1:8000/dashboard")
+        except Exception:
+            pass
+
+    threading.Thread(target=open_browser, daemon=True).start()
+
     yield
-    print("🛑 Mematikan Server ARGUS...")
+    print("\n🛑 Mematikan Server ARGUS...")
 
 
 app = FastAPI(
@@ -79,4 +110,5 @@ app.include_router(excel.router)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    # Gunakan log_level warning agar terminal tidak banjir request statis
+    uvicorn.run(app, host="127.0.0.1", port=8000, log_level="warning")
