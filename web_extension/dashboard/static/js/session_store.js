@@ -33,7 +33,20 @@ function openSessionDB() {
     });
 }
 
-async function persistCurrentSession() {
+let persistDebounceTimer = null;
+
+function persistCurrentSession(immediate = false) {
+    if (immediate) {
+        if (persistDebounceTimer) clearTimeout(persistDebounceTimer);
+        return doPersistCurrentSession();
+    }
+    if (persistDebounceTimer) clearTimeout(persistDebounceTimer);
+    persistDebounceTimer = setTimeout(() => {
+        doPersistCurrentSession();
+    }, 350);
+}
+
+async function doPersistCurrentSession() {
     try {
         const rows = document.querySelectorAll('#table-body tr:not(#empty-state-row)');
         const sessionData = [];

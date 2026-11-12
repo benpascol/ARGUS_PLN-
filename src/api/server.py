@@ -2,6 +2,7 @@ import io
 import sys
 import time
 import base64
+import asyncio
 from contextlib import asynccontextmanager
 import cv2
 import numpy as np
@@ -176,7 +177,7 @@ async def predict_file(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail=f"Gagal membaca berkas citra: {str(e)}")
 
     t0 = time.time()
-    result = pipeline.predict_image(img)
+    result = await asyncio.to_thread(pipeline.predict_image, img)
     latency_ms = round((time.time() - t0) * 1000, 2)
     result["image_name"] = file.filename
     result["latency_ms"] = latency_ms
@@ -188,6 +189,7 @@ async def predict_base64(payload: Base64PredictRequest):
     """
     Endpoint Base64 JSON.
     Sangat ramah untuk Userscript Tampermonkey di Google Chrome (GM_xmlhttpRequest).
+    Mendukung Concurrent Worker Pool via asyncio.to_thread non-blocking.
     """
     if pipeline is None:
         raise HTTPException(status_code=503, detail="Pipeline AI belum selesai dimuat.")
@@ -198,7 +200,7 @@ async def predict_base64(payload: Base64PredictRequest):
         raise HTTPException(status_code=400, detail=f"Gagal mendecode Base64: {str(e)}")
 
     t0 = time.time()
-    result = pipeline.predict_image(img)
+    result = await asyncio.to_thread(pipeline.predict_image, img)
     latency_ms = round((time.time() - t0) * 1000, 2)
     result["image_name"] = payload.filename
     result["latency_ms"] = latency_ms

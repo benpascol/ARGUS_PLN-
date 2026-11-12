@@ -170,58 +170,89 @@ async function auditAllRows() {
     }
 
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses Batch...';
+    btn.innerHTML = '<i class="fas fa-bolt" style="color:var(--pln-yellow);"></i> Memproses Batch (4x Worker)...';
 
     const pWrapper = document.getElementById('batch-progress-wrapper');
     const pFill = document.getElementById('batch-progress-fill');
     const pEta = document.getElementById('batch-eta-badge');
+    const pTitle = document.getElementById('batch-progress-label');
     if (pWrapper) pWrapper.style.display = 'block';
     if (pFill) pFill.style.width = '0%';
-    if (pEta) pEta.innerHTML = '<i class="fas fa-hourglass-half"></i> Menyiapkan antrean...';
+    if (pTitle) pTitle.textContent = 'Memproses Batch AI (4x Worker Pool - RTX 4060 GPU)...';
+    if (pEta) pEta.innerHTML = '<i class="fas fa-bolt" style="color:var(--pln-yellow);"></i> Mengaktifkan 4 worker GPU paralel...';
 
     let processedCount = 0;
     let protectedCount = 0;
+    let completedCount = 0;
     const totalCount = rows.length;
     const tBatchStart = performance.now();
 
-    for (let i = 0; i < totalCount; i++) {
-        const row = rows[i];
-        const currentPhotoNum = i + 1;
-        const progressPct = Math.round((currentPhotoNum / totalCount) * 100);
+    // SOLUSI 5: CONCURRENT WORKER POOL (AKSELERASI MULTI-WORKER RTX 4060)
+    const CONCURRENCY = 4;
+    let nextIndex = 0;
+
+    function updateBatchProgress(done) {
+        const progressPct = Math.min(100, Math.round((done / totalCount) * 100));
         if (pFill) pFill.style.width = `${progressPct}%`;
 
-        // Update Live ETA Counter
         if (pEta) {
-            if (i === 0) {
-                pEta.innerHTML = `<i class="fas fa-hourglass-half"></i> Memproses foto 1 dari ${totalCount} (Menghitung estimasi...)`;
+            if (done <= CONCURRENCY) {
+                pEta.innerHTML = `<i class="fas fa-bolt" style="color:var(--pln-yellow);"></i> 4x GPU Worker Aktif: Memproses ${done} dari ${totalCount}...`;
             } else {
                 const elapsedSec = (performance.now() - tBatchStart) / 1000;
-                const avgSecPerPhoto = elapsedSec / i;
-                const remainingPhotos = totalCount - i;
+                const avgSecPerPhoto = elapsedSec / done;
+                const remainingPhotos = totalCount - done;
                 const estRemainingSec = Math.max(1, Math.round(avgSecPerPhoto * remainingPhotos));
-                pEta.innerHTML = `<i class="fas fa-hourglass-half"></i> Memproses foto ${currentPhotoNum} dari ${totalCount} (Sisa ~${estRemainingSec} detik)`;
+                pEta.innerHTML = `<i class="fas fa-bolt" style="color:var(--pln-yellow);"></i> 4x GPU Worker: Selesai ${done}/${totalCount} (Sisa ~${estRemainingSec} detik)`;
             }
         }
-
-        // Human-in-the-Loop Guard: Jangan menimpa baris yang telah dikoreksi manual oleh auditor
-        if (row.getAttribute('data-edited') === 'true') {
-            protectedCount++;
-            continue;
-        }
-        await auditSingleRow(i);
-        processedCount++;
     }
 
+    async function worker(workerId) {
+        while (nextIndex < totalCount) {
+            const currentIdx = nextIndex++;
+            const row = rows[currentIdx];
+            if (!row) break;
+
+            // Human-in-the-Loop Guard: Jangan menimpa baris yang telah dikoreksi manual oleh auditor
+            if (row.getAttribute('data-edited') === 'true') {
+                protectedCount++;
+                completedCount++;
+                updateBatchProgress(completedCount);
+                continue;
+            }
+
+            try {
+                await auditSingleRow(currentIdx);
+                processedCount++;
+            } catch (err) {
+                console.error(`[Worker ${workerId}] Error audit baris ${currentIdx}:`, err);
+            } finally {
+                completedCount++;
+                updateBatchProgress(completedCount);
+            }
+        }
+    }
+
+    // Eksekusi paralel 4 worker serentak
+    const activeWorkers = Math.min(CONCURRENCY, totalCount);
+    const workerPromises = [];
+    for (let w = 1; w <= activeWorkers; w++) {
+        workerPromises.push(worker(w));
+    }
+    await Promise.all(workerPromises);
+
     const totalBatchDuration = ((performance.now() - tBatchStart) / 1000).toFixed(1);
+    const avgLatency = (totalBatchDuration / Math.max(1, processedCount)).toFixed(2);
     if (pFill) pFill.style.width = '100%';
     if (pEta) {
-        pEta.innerHTML = `<i class="fas fa-check-circle" style="color:#16A34A;"></i> Selesai ${totalCount} foto (${totalBatchDuration}s)`;
+        pEta.innerHTML = `<i class="fas fa-check-circle" style="color:#16A34A;"></i> Selesai ${totalCount} foto dalam ${totalBatchDuration}s (Rerata ~${avgLatency}s/foto)`;
     }
 
     setTimeout(() => {
         if (pWrapper) pWrapper.style.display = 'none';
         if (pFill) pFill.style.width = '0%';
-    }, 1200);
+    }, 1500);
 
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-check-double"></i> Selesai Diaudit';
@@ -252,13 +283,17 @@ async function auditAllRows() {
     if (mDiff) mDiff.textContent = `${diff} (${totalCount ? Math.round(diff/totalCount*100) : 0}%)`;
     if (mNihil) mNihil.textContent = nihil;
     if (mEdited) mEdited.textContent = edited;
-    if (mNotes && protectedCount > 0) {
-        mNotes.textContent = `${processedCount} foto selesai diproses AI. ${protectedCount} hasil koreksi manual Anda tetap terlindungi aman.`;
+    if (mNotes) {
+        let noteMsg = `Total waktu: ${totalBatchDuration} detik (Akselerasi 4x Worker GPU RTX 4060).`;
+        if (protectedCount > 0) {
+            noteMsg += ` ${protectedCount} baris hasil koreksi auditor tetap aman terlindungi.`;
+        }
+        mNotes.textContent = noteMsg;
     }
 
     if (modalComplete) modalComplete.style.display = 'flex';
 
-    if (typeof persistCurrentSession === 'function') persistCurrentSession();
+    if (typeof persistCurrentSession === 'function') persistCurrentSession(true);
 
     setTimeout(() => {
         btn.innerHTML = '<i class="fas fa-play"></i> Mulai Audit Batch';
