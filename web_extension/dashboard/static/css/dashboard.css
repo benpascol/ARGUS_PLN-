@@ -751,6 +751,125 @@ tr.row-just-edited td {
     color: #FFFFFF;
 }
 
+/* ENTERPRISE PAGINATION & VIRTUAL SLICING FOOTER */
+.table-pagination-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    background: #FFFFFF;
+    border-top: 1px solid var(--border-color);
+    flex-shrink: 0;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    user-select: none;
+    gap: 12px;
+    box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.02);
+    z-index: 10;
+}
+
+.pagination-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+}
+
+.pagination-info strong {
+    color: var(--pln-blue);
+    font-weight: 700;
+}
+
+.pagination-filter-badge {
+    background: var(--pln-blue-light);
+    color: var(--pln-blue);
+    border: 1px solid rgba(0, 162, 218, 0.25);
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.page-size-selector {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.select-page-size {
+    border: 1px solid #CBD5E1;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--pln-blue);
+    background: #FFFFFF;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.15s ease;
+}
+
+.select-page-size:hover, .select-page-size:focus {
+    border-color: var(--pln-blue);
+    box-shadow: 0 0 0 2px rgba(0, 162, 218, 0.15);
+}
+
+.pagination-nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-page {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid #CBD5E1;
+    background: #FFFFFF;
+    border-radius: 6px;
+    color: var(--pln-blue);
+    font-size: 11.5px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-page:hover:not(:disabled) {
+    background: var(--pln-blue-light);
+    border-color: var(--pln-blue);
+    color: var(--pln-blue-dark);
+}
+
+.btn-page:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    background: #F8FAFC;
+    border-color: #E2E8F0;
+    color: #94A3B8;
+}
+
+.page-indicator {
+    font-size: 12px;
+    padding: 0 6px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.page-indicator strong {
+    color: var(--pln-blue);
+    font-weight: 700;
+}
+
 /* MODAL INSPECTOR LIGHT */
 .modal-backdrop {
     display: none;

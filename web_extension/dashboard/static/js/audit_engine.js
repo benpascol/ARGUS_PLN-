@@ -293,6 +293,8 @@ async function auditAllRows() {
 
     if (modalComplete) modalComplete.style.display = 'flex';
 
+    if (typeof updateKPIs === 'function') updateKPIs();
+    if (typeof refreshTableDisplay === 'function') refreshTableDisplay();
     if (typeof persistCurrentSession === 'function') persistCurrentSession(true);
 
     setTimeout(() => {

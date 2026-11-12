@@ -144,7 +144,12 @@ async function restoreSessionOnStartup() {
                     if (data.photo_blob) {
                         try {
                             tr._photoBlob = data.photo_blob;
-                            resolvedSrc = URL.createObjectURL(data.photo_blob);
+                            if (typeof createTrackedObjectURL === 'function') {
+                                resolvedSrc = createTrackedObjectURL(data.photo_blob);
+                            } else {
+                                resolvedSrc = URL.createObjectURL(data.photo_blob);
+                            }
+                            tr._trackedUrl = resolvedSrc;
                         } catch (e) {
                             resolvedSrc = `/sample-photo/${encodeURIComponent(data.photo_name)}`;
                         }
@@ -160,7 +165,7 @@ async function restoreSessionOnStartup() {
                         <td><strong>${data.nama}</strong></td>
                         <td>${data.tarif_daya}</td>
                         <td><input type="text" class="input-table" value="${data.stan_lapangan}" onchange="onFieldChange(${i})" onkeydown="handleRowKeydown(event, ${i}, 'stan_lap')"></td>
-                        <td><img class="photo-thumbnail" src="${resolvedSrc}" onerror="if(!this.src.includes('/sample-photo/')){this.src='/sample-photo/' + encodeURIComponent('${data.photo_name}')}" onclick="inspectPhoto(${i})" alt="Foto Meter"></td>
+                        <td><img class="photo-thumbnail" loading="lazy" src="${resolvedSrc}" onerror="if(!this.src.includes('/sample-photo/')){this.src='/sample-photo/' + encodeURIComponent('${data.photo_name}')}" onclick="inspectPhoto(${i})" alt="Foto Meter"></td>
                         <td class="cell-raw" style="font-family:'JetBrains Mono';">${data.raw_display}</td>
                         <td>
                             <input type="text" class="input-table ai-field cell-argus" value="${data.stan_argus}" onchange="onArgusChange(${i})" onkeydown="handleRowKeydown(event, ${i}, 'argus')">
@@ -190,6 +195,7 @@ async function restoreSessionOnStartup() {
 
                 tbody.appendChild(fragment);
                 if (typeof updateKPIs === 'function') updateKPIs();
+                if (typeof refreshTableDisplay === 'function') refreshTableDisplay();
                 showToast(`Sesi audit aktif (${rows.length} foto) berhasil dipulihkan otomatis dari memori lokal.`, 'info');
             }
         };

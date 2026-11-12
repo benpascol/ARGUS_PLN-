@@ -10,6 +10,24 @@
 let excelRecordsMap = new Map(); // Map IDPEL -> { nama, tarif, daya, tarif_daya, stan_lapangan, nama_file, alamat }
 let currentAuditMode = 'AUTO'; // 'AUTO', 'MANDIRI', 'KOMPARASI'
 
+// Object URL Tracking & Memory Optimization (Anti-Memory Leak)
+window._activeObjectUrls = window._activeObjectUrls || new Set();
+
+function createTrackedObjectURL(blob) {
+    const url = URL.createObjectURL(blob);
+    window._activeObjectUrls.add(url);
+    return url;
+}
+
+function revokeAllObjectURLs() {
+    if (window._activeObjectUrls && window._activeObjectUrls.size > 0) {
+        window._activeObjectUrls.forEach(url => {
+            try { URL.revokeObjectURL(url); } catch (e) {}
+        });
+        window._activeObjectUrls.clear();
+    }
+}
+
 // Toast Notification System
 function showToast(message, type = 'info') {
     const box = document.getElementById('toast-box');
@@ -226,9 +244,15 @@ function resolveDuplicateAction(action) {
         duplicateFiles.forEach(item => {
             const r = item.existingRow;
             const photoImg = r.querySelector('.photo-thumbnail');
-            const objectUrl = URL.createObjectURL(item.file);
+            if (r._trackedUrl) {
+                try { URL.revokeObjectURL(r._trackedUrl); } catch (e) {}
+                window._activeObjectUrls.delete(r._trackedUrl);
+            }
+            const objectUrl = createTrackedObjectURL(item.file);
+            r._trackedUrl = objectUrl;
             r._photoBlob = item.file;
             photoImg.src = objectUrl;
+            photoImg.loading = "lazy";
             photoImg.setAttribute('onerror', `if(!this.src.includes('/sample-photo/')){this.src='/sample-photo/' + encodeURIComponent('${item.file.name}')}`);
             r.setAttribute('data-photo', item.file.name);
             r.setAttribute('data-status', 'PENDING');
@@ -267,7 +291,7 @@ function appendFilesToTable(files) {
         const file = files[i];
         const rowIdx = currentCount + i;
         const idpel = extractIdpelFromFilename(file.name);
-        const objectUrl = URL.createObjectURL(file);
+        const objectUrl = createTrackedObjectURL(file);
 
         // Auto-pairing jika file Excel ACMT sudah pernah diunggah lebih dulu
         const excelData = excelRecordsMap.get(idpel) || excelRecordsMap.get(file.name.replace(/\.[^/.]+$/, ""));
@@ -278,6 +302,7 @@ function appendFilesToTable(files) {
         const newRow = document.createElement('tr');
         newRow.id = `row-${rowIdx}`;
         newRow._photoBlob = file;
+        newRow._trackedUrl = objectUrl;
         newRow.setAttribute('data-idpel', idpel);
         newRow.setAttribute('data-photo', file.name);
         newRow.setAttribute('data-status', 'PENDING');
@@ -289,7 +314,7 @@ function appendFilesToTable(files) {
             <td>${tarifDayaDisplay}</td>
             <td><input type="text" class="input-table" value="${stanLapValue}" onchange="onFieldChange(${rowIdx})" onkeydown="handleRowKeydown(event, ${rowIdx}, 'stan_lap')"></td>
             <td>
-                <img class="photo-thumbnail" src="${objectUrl}" onerror="if(!this.src.includes('/sample-photo/')){this.src='/sample-photo/' + encodeURIComponent('${file.name}')}" onclick="inspectPhoto(${rowIdx})" alt="Foto Meter">
+                <img class="photo-thumbnail" loading="lazy" src="${objectUrl}" onerror="if(!this.src.includes('/sample-photo/')){this.src='/sample-photo/' + encodeURIComponent('${file.name}')}" onclick="inspectPhoto(${rowIdx})" alt="Foto Meter">
             </td>
             <td class="cell-raw" style="font-family:'JetBrains Mono';">-</td>
             <td>
@@ -316,6 +341,7 @@ function appendFilesToTable(files) {
 
     tbody.appendChild(fragment);
     if (typeof updateKPIs === 'function') updateKPIs();
+    if (typeof refreshTableDisplay === 'function') refreshTableDisplay();
     if (typeof persistCurrentSession === 'function') persistCurrentSession();
 }
 
@@ -367,10 +393,11 @@ function executeResetTable() {
         </tr>
     `;
 
-    // 2. Bersihkan Total Memori Kamus Excel Rekap ACMT (RAM)
+    // 2. Bersihkan Total Memori Kamus Excel Rekap ACMT (RAM) & Revoke Seluruh Object URL
     if (typeof excelRecordsMap !== 'undefined' && excelRecordsMap.clear) {
         excelRecordsMap.clear();
     }
+    revokeAllObjectURLs();
 
     // 3. Reset Seluruh Nilai Input Form Berkas & Pencarian
     const folderInput = document.getElementById('folder-input');
@@ -387,9 +414,13 @@ function executeResetTable() {
     if (modeSelect) modeSelect.value = 'AUTO';
     currentAuditMode = 'AUTO';
 
-    // 5. Reset Status Filter Kartu KPI ke 'ALL'
+    // 5. Reset Status Filter Kartu KPI ke 'ALL' & Reset Pagination
+    if (typeof currentPage !== 'undefined') currentPage = 1;
     if (typeof filterByStatus === 'function') {
         filterByStatus('ALL');
+    }
+    if (typeof refreshTableDisplay === 'function') {
+        refreshTableDisplay();
     }
 
     // 6. Inisialisasi Ulang Dropzone & Hitung Statistik KPI
