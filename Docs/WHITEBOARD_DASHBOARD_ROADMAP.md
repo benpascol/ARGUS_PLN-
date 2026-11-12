@@ -175,3 +175,20 @@ Di dunia industri Computer Vision, model AI mentah (*vanilla model*) tidak akan 
 
 3. **Smart Dynamic Confidence Thresholding:**
    - Ambang batas keyakinan deteksi angka dibuat adaptif terhadap kondisi pencahayaan: jika foto terdeteksi agak gelap/kontras rendah, ambang batas disesuaikan otomatis untuk mencegah angka tidak terbaca.
+
+---
+
+## 4. Distribusi Standalone Executable (Opsi A: `--onedir` Portable Package) [STATUS: SELESAI]
+
+- **Direktori Output:** `dist/ARGUS/`
+- **File Eksekusi Utama:** `ARGUS.exe` dan shortcut `Mulai_ARGUS.bat`
+- **Arsitektur Distribusi:**
+  - `_internal/`: Menyimpan seluruh biner Python runtime, CUDA 12, cuDNN, PyTorch, OpenCV, dan Uvicorn.
+  - `models/`: Berisi bobot model AI (`meter_counter_detector.pt`, `digit_ocr_detector_v5.pt`, dll.) yang dapat diperbarui kapan saja tanpa rebuild.
+  - `web_extension/dashboard/`: Berisi antarmuka web dashboard modular (HTML, CSS, JS).
+  - `data/`: Folder penampung hasil audit dan sampel.
+- **Tampilan Console & Web:**
+  - **Console CMD:** Header murni menampilkan `⚡ PT PLN (PERSERO) UNIT INDUK DISTRIBUSI JAWA TIMUR - UP3 MOJOKERTO`. Kredit `Lead Engineer: Benedictus Pascal` diletakkan di bawah petunjuk pengoperasian.
+  - **Web Dashboard:** Header bersih dari teks Lead Engineer, digantikan oleh footer elegan di bagian bawah tabel.
+  - **Auto-Launch:** Seketika `ARGUS.exe` diklik, browser default langsung membuka `http://127.0.0.1:8000/dashboard`.
+  - **Log Bersih:** Terminal hanya menampilkan aktivitas penting (impor berkas ACMT, hasil vonis AI per meteran, dan ekspor excel resmi).
