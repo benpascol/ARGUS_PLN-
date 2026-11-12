@@ -2,7 +2,7 @@
  * Module: excel_export.js
  * Deskripsi: Penarikan berkas laporan audit Excel resmi ber-hyperlink
  *            langsung ke backend openpyxl di /api/export-audit-excel.
- * Lead Engineer: Pascol
+ * Lead Engineer: Benedictus Pascal
  */
 
 async function exportOfficialExcel() {

@@ -76,7 +76,9 @@
                     <i class="fas fa-chevron-left"></i>
                 </button>
                 <div class="page-indicator">
-                    Halaman <strong id="current-page-num">1</strong> dari <strong id="total-pages-num">1</strong>
+                    <span>Halaman</span>
+                    <input type="number" id="page-jump-input" class="input-page-jump" min="1" max="1" value="1" title="Ketik nomor halaman lalu tekan Enter untuk lompat cepat" onkeydown="handlePageJumpKeydown(event, this)" onchange="handlePageJumpChange(this)">
+                    <span>dari <strong id="total-pages-num">1</strong></span>
                 </div>
                 <button type="button" class="btn-page" id="btn-page-next" onclick="goToPage('next')" title="Halaman Berikutnya" disabled>
                     <i class="fas fa-chevron-right"></i>

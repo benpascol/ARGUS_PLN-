@@ -2,7 +2,7 @@
  * Module: audit_engine.js
  * Deskripsi: Mesin inferensi batch AI GPU, evaluasi selisih kWh,
  *            serta penanganan koreksi manual Human-in-the-Loop.
- * Lead Engineer: Pascol
+ * Lead Engineer: Benedictus Pascal
  */
 
 /**
@@ -187,8 +187,8 @@ async function auditAllRows() {
     const totalCount = rows.length;
     const tBatchStart = performance.now();
 
-    // SOLUSI 5: CONCURRENT WORKER POOL (AKSELERASI MULTI-WORKER RTX 4060)
-    const CONCURRENCY = 4;
+    // SOLUSI 5: CONCURRENT WORKER POOL (AKSELERASI MULTI-WORKER DENGAN AUTO-HARDWARE TUNING)
+    const CONCURRENCY = window.BATCH_CONCURRENCY || 4;
     let nextIndex = 0;
 
     function updateBatchProgress(done) {

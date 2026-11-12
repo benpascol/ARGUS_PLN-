@@ -3,7 +3,7 @@
  * Deskripsi: Penanganan unggah berkas dual-mode (folder/file), ekstraksi IDPEL,
  *            jaring pengaman anti-duplikasi foto (Deduplication Guard),
  *            serta mekanisme pemasangan otomatis rekap ACMT Excel (Auto-Pairing).
- * Lead Engineer: Pascol
+ * Lead Engineer: Benedictus Pascal
  */
 
 // Global State

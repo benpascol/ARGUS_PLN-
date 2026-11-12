@@ -1,9 +1,12 @@
-<!-- MODAL INSPECTOR HD -->
+<!-- MODAL INSPECTOR HD & AUDITOR VERIFICATION STATION -->
 <div class="modal-backdrop" id="modal-inspector" onclick="closeInspector()">
-    <div class="modal-window" onclick="event.stopPropagation()">
+    <div class="modal-window modal-window-large" onclick="event.stopPropagation()">
         <div class="modal-bar">
-            <h3 id="modal-title"><i class="fas fa-search-plus" style="color: var(--pln-blue);"></i> Pratinjau Stand KWH Meter</h3>
-            <button class="btn btn-secondary" style="padding: 4px 10px;" onclick="closeInspector()"><i class="fas fa-times"></i></button>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <h3 id="modal-title" style="margin:0;"><i class="fas fa-search-plus" style="color: var(--pln-blue);"></i> Pratinjau & Verifikasi Stand KWH Meter</h3>
+                <span class="inspector-counter-badge" id="modal-counter-badge">Foto 1 dari 1</span>
+            </div>
+            <button class="btn btn-secondary" style="padding: 4px 10px;" onclick="closeInspector()" title="Tutup (ESC)"><i class="fas fa-times"></i></button>
         </div>
         <div class="modal-body-grid">
             <div class="modal-image-box" id="inspector-image-container">
@@ -16,25 +19,64 @@
                 <div class="zoom-viewport" id="zoom-viewport" onwheel="handleWheelZoom(event)" onmousedown="startPan(event)">
                     <img id="modal-photo-src" src="" alt="Pratinjau KWH Meter">
                 </div>
+                <div class="modal-image-hint">
+                    <i class="fas fa-keyboard"></i> Navigasi: <strong>[←] Sebelumnya</strong> | <strong>[→] Berikutnya</strong> • Scroll untuk Zoom
+                </div>
             </div>
             <div class="modal-info-list">
                 <div class="info-card">
                     <div class="info-card-label">IDPEL & Nama Pelanggan</div>
-                    <div class="info-card-val" id="modal-idpel" style="font-size: 15px; color: var(--pln-blue);">-</div>
+                    <div class="info-card-val" id="modal-idpel" style="font-size: 14.5px; color: var(--pln-blue); font-weight:700;">-</div>
+                    <div id="modal-tarif-daya" style="font-size:12px; color:var(--text-muted); margin-top:2px;">-</div>
                 </div>
+
                 <div class="info-card">
                     <div class="info-card-label">Stand Lapangan (Petugas Cater)</div>
-                    <div class="info-card-val" id="modal-stan-lap">-</div>
+                    <input type="text" id="modal-stan-lap" class="modal-input-field" placeholder="Stan Lapangan..." onchange="onModalFieldChange('stan_lap', this.value)" onkeydown="handleModalKeydown(event, 'stan_lap')">
                 </div>
+
                 <div class="info-card">
                     <div class="info-card-label">Stand Hasil AI ARGUS (V5)</div>
-                    <div class="info-card-val" id="modal-stan-ai" style="color: #16A34A;">-</div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <input type="text" id="modal-stan-ai" class="modal-input-field ai-field" placeholder="Hasil Stan..." onchange="onModalFieldChange('stan_ai', this.value)" onkeydown="handleModalKeydown(event, 'stan_ai')">
+                        <div id="modal-edit-tag-slot"></div>
+                    </div>
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">
+                        Teks Mentah AI: <span id="modal-raw-display" style="font-family:'JetBrains Mono'; font-weight:600; color:#334155;">-</span>
+                    </div>
                 </div>
+
                 <div class="info-card">
-                    <div class="info-card-label">Status Verifikasi</div>
-                    <div class="info-card-val" id="modal-status-text" style="font-size: 13.5px;">-</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <div class="info-card-label">Selisih (kWh) & Vonis Audit</div>
+                        <div id="modal-diff-display" style="font-family:'JetBrains Mono'; font-weight:700; font-size:13px;">-</div>
+                    </div>
+                    <select id="modal-select-status" class="modal-select-status" onchange="onModalFieldChange('status', this.value)">
+                        <option value="PENDING">Belum Diaudit</option>
+                        <option value="MATCH">Sesuai Match</option>
+                        <option value="ROLLING">Rolling Digit</option>
+                        <option value="DIFF">Beda Stand</option>
+                        <option value="NIHIL">Bukan KWH / Nihil</option>
+                        <option value="TRIAGE">Perlu Tinjau Ulang</option>
+                    </select>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-card-label">Catatan Khusus Auditor</div>
+                    <input type="text" id="modal-input-notes" class="modal-input-field" placeholder="Tulis catatan verifikasi..." onchange="onModalFieldChange('notes', this.value)" onkeydown="handleModalKeydown(event, 'notes')">
                 </div>
             </div>
+        </div>
+        <div class="modal-nav-bar">
+            <button type="button" class="btn btn-secondary btn-modal-nav" id="btn-modal-prev" onclick="navigateInspector(-1)">
+                <i class="fas fa-chevron-left"></i> Foto Sebelumnya [←]
+            </button>
+            <div class="modal-nav-info" id="modal-nav-info">
+                Menampilkan Baris <strong id="modal-current-row-num">1</strong> dari <strong id="modal-total-rows-num">1</strong>
+            </div>
+            <button type="button" class="btn btn-secondary btn-modal-nav" id="btn-modal-next" onclick="navigateInspector(1)">
+                Foto Berikutnya [→] <i class="fas fa-chevron-right"></i>
+            </button>
         </div>
     </div>
 </div>

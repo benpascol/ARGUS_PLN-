@@ -99,9 +99,41 @@ def root():
     return {
         "app": "Project ARGUS AI Vision Engine",
         "unit": "PT PLN (Persero) UP3 Mojokerto",
+        "lead_engineer": "Benedictus Pascal",
         "status": "ONLINE",
         "mode": "100% Pure Local & Offline",
         "version": "1.0.0"
+    }
+
+@app.get("/api/system-info")
+def get_system_info():
+    """Mengembalikan informasi hardware komputasi riil (GPU RTX / CPU) dan konfigurasi engine ARGUS."""
+    import torch
+    if torch.cuda.is_available():
+        gpu_name = torch.cuda.get_device_name(0)
+        vram_gb = round(torch.cuda.get_device_properties(0).total_memory / (1024**3), 1)
+        device_label = f"ENGINE: ARGUS AI V5 ({gpu_name})"
+        batch_concurrency = 4
+        hardware_type = "GPU"
+        hardware_desc = f"{gpu_name} ({vram_gb} GB VRAM)"
+    else:
+        import platform
+        cpu_name = platform.processor() or "CPU Mode"
+        device_label = "ENGINE: ARGUS AI V5 (CPU Mode)"
+        batch_concurrency = 2
+        hardware_type = "CPU"
+        hardware_desc = f"CPU Mode ({cpu_name[:30]})"
+        
+    return {
+        "app": "Project ARGUS AI Vision Engine",
+        "unit": "PT PLN (Persero) UP3 Mojokerto",
+        "lead_engineer": "Benedictus Pascal",
+        "hardware": {
+            "type": hardware_type,
+            "device_name": hardware_desc,
+            "engine_label": device_label,
+            "concurrency": batch_concurrency
+        }
     }
 
 @app.get("/simulator", response_class=HTMLResponse)
@@ -213,7 +245,7 @@ async def parse_acmt_excel_endpoint(file: UploadFile = File(...)):
     Solusi 2: Engine Parser Rekap ACMT / LBKB Excel (.xlsx, .xls) & CSV.
     Mengekstrak IDPEL, NAMA, TARIF, DAYA, STAN_BACA / STAN_LAPANGAN,
     dan NAMA FILE untuk mekanisme pemasangan otomatis (auto-pairing).
-    Lead Engineer: Pascol
+    Lead Engineer: Benedictus Pascal
     """
     import re
     import csv

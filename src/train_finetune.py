@@ -4,7 +4,7 @@
 =============================================================================
 PROJECT ARGUS: DIGIT OCR DETECTOR FINE-TUNING ENGINE (MODEL V4 UPGRADE)
 PT PLN (Persero) UP3 Mojokerto
-Lead Engineer: Pascol
+Lead Engineer: Benedictus Pascal
 =============================================================================
 Skrip otomatis untuk melakukan transfer learning / fine-tuning pada model
 YOLOv8 digit detector menggunakan base weights (digit_ocr_detector.pt)
@@ -107,7 +107,7 @@ def run_training(
 ):
     print("=" * 80)
     print(f"⚡ PROJECT ARGUS: FINE-TUNING DIGIT OCR DETECTOR (MODEL {version_tag.upper()})")
-    print("   PT PLN (Persero) UP3 Mojokerto | Lead Engineer: Pascol")
+    print("   PT PLN (Persero) UP3 Mojokerto | Lead Engineer: Benedictus Pascal")
     print("=" * 80)
     
     device_name = "cpu"

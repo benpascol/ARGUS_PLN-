@@ -497,12 +497,14 @@
 
 .search-field {
     position: relative;
+    display: flex;
+    align-items: center;
 }
 
 .search-field input {
     background: #FFFFFF;
     border: 1px solid var(--border-color);
-    padding: 8px 12px 8px 34px;
+    padding: 8px 32px 8px 34px;
     border-radius: 6px;
     font-size: 12.5px;
     color: var(--text-heading);
@@ -515,6 +517,30 @@
     border-color: var(--pln-blue);
     width: 260px;
     box-shadow: 0 0 0 3px rgba(0, 123, 181, 0.15);
+}
+
+.btn-search-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #E2E8F0;
+    border: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    color: #64748B;
+    font-size: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-search-clear:hover {
+    background: var(--pln-red);
+    color: #FFFFFF;
 }
 
 .search-field i {
@@ -863,6 +889,41 @@ tr.row-just-edited td {
     padding: 0 6px;
     color: var(--text-secondary);
     font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.input-page-jump {
+    width: 44px;
+    height: 24px;
+    border: 1px solid #CBD5E1;
+    border-radius: 4px;
+    padding: 0 2px;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--pln-blue);
+    background: #FFFFFF;
+    outline: none;
+    transition: all 0.15s ease;
+    margin: 0 2px;
+}
+
+.input-page-jump:focus {
+    border-color: var(--pln-blue);
+    box-shadow: 0 0 0 2px rgba(0, 162, 218, 0.2);
+}
+
+/* Remove number input spin buttons */
+.input-page-jump::-webkit-inner-spin-button,
+.input-page-jump::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.input-page-jump {
+    -moz-appearance: textfield;
 }
 
 .page-indicator strong {
@@ -894,6 +955,112 @@ tr.row-just-edited td {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+}
+
+.modal-window-large {
+    width: min(940px, 95vw);
+    max-height: 94vh;
+}
+
+.inspector-counter-badge {
+    background: var(--pln-blue-light);
+    color: var(--pln-blue);
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 162, 218, 0.25);
+    white-space: nowrap;
+}
+
+.modal-image-hint {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(4px);
+    color: #E2E8F0;
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 10;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.modal-input-field {
+    width: 100%;
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 13.5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: var(--text-heading);
+    outline: none;
+    transition: all 0.15s ease;
+    box-sizing: border-box;
+}
+
+.modal-input-field:focus {
+    border-color: var(--pln-blue);
+    box-shadow: 0 0 0 2px rgba(0, 162, 218, 0.2);
+}
+
+.modal-input-field.ai-field {
+    color: var(--pln-blue);
+}
+
+.modal-select-status {
+    width: 100%;
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--text-heading);
+    outline: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.modal-select-status:focus {
+    border-color: var(--pln-blue);
+    box-shadow: 0 0 0 2px rgba(0, 162, 218, 0.2);
+}
+
+.modal-nav-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background: #F8FAFC;
+    border-top: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.btn-modal-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 6px;
+}
+
+.modal-nav-info {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.modal-nav-info strong {
+    color: var(--pln-blue);
+    font-weight: 700;
 }
 
 .modal-bar {

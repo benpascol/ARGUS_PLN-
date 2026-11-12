@@ -39,8 +39,11 @@
             </select>
         </div>
         <div class="search-field">
-            <i class="fas fa-search"></i>
-            <input type="text" id="search-input" placeholder="Cari IDPEL / Nama..." oninput="searchRows(this.value)">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="search-input" placeholder="Cari IDPEL / Nama..." oninput="handleSearchInput(this.value)">
+            <button type="button" class="btn-search-clear" id="btn-search-clear" onclick="clearSearchInput()" title="Bersihkan pencarian (ESC)" style="display:none;">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
     </div>
 </div>
@@ -50,7 +53,7 @@
     <div class="batch-progress-header">
         <div class="batch-progress-title">
             <i class="fas fa-microchip"></i>
-            <span id="batch-progress-label">Memproses Batch AI (Engine RTX 4080)...</span>
+            <span id="batch-progress-label">Memproses Batch AI...</span>
         </div>
         <div class="batch-eta-badge" id="batch-eta-badge">
             <i class="fas fa-hourglass-half"></i> Menyiapkan antrean...

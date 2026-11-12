@@ -1,15 +1,16 @@
 /**
  * Module: dashboard_app.js
  * Deskripsi: State management, filtering kartu KPI, pencarian tabel,
- *            Enterprise Pagination & Virtual Slicing, modal inspector,
+ *            Enterprise Pagination & Virtual Slicing, modal inspector verifikasi HD,
  *            dan inisialisasi antarmuka utama.
- * Lead Engineer: Pascol
+ * Lead Engineer: Benedictus Pascal
  */
 
 let currentFilter = 'ALL';
 let currentSearchQuery = '';
 let currentPage = 1;
 let pageSize = 50;
+let currentInspectedRowIndex = -1;
 
 function updateKPIs() {
     const rows = document.querySelectorAll('#table-body tr:not(#empty-state-row)');
@@ -96,6 +97,42 @@ function searchRows(query) {
     currentSearchQuery = query;
     currentPage = 1;
     refreshTableDisplay();
+}
+
+function handleSearchInput(query) {
+    const clearBtn = document.getElementById('btn-search-clear');
+    if (clearBtn) {
+        clearBtn.style.display = query ? 'inline-flex' : 'none';
+    }
+    searchRows(query);
+}
+
+function clearSearchInput() {
+    const input = document.getElementById('search-input');
+    if (input) {
+        input.value = '';
+        input.focus();
+    }
+    const clearBtn = document.getElementById('btn-search-clear');
+    if (clearBtn) clearBtn.style.display = 'none';
+    searchRows('');
+}
+
+function handlePageJumpKeydown(event, inputEl) {
+    if (event.key === 'Enter') {
+        const targetPage = parseInt(inputEl.value, 10);
+        if (!isNaN(targetPage)) {
+            goToPage(targetPage);
+        }
+        inputEl.blur();
+    }
+}
+
+function handlePageJumpChange(inputEl) {
+    const targetPage = parseInt(inputEl.value, 10);
+    if (!isNaN(targetPage)) {
+        goToPage(targetPage);
+    }
 }
 
 /**
@@ -192,6 +229,13 @@ function updatePaginationUI(start, end, total, page, totalPages) {
     if (elTotal) elTotal.textContent = total;
     if (elCurrentPage) elCurrentPage.textContent = page;
     if (elTotalPages) elTotalPages.textContent = totalPages;
+
+    const jumpInput = document.getElementById('page-jump-input');
+    if (jumpInput) {
+        jumpInput.value = page;
+        jumpInput.max = totalPages;
+        jumpInput.disabled = (total === 0);
+    }
 
     const btnFirst = document.getElementById('btn-page-first');
     const btnPrev = document.getElementById('btn-page-prev');
@@ -343,24 +387,170 @@ window.addEventListener('mouseup', () => {
 });
 
 function inspectPhoto(rowIndex) {
+    const allRows = Array.from(document.querySelectorAll('#table-body tr:not(#empty-state-row)'));
+    const totalCount = allRows.length;
+    if (totalCount === 0) return;
+
+    // Clamp index
+    if (rowIndex < 0) rowIndex = 0;
+    if (rowIndex >= totalCount) rowIndex = totalCount - 1;
+
+    currentInspectedRowIndex = rowIndex;
     const row = document.getElementById(`row-${rowIndex}`);
     if (!row) return;
 
     resetZoom();
 
     const photoImg = row.querySelector('.photo-thumbnail');
-    const idpel = row.querySelector('.idpel-code').textContent;
-    const nama = row.querySelector('strong').textContent;
-    const stanLap = row.querySelectorAll('.input-table')[0].value;
-    const stanAi = row.querySelector('.cell-argus').value;
+    const idpel = row.querySelector('.idpel-code') ? row.querySelector('.idpel-code').textContent.trim() : '-';
+    const nama = row.querySelector('strong') ? row.querySelector('strong').textContent.trim() : '-';
+    const tarifDaya = row.cells[3] ? row.cells[3].textContent.trim() : '-';
+    const stanLap = row.querySelectorAll('.input-table')[0] ? row.querySelectorAll('.input-table')[0].value.trim() : '';
+    const rawAi = row.querySelector('.cell-raw') ? row.querySelector('.cell-raw').textContent.trim() : '-';
+    const stanAi = row.querySelector('.cell-argus') ? row.querySelector('.cell-argus').value.trim() : '';
+    const diff = row.querySelector('.cell-diff') ? row.querySelector('.cell-diff').textContent.trim() : '-';
     const statusSel = row.querySelector('.select-status');
+    const notesInput = row.querySelector('.input-notes');
+    const isEdited = row.getAttribute('data-edited') === 'true';
 
-    document.getElementById('modal-photo-src').src = photoImg.src;
-    document.getElementById('modal-idpel').textContent = `${idpel} - ${nama}`;
-    document.getElementById('modal-stan-lap').textContent = stanLap || '-';
-    document.getElementById('modal-stan-ai').textContent = stanAi || '-';
-    document.getElementById('modal-status-text').textContent = statusSel.options[statusSel.selectedIndex].text;
-    document.getElementById('modal-inspector').style.display = 'flex';
+    // 1. Tampilkan Foto Resolusi Penuh
+    const modalPhoto = document.getElementById('modal-photo-src');
+    if (modalPhoto && photoImg) modalPhoto.src = photoImg.src;
+
+    // 2. Tampilkan Info Pelanggan
+    const elIdpel = document.getElementById('modal-idpel');
+    if (elIdpel) elIdpel.textContent = `${idpel} • ${nama}`;
+
+    const elTarif = document.getElementById('modal-tarif-daya');
+    if (elTarif) elTarif.textContent = `Tarif / Daya: ${tarifDaya}`;
+
+    // 3. Stan Lapangan (Editable)
+    const inputStanLap = document.getElementById('modal-stan-lap');
+    if (inputStanLap) inputStanLap.value = (stanLap === '-' ? '' : stanLap);
+
+    // 4. Raw AI & Stan Baca AI (Editable)
+    const elRaw = document.getElementById('modal-raw-display');
+    if (elRaw) elRaw.textContent = rawAi;
+
+    const inputStanAi = document.getElementById('modal-stan-ai');
+    if (inputStanAi) inputStanAi.value = (stanAi === '-' ? '' : stanAi);
+
+    const elTagSlot = document.getElementById('modal-edit-tag-slot');
+    if (elTagSlot) {
+        elTagSlot.innerHTML = isEdited ? '<span class="tag-manual"><i class="fas fa-pen"></i> Dikoreksi</span>' : '';
+    }
+
+    // 5. Selisih kWh & Vonis Audit (Editable)
+    const elDiff = document.getElementById('modal-diff-display');
+    if (elDiff) {
+        elDiff.textContent = (diff === '-' || diff === '' ? '-' : `${diff} kWh`);
+        if (diff === '0') elDiff.style.color = '#16A34A';
+        else if (diff !== '-' && diff !== '') elDiff.style.color = '#DC2626';
+        else elDiff.style.color = 'var(--text-heading)';
+    }
+
+    const modalStatusSel = document.getElementById('modal-select-status');
+    if (modalStatusSel && statusSel) {
+        modalStatusSel.value = statusSel.value;
+    }
+
+    // 6. Catatan Auditor (Editable)
+    const inputNotes = document.getElementById('modal-input-notes');
+    if (inputNotes && notesInput) {
+        inputNotes.value = notesInput.value;
+    }
+
+    // 7. Update Navigasi & Counter Modal
+    const counterBadge = document.getElementById('modal-counter-badge');
+    if (counterBadge) counterBadge.textContent = `Foto #${rowIndex + 1} dari ${totalCount}`;
+
+    const rowNum = document.getElementById('modal-current-row-num');
+    if (rowNum) rowNum.textContent = rowIndex + 1;
+
+    const totalRowNum = document.getElementById('modal-total-rows-num');
+    if (totalRowNum) totalRowNum.textContent = totalCount;
+
+    const btnPrev = document.getElementById('btn-modal-prev');
+    const btnNext = document.getElementById('btn-modal-next');
+    if (btnPrev) btnPrev.disabled = (rowIndex <= 0);
+    if (btnNext) btnNext.disabled = (rowIndex >= totalCount - 1);
+
+    const modal = document.getElementById('modal-inspector');
+    if (modal) modal.style.display = 'flex';
+}
+
+function navigateInspector(delta) {
+    if (currentInspectedRowIndex < 0) return;
+    const allRows = Array.from(document.querySelectorAll('#table-body tr:not(#empty-state-row)'));
+    const targetIdx = currentInspectedRowIndex + delta;
+    if (targetIdx >= 0 && targetIdx < allRows.length) {
+        inspectPhoto(targetIdx);
+    }
+}
+
+function onModalFieldChange(fieldType, val) {
+    if (currentInspectedRowIndex < 0) return;
+    const row = document.getElementById(`row-${currentInspectedRowIndex}`);
+    if (!row) return;
+
+    if (fieldType === 'stan_lap') {
+        const input = row.querySelectorAll('.input-table')[0];
+        if (input) input.value = val.trim();
+        if (typeof recalculateRowDiffAndStatus === 'function') {
+            recalculateRowDiffAndStatus(row);
+        }
+    } else if (fieldType === 'stan_ai') {
+        const input = row.querySelector('.cell-argus');
+        if (input) input.value = val.trim();
+        if (typeof markRowAsEdited === 'function') {
+            markRowAsEdited(row);
+        }
+        if (typeof recalculateRowDiffAndStatus === 'function') {
+            recalculateRowDiffAndStatus(row);
+        }
+    } else if (fieldType === 'status') {
+        const sel = row.querySelector('.select-status');
+        if (sel) {
+            sel.value = val;
+            if (typeof updateSelectStyle === 'function') updateSelectStyle(sel);
+            if (typeof markRowAsEdited === 'function') markRowAsEdited(row);
+            if (typeof updateRowStyle === 'function') updateRowStyle(row);
+        }
+    } else if (fieldType === 'notes') {
+        const notesInput = row.querySelector('.input-notes');
+        if (notesInput) notesInput.value = val.trim();
+    }
+
+    // Sinkronisasi balik tampilan in-modal secara real-time
+    const diff = row.querySelector('.cell-diff') ? row.querySelector('.cell-diff').textContent.trim() : '-';
+    const elDiff = document.getElementById('modal-diff-display');
+    if (elDiff) {
+        elDiff.textContent = (diff === '-' || diff === '' ? '-' : `${diff} kWh`);
+        if (diff === '0') elDiff.style.color = '#16A34A';
+        else if (diff !== '-' && diff !== '') elDiff.style.color = '#DC2626';
+        else elDiff.style.color = 'var(--text-heading)';
+    }
+
+    const isEdited = row.getAttribute('data-edited') === 'true';
+    const elTagSlot = document.getElementById('modal-edit-tag-slot');
+    if (elTagSlot) {
+        elTagSlot.innerHTML = isEdited ? '<span class="tag-manual"><i class="fas fa-pen"></i> Dikoreksi</span>' : '';
+    }
+
+    const statusSel = row.querySelector('.select-status');
+    const modalStatusSel = document.getElementById('modal-select-status');
+    if (modalStatusSel && statusSel && modalStatusSel.value !== statusSel.value) {
+        modalStatusSel.value = statusSel.value;
+    }
+
+    if (typeof updateKPIs === 'function') updateKPIs();
+    if (typeof persistCurrentSession === 'function') persistCurrentSession();
+}
+
+function handleModalKeydown(event, fieldType) {
+    if (event.key === 'Enter') {
+        event.target.blur();
+    }
 }
 
 function closeInspector() {
@@ -368,11 +558,13 @@ function closeInspector() {
     if (modal) modal.style.display = 'none';
 }
 
-// GLOBAL KEYBOARD SHORTCUTS (ESC TO CLOSE INSPECTOR & MODALS)
+// GLOBAL KEYBOARD SHORTCUTS (ESC TO CLOSE INSPECTOR & MODALS, ARROW KEYS TO NAVIGATE)
 document.addEventListener('keydown', (e) => {
+    const inspector = document.getElementById('modal-inspector');
+    const isInspectorOpen = (inspector && inspector.style.display !== 'none' && getComputedStyle(inspector).display !== 'none');
+
     if (e.key === 'Escape' || e.key === 'Esc') {
-        const inspector = document.getElementById('modal-inspector');
-        if (inspector && inspector.style.display !== 'none' && getComputedStyle(inspector).display !== 'none') {
+        if (isInspectorOpen) {
             closeInspector();
             return;
         }
@@ -389,10 +581,52 @@ document.addEventListener('keydown', (e) => {
                 m.style.display = 'none';
             }
         });
+        return;
+    }
+
+    // Keyboard Arrow navigation di dalam Modal Inspector
+    if (isInspectorOpen) {
+        const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+        const isEditingInput = (tag === 'input' || tag === 'textarea' || tag === 'select');
+
+        if (e.key === 'ArrowLeft' && (!isEditingInput || e.altKey)) {
+            e.preventDefault();
+            navigateInspector(-1);
+        } else if (e.key === 'ArrowRight' && (!isEditingInput || e.altKey)) {
+            e.preventDefault();
+            navigateInspector(1);
+        }
     }
 });
+
+// DETEKSI OTOMATIS HARDWARE GPU / CPU RIIL DARI BACKEND
+async function fetchSystemHardwareInfo() {
+    try {
+        const resp = await fetch('/api/system-info');
+        if (resp.ok) {
+            const data = await resp.json();
+            const hw = data.hardware;
+            if (hw) {
+                const badge = document.getElementById('engine-hardware-badge');
+                if (badge) {
+                    badge.textContent = hw.engine_label || `ENGINE: ARGUS AI V5 (${hw.type})`;
+                }
+                const batchLabel = document.getElementById('batch-progress-label');
+                if (batchLabel) {
+                    batchLabel.textContent = `Memproses Batch AI (${hw.device_name})...`;
+                }
+                if (hw.concurrency) {
+                    window.BATCH_CONCURRENCY = hw.concurrency;
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('Gagal memuat info hardware dari API:', e);
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     updateKPIs();
     if (typeof refreshTableDisplay === 'function') refreshTableDisplay();
+    fetchSystemHardwareInfo();
 });

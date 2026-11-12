@@ -4,7 +4,7 @@
 =============================================================================
 PROJECT ARGUS: BATCH AUDIT EXCEL ENGINE (TAHAP 5 - V2.0 UPGRADE)
 PT PLN (Persero) UP3 Mojokerto
-Lead Engineer: Pascol
+Lead Engineer: Benedictus Pascal
 =============================================================================
 Skrip batch auditor mandiri untuk menguji ratusan foto lapangan secara
 otomatis dari Master Excel LBKB ('Detail' sheet), membandingkan angka stan
@@ -105,7 +105,7 @@ def run_batch_audit(
 ):
     print("=" * 85)
     print("⚡ PROJECT ARGUS - BATCH AUDIT EXCEL ENGINE (V2.5 AUTO-HARVEST EDITION)")
-    print("   PT PLN (Persero) UP3 Mojokerto | Lead Engineer: Pascol")
+    print("   PT PLN (Persero) UP3 Mojokerto | Lead Engineer: Benedictus Pascal")
     print("=" * 85)
     print(f"📂 File Master Excel : {excel_path}")
     print(f"📁 Folder Foto       : {photo_dir}")
@@ -706,7 +706,7 @@ def export_audit_excel_file(
 
     # Baris 2: Sub-Banner Lead Engineer & Info
     ws_out.merge_cells(start_row=2, start_column=1, end_row=2, end_column=num_cols)
-    b2 = ws_out.cell(row=2, column=1, value="Sistem Pengawasan Otomatis Stand Meter AI Vision Lokal | Lead Engineer: Pascol | Perlindungan Billing & Tinjau Ulang")
+    b2 = ws_out.cell(row=2, column=1, value="Sistem Pengawasan Otomatis Stand Meter AI Vision Lokal | Lead Engineer: Benedictus Pascal | Perlindungan Billing & Tinjau Ulang")
     b2.fill = PatternFill(start_color="0B388A", fill_type="solid")
     b2.font = Font(name="Segoe UI", size=9.5, italic=True, color="E0E0E0")
     b2.alignment = ALIGN_CENTER

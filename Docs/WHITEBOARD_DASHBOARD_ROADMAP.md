@@ -1,6 +1,6 @@
 # WHITEBOARD ARSITEKTUR & ROADMAP DASHBOARD MANDIRI ARGUS V5
 **PT PLN (Persero) UP3 Mojokerto**  
-*Lead Engineer: Pascol*  
+*Lead Engineer: Benedictus Pascal*  
 *Dokumen Rencana Solusi & Optimasi Rekayasa Sistem Audit LBKB*  
 *Pembaruan Terakhir: 11 November 2026*
 

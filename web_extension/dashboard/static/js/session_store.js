@@ -2,7 +2,7 @@
  * Module: session_store.js
  * Deskripsi: Manajemen persistensi sesi audit lokal via IndexedDB & jaring pengaman anti-refresh.
  *            Mencegah data antrean foto dan hasil koreksi hilang saat browser di-refresh.
- * Lead Engineer: Pascol
+ * Lead Engineer: Benedictus Pascal
  */
 
 const DB_NAME = 'ARGUS_LOCAL_SESSION_DB';
