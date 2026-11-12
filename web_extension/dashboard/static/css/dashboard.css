@@ -82,7 +82,7 @@
 /* KPI INTERACTIVE FILTER CARDS (LIGHT THEME - CLICKABLE BADGE + WATERMARK DESIGN) */
 .kpi-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 12px;
     margin-bottom: 12px;
     flex-shrink: 0;
@@ -210,7 +210,20 @@
 }
 .kpi-card.diff.active .kpi-card-inner { background: #FEE2E2; }
 
-/* 5. BUKAN KWH / NIHIL (SLATE) */
+/* 5. PERLU TINJAU ULANG (VIOLET/PURPLE) */
+.kpi-card.triage { border-color: #A78BFA; background: #FAF5FF; }
+.kpi-card.triage .kpi-card-inner { background: #FAF5FF; }
+.kpi-card.triage .kpi-title { color: #7C3AED; }
+.kpi-card.triage .kpi-number { color: #7C3AED; }
+.kpi-card.triage .kpi-watermark { color: #7C3AED; }
+.kpi-card.triage .kpi-click-badge { background: #7C3AED; color: #FFFFFF; }
+.kpi-card.triage.active {
+    border-color: #7C3AED;
+    box-shadow: 0 4px 16px rgba(124, 58, 237, 0.3);
+}
+.kpi-card.triage.active .kpi-card-inner { background: #EDE9FE; }
+
+/* 6. BUKAN KWH / NIHIL (SLATE) */
 .kpi-card.nihil { border-color: #94A3B8; background: #F8FAFC; }
 .kpi-card.nihil .kpi-card-inner { background: #F8FAFC; }
 .kpi-card.nihil .kpi-title { color: #475569; }
@@ -223,7 +236,7 @@
 }
 .kpi-card.nihil.active .kpi-card-inner { background: #E2E8F0; }
 
-/* 6. DIKOREKSI AUDITOR (PURPLE) */
+/* 7. DIKOREKSI AUDITOR (PURPLE) */
 .kpi-card.edited { border-color: #C084FC; background: #FAF5FF; }
 .kpi-card.edited .kpi-card-inner { background: #FAF5FF; }
 .kpi-card.edited .kpi-title { color: #9333EA; }
@@ -255,6 +268,7 @@
 .kpi-card.match.active .kpi-card-inner::after { background: #16A34A; }
 .kpi-card.rolling.active .kpi-card-inner::after { background: #D97706; }
 .kpi-card.diff.active .kpi-card-inner::after { background: var(--pln-red); }
+.kpi-card.triage.active .kpi-card-inner::after { background: #7C3AED; }
 .kpi-card.nihil.active .kpi-card-inner::after { background: #64748B; }
 .kpi-card.edited.active .kpi-card-inner::after { background: #9333EA; }
 
@@ -973,6 +987,56 @@ tr.row-just-edited td {
     white-space: nowrap;
 }
 
+/* DYNAMIC IN-MODAL VERDICT BADGE PILL (HEADER) */
+.modal-verdict-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
+    border: 1.5px solid transparent;
+}
+.modal-verdict-pill.pill-pending {
+    background: #F1F5F9;
+    color: #64748B;
+    border-color: #CBD5E1;
+}
+.modal-verdict-pill.pill-match {
+    background: #DCFCE7;
+    color: #166534;
+    border-color: #86EFAC;
+    box-shadow: 0 2px 6px rgba(22, 163, 74, 0.15);
+}
+.modal-verdict-pill.pill-rolling {
+    background: #FEF3C7;
+    color: #92400E;
+    border-color: #FDE68A;
+    box-shadow: 0 2px 6px rgba(217, 119, 6, 0.15);
+}
+.modal-verdict-pill.pill-diff {
+    background: #FEE2E2;
+    color: #991B1B;
+    border-color: #FECACA;
+    box-shadow: 0 2px 6px rgba(237, 28, 36, 0.15);
+}
+.modal-verdict-pill.pill-triage {
+    background: #F3E8FF;
+    color: #6B21A8;
+    border-color: #D8B4FE;
+    box-shadow: 0 2px 6px rgba(124, 58, 237, 0.15);
+}
+.modal-verdict-pill.pill-nihil {
+    background: #F1F5F9;
+    color: #475569;
+    border-color: #CBD5E1;
+}
+
 .modal-image-hint {
     position: absolute;
     bottom: 10px;
@@ -1200,6 +1264,60 @@ tr.row-just-edited td {
     color: var(--text-heading);
     font-family: 'JetBrains Mono', monospace;
 }
+
+/* DYNAMIC IN-MODAL VERDICT CARD STYLING */
+#modal-card-verdict {
+    transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    border: 2px solid var(--border-color);
+}
+#modal-card-verdict.verdict-pending {
+    background: #F8FAFC !important;
+    border-color: #E2E8F0 !important;
+}
+#modal-card-verdict.verdict-match {
+    background: #F0FDF4 !important;
+    border-color: #4ADE80 !important;
+    box-shadow: 0 2px 10px rgba(34, 197, 94, 0.12);
+}
+#modal-card-verdict.verdict-rolling {
+    background: #FFFBEB !important;
+    border-color: #FBBF24 !important;
+    box-shadow: 0 2px 10px rgba(245, 158, 11, 0.12);
+}
+#modal-card-verdict.verdict-diff {
+    background: #FEF2F2 !important;
+    border-color: #F87171 !important;
+    box-shadow: 0 2px 10px rgba(239, 68, 68, 0.15);
+}
+#modal-card-verdict.verdict-triage {
+    background: #FAF5FF !important;
+    border-color: #C084FC !important;
+    box-shadow: 0 2px 10px rgba(168, 85, 247, 0.15);
+}
+#modal-card-verdict.verdict-nihil {
+    background: #F8FAFC !important;
+    border-color: #94A3B8 !important;
+    box-shadow: 0 2px 10px rgba(100, 116, 139, 0.10);
+}
+
+/* DYNAMIC TOP BORDER ACCENTS FOR MODAL IMAGE BOX */
+.modal-image-box {
+    transition: border-top-color 0.25s ease, border-top-width 0.25s ease;
+}
+.modal-image-box.accent-pending { border-top: 3px solid #475569; }
+.modal-image-box.accent-match { border-top: 3.5px solid #22C55E; }
+.modal-image-box.accent-rolling { border-top: 3.5px solid #F59E0B; }
+.modal-image-box.accent-diff { border-top: 3.5px solid #EF4444; }
+.modal-image-box.accent-triage { border-top: 3.5px solid #A855F7; }
+.modal-image-box.accent-nihil { border-top: 3.5px solid #64748B; }
+
+/* MODAL SELECT STATUS DYNAMIC TINTS */
+.modal-select-status.status-pending { background: #FFFFFF; color: #64748B; border-color: #CBD5E1; }
+.modal-select-status.status-match { background: #DCFCE7; color: #166534; border-color: #86EFAC; }
+.modal-select-status.status-rolling { background: #FEF3C7; color: #92400E; border-color: #FDE68A; }
+.modal-select-status.status-diff { background: #FEE2E2; color: #991B1B; border-color: #FECACA; }
+.modal-select-status.status-triage { background: #F3E8FF; color: #6B21A8; border-color: #D8B4FE; }
+.modal-select-status.status-nihil { background: #F1F5F9; color: #475569; border-color: #CBD5E1; }
 
 /* EMPTY STATE & DROPZONE (UX ENHANCEMENT) */
 .empty-state-td {

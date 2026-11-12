@@ -2,9 +2,10 @@
 <div class="modal-backdrop" id="modal-inspector" onclick="closeInspector()">
     <div class="modal-window modal-window-large" onclick="event.stopPropagation()">
         <div class="modal-bar">
-            <div style="display:flex; align-items:center; gap:10px;">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
                 <h3 id="modal-title" style="margin:0;"><i class="fas fa-search-plus" style="color: var(--pln-blue);"></i> Pratinjau & Verifikasi Stand KWH Meter</h3>
                 <span class="inspector-counter-badge" id="modal-counter-badge">Foto 1 dari 1</span>
+                <span id="modal-verdict-pill" class="modal-verdict-pill pill-pending"><i class="fas fa-clock"></i> BELUM DIAUDIT</span>
             </div>
             <button class="btn btn-secondary" style="padding: 4px 10px;" onclick="closeInspector()" title="Tutup (ESC)"><i class="fas fa-times"></i></button>
         </div>
@@ -46,9 +47,9 @@
                     </div>
                 </div>
 
-                <div class="info-card">
+                <div class="info-card" id="modal-card-verdict">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                        <div class="info-card-label">Selisih (kWh) & Vonis Audit</div>
+                        <div class="info-card-label" id="modal-card-verdict-label">Selisih (kWh) & Vonis Audit</div>
                         <div id="modal-diff-display" style="font-family:'JetBrains Mono'; font-weight:700; font-size:13px;">-</div>
                     </div>
                     <select id="modal-select-status" class="modal-select-status" onchange="onModalFieldChange('status', this.value)">
@@ -56,8 +57,8 @@
                         <option value="MATCH">Sesuai Match</option>
                         <option value="ROLLING">Rolling Digit</option>
                         <option value="DIFF">Beda Stand</option>
-                        <option value="NIHIL">Bukan KWH / Nihil</option>
                         <option value="TRIAGE">Perlu Tinjau Ulang</option>
+                        <option value="NIHIL">Bukan KWH / Nihil</option>
                     </select>
                 </div>
 

@@ -40,8 +40,18 @@
         <div class="kpi-click-badge" title="Klik untuk memfilter"><i class="fas fa-arrow-pointer"></i></div>
     </div>
 
-    <!-- 5. BUKAN KWH / NIHIL -->
-    <div class="kpi-card nihil" id="kpi-nihil" onclick="filterByStatus('NIHIL')" title="Klik untuk memfilter: Bukan KWH / Nihil">
+    <!-- 5. PERLU TINJAU ULANG (DEDICATED HUMAN-IN-THE-LOOP VERIFICATION CARD) -->
+    <div class="kpi-card triage" id="kpi-triage" onclick="filterByStatus('TRIAGE')" title="Klik untuk memfilter: Perlu Tinjau Ulang (Blur / Glare / Ambigu)">
+        <div class="kpi-card-inner">
+            <div class="kpi-watermark">TRIAGE</div>
+            <div class="kpi-title"><i class="fas fa-microscope"></i> Perlu Tinjau Ulang</div>
+            <div class="kpi-number" id="stat-triage">0 <span class="kpi-pct-badge">(0%)</span></div>
+        </div>
+        <div class="kpi-click-badge" title="Klik untuk memfilter"><i class="fas fa-arrow-pointer"></i></div>
+    </div>
+
+    <!-- 6. BUKAN KWH / NIHIL -->
+    <div class="kpi-card nihil" id="kpi-nihil" onclick="filterByStatus('NIHIL')" title="Klik untuk memfilter: Bukan KWH / Nihil (Murni Bukan Meteran)">
         <div class="kpi-card-inner">
             <div class="kpi-watermark">NIHIL</div>
             <div class="kpi-title"><i class="fas fa-times-circle"></i> Bukan KWH / Nihil</div>
@@ -50,7 +60,7 @@
         <div class="kpi-click-badge" title="Klik untuk memfilter"><i class="fas fa-arrow-pointer"></i></div>
     </div>
 
-    <!-- 6. DIKOREKSI AUDITOR -->
+    <!-- 7. DIKOREKSI AUDITOR -->
     <div class="kpi-card edited" id="kpi-edited" onclick="filterByStatus('EDITED')" title="Klik untuk memfilter: Dikoreksi Auditor">
         <div class="kpi-card-inner">
             <div class="kpi-watermark">EDIT</div>

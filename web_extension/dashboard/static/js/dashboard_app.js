@@ -14,14 +14,15 @@ let currentInspectedRowIndex = -1;
 
 function updateKPIs() {
     const rows = document.querySelectorAll('#table-body tr:not(#empty-state-row)');
-    let match = 0, rolling = 0, diff = 0, nihil = 0, edited = 0;
+    let match = 0, rolling = 0, diff = 0, triage = 0, nihil = 0, edited = 0;
 
     rows.forEach(r => {
         const st = r.getAttribute('data-status');
         if (st === 'MATCH') match++;
         else if (st === 'ROLLING') rolling++;
         else if (st === 'DIFF') diff++;
-        else if (st === 'NIHIL' || st === 'TRIAGE') nihil++;
+        else if (st === 'TRIAGE') triage++;
+        else if (st === 'NIHIL') nihil++;
 
         if (r.getAttribute('data-edited') === 'true') edited++;
     });
@@ -45,8 +46,15 @@ function updateKPIs() {
         statDiff.innerHTML = `${diff} <span class="kpi-pct-badge">(${total ? Math.round(diff/total*100) : 0}%)</span>`;
     }
 
+    const statTriage = document.getElementById('stat-triage');
+    if (statTriage) {
+        statTriage.innerHTML = `${triage} <span class="kpi-pct-badge">(${total ? Math.round(triage/total*100) : 0}%)</span>`;
+    }
+
     const statNihil = document.getElementById('stat-nihil');
-    if (statNihil) statNihil.textContent = nihil;
+    if (statNihil) {
+        statNihil.innerHTML = `${nihil} <span class="kpi-pct-badge">(${total ? Math.round(nihil/total*100) : 0}%)</span>`;
+    }
 
     const statEdited = document.getElementById('stat-edited');
     if (statEdited) statEdited.textContent = edited;
@@ -68,6 +76,7 @@ function filterByStatus(statusType) {
     const kpiMatch = document.getElementById('kpi-match');
     const kpiRolling = document.getElementById('kpi-rolling');
     const kpiDiff = document.getElementById('kpi-diff');
+    const kpiTriage = document.getElementById('kpi-triage');
     const kpiNihil = document.getElementById('kpi-nihil');
     const kpiEdited = document.getElementById('kpi-edited');
 
@@ -76,6 +85,7 @@ function filterByStatus(statusType) {
     else if (statusType === 'MATCH') activeCard = kpiMatch;
     else if (statusType === 'ROLLING') activeCard = kpiRolling;
     else if (statusType === 'DIFF') activeCard = kpiDiff;
+    else if (statusType === 'TRIAGE') activeCard = kpiTriage;
     else if (statusType === 'NIHIL') activeCard = kpiNihil;
     else if (statusType === 'EDITED') activeCard = kpiEdited;
 
@@ -168,8 +178,10 @@ function refreshTableDisplay() {
             passFilter = true;
         } else if (currentFilter === 'EDITED') {
             passFilter = isEdited;
+        } else if (currentFilter === 'TRIAGE') {
+            passFilter = (st === 'TRIAGE');
         } else if (currentFilter === 'NIHIL') {
-            passFilter = (st === 'NIHIL' || st === 'TRIAGE');
+            passFilter = (st === 'NIHIL');
         } else {
             passFilter = (st === currentFilter);
         }
@@ -255,6 +267,7 @@ function updatePaginationUI(start, end, total, page, totalPages) {
             if (currentFilter === 'MATCH') filterLabel = 'Sesuai Match';
             else if (currentFilter === 'ROLLING') filterLabel = 'Rolling Digit';
             else if (currentFilter === 'DIFF') filterLabel = 'Beda Stand';
+            else if (currentFilter === 'TRIAGE') filterLabel = 'Perlu Tinjau Ulang';
             else if (currentFilter === 'NIHIL') filterLabel = 'Bukan KWH / Nihil';
             else if (currentFilter === 'EDITED') filterLabel = 'Dikoreksi';
 
@@ -475,8 +488,123 @@ function inspectPhoto(rowIndex) {
     if (btnPrev) btnPrev.disabled = (rowIndex <= 0);
     if (btnNext) btnNext.disabled = (rowIndex >= totalCount - 1);
 
+    // 8. Terapkan Tema Warna Dinamis In-Modal sesuai Vonis Audit (Neutral jika belum diaudit)
+    const currentStatus = row.getAttribute('data-status') || (statusSel ? statusSel.value : 'PENDING');
+    updateModalVerdictTheme(currentStatus, diff);
+
     const modal = document.getElementById('modal-inspector');
     if (modal) modal.style.display = 'flex';
+}
+
+/**
+ * Memperbarui tema warna visual kartu pratinjau in-modal secara dinamis.
+ * Jika status belum diaudit (PENDING): tampil bersih netral (tanpa warna menyolok).
+ * Jika status sudah diaudit: tampil elegan sesuai vonis (Match, Rolling, Diff, Triage, Nihil).
+ */
+function updateModalVerdictTheme(status, diffVal) {
+    const cardVerdict = document.getElementById('modal-card-verdict');
+    const labelVerdict = document.getElementById('modal-card-verdict-label');
+    const pill = document.getElementById('modal-verdict-pill');
+    const imgBox = document.getElementById('inspector-image-container');
+    const selectStatus = document.getElementById('modal-select-status');
+    const diffDisplay = document.getElementById('modal-diff-display');
+
+    const cleanStatus = (status || 'PENDING').toUpperCase();
+
+    // Reset modifier classes
+    const statusClasses = ['pending', 'match', 'rolling', 'diff', 'triage', 'nihil'];
+    if (cardVerdict) {
+        statusClasses.forEach(c => cardVerdict.classList.remove(`verdict-${c}`));
+    }
+    if (pill) {
+        statusClasses.forEach(c => pill.classList.remove(`pill-${c}`));
+    }
+    if (imgBox) {
+        statusClasses.forEach(c => imgBox.classList.remove(`accent-${c}`));
+    }
+    if (selectStatus) {
+        statusClasses.forEach(c => selectStatus.classList.remove(`status-${c}`));
+    }
+
+    if (cleanStatus === 'PENDING') {
+        if (cardVerdict) cardVerdict.classList.add('verdict-pending');
+        if (labelVerdict) {
+            labelVerdict.textContent = 'Vonis Audit (Belum Dievaluasi)';
+            labelVerdict.style.color = 'var(--text-muted)';
+        }
+        if (pill) {
+            pill.classList.add('pill-pending');
+            pill.innerHTML = '<i class="fas fa-clock"></i> Belum Diaudit';
+        }
+        if (imgBox) imgBox.classList.add('accent-pending');
+        if (selectStatus) selectStatus.classList.add('status-pending');
+        if (diffDisplay) diffDisplay.style.color = 'var(--text-muted)';
+    } else if (cleanStatus === 'MATCH') {
+        if (cardVerdict) cardVerdict.classList.add('verdict-match');
+        if (labelVerdict) {
+            labelVerdict.textContent = 'Selisih (0 kWh) • Match Presisi';
+            labelVerdict.style.color = '#166534';
+        }
+        if (pill) {
+            pill.classList.add('pill-match');
+            pill.innerHTML = '<i class="fas fa-check-circle"></i> Sesuai Match';
+        }
+        if (imgBox) imgBox.classList.add('accent-match');
+        if (selectStatus) selectStatus.classList.add('status-match');
+        if (diffDisplay) diffDisplay.style.color = '#16A34A';
+    } else if (cleanStatus === 'ROLLING') {
+        if (cardVerdict) cardVerdict.classList.add('verdict-rolling');
+        if (labelVerdict) {
+            labelVerdict.textContent = 'Selisih Transisi • Rolling Digit';
+            labelVerdict.style.color = '#92400E';
+        }
+        if (pill) {
+            pill.classList.add('pill-rolling');
+            pill.innerHTML = '<i class="fas fa-sync-alt"></i> Rolling Digit';
+        }
+        if (imgBox) imgBox.classList.add('accent-rolling');
+        if (selectStatus) selectStatus.classList.add('status-rolling');
+        if (diffDisplay) diffDisplay.style.color = '#D97706';
+    } else if (cleanStatus === 'DIFF') {
+        if (cardVerdict) cardVerdict.classList.add('verdict-diff');
+        if (labelVerdict) {
+            labelVerdict.textContent = 'Anomali Angka • Beda Stand KWH';
+            labelVerdict.style.color = '#991B1B';
+        }
+        if (pill) {
+            pill.classList.add('pill-diff');
+            pill.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Beda Stand';
+        }
+        if (imgBox) imgBox.classList.add('accent-diff');
+        if (selectStatus) selectStatus.classList.add('status-diff');
+        if (diffDisplay) diffDisplay.style.color = '#DC2626';
+    } else if (cleanStatus === 'TRIAGE') {
+        if (cardVerdict) cardVerdict.classList.add('verdict-triage');
+        if (labelVerdict) {
+            labelVerdict.textContent = 'Kualitas Rendah • Perlu Tinjau Ulang';
+            labelVerdict.style.color = '#6B21A8';
+        }
+        if (pill) {
+            pill.classList.add('pill-triage');
+            pill.innerHTML = '<i class="fas fa-microscope"></i> Perlu Tinjau Ulang';
+        }
+        if (imgBox) imgBox.classList.add('accent-triage');
+        if (selectStatus) selectStatus.classList.add('status-triage');
+        if (diffDisplay) diffDisplay.style.color = '#7C3AED';
+    } else if (cleanStatus === 'NIHIL') {
+        if (cardVerdict) cardVerdict.classList.add('verdict-nihil');
+        if (labelVerdict) {
+            labelVerdict.textContent = 'Foto Non-Meteran • Bukan KWH / Nihil';
+            labelVerdict.style.color = '#475569';
+        }
+        if (pill) {
+            pill.classList.add('pill-nihil');
+            pill.innerHTML = '<i class="fas fa-times-circle"></i> Bukan KWH / Nihil';
+        }
+        if (imgBox) imgBox.classList.add('accent-nihil');
+        if (selectStatus) selectStatus.classList.add('status-nihil');
+        if (diffDisplay) diffDisplay.style.color = '#64748B';
+    }
 }
 
 function navigateInspector(delta) {
@@ -542,6 +670,10 @@ function onModalFieldChange(fieldType, val) {
     if (modalStatusSel && statusSel && modalStatusSel.value !== statusSel.value) {
         modalStatusSel.value = statusSel.value;
     }
+
+    // Update tema visual in-modal secara real-time
+    const currentStatus = row.getAttribute('data-status') || (statusSel ? statusSel.value : 'PENDING');
+    updateModalVerdictTheme(currentStatus, diff);
 
     if (typeof updateKPIs === 'function') updateKPIs();
     if (typeof persistCurrentSession === 'function') persistCurrentSession();
