@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
-from src.api.dependencies import BASE_DIR, DASHBOARD_DIR, get_hardware_info
+from src.api.dependencies import BASE_DIR, DASHBOARD_DIR, get_hardware_info, resolve_photo_path
 
 router = APIRouter(tags=["Web Views & System Status"])
 
@@ -89,23 +89,8 @@ def get_favicon():
 
 @router.get("/sample-photo/{filename:path}")
 def get_sample_photo(filename: str):
-    """Menyajikan foto sampel meteran asli dari Docs/DOkumentasi LBKB dengan fallback pencarian cerdas."""
-    photo_dir = BASE_DIR / "Docs" / "DOkumentasi LBKB"
-    photo_path = photo_dir / filename
-    if not photo_path.is_file():
-        clean_name = Path(filename).name
-        photo_path = photo_dir / clean_name
-    if not photo_path.is_file():
-        matched = list(photo_dir.glob(f"*{clean_name}*"))
-        if not matched and "-" in clean_name:
-            parts = clean_name.replace(".jpg", "").replace(".jpeg", "").replace(".png", "").split("-")
-            for p in parts:
-                if len(p) >= 10 and p.isdigit():
-                    matched = list(photo_dir.glob(f"*{p}*.jpg"))
-                    if matched:
-                        break
-        if matched and matched[0].is_file():
-            photo_path = matched[0]
-        else:
-            raise HTTPException(status_code=404, detail=f"Foto {filename} tidak ditemukan di {photo_dir}.")
+    """Menyajikan foto sampel meteran asli dengan fallback pencarian cerdas di data/input_foto & Docs/DOkumentasi LBKB."""
+    photo_path = resolve_photo_path(filename)
+    if not photo_path or not photo_path.is_file():
+        raise HTTPException(status_code=404, detail=f"Foto {filename} tidak ditemukan di folder penyimpanan data.")
     return FileResponse(str(photo_path), media_type="image/jpeg")

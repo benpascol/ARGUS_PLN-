@@ -145,6 +145,116 @@ function handlePageJumpChange(inputEl) {
     }
 }
 
+// TABLE COLUMN SORTING STATE
+let currentSortCol = null;
+let currentSortDir = 'asc';
+
+/**
+ * Menyortir tabel berdasarkan kolom header yang diklik.
+ * Mendukung pengurutan angka (NO, SELISIH, STAN LAP, LATENSI), teks (IDPEL, NAMA), dan prioritas status.
+ */
+function handleSortTable(colKey) {
+    const tbody = document.getElementById('table-body');
+    if (!tbody) return;
+    const rows = Array.from(tbody.querySelectorAll('tr:not(#empty-state-row)'));
+    if (rows.length <= 1) return;
+
+    // Tentukan arah sort
+    if (currentSortCol === colKey) {
+        if (currentSortDir === 'asc') {
+            currentSortDir = 'desc';
+        } else {
+            currentSortCol = 'no';
+            currentSortDir = 'asc';
+        }
+    } else {
+        currentSortCol = colKey;
+        // Kolom selisih dan latensi default ke 'desc' agar anomali terbesar muncul paling atas
+        if (colKey === 'diff' || colKey === 'latency') {
+            currentSortDir = 'desc';
+        } else {
+            currentSortDir = 'asc';
+        }
+    }
+
+    // Update UI Header Sort Icons
+    document.querySelectorAll('.th-sortable').forEach(th => th.classList.remove('sorted-active'));
+    document.querySelectorAll('.sort-icon i').forEach(icon => {
+        icon.className = 'fas fa-sort';
+    });
+
+    const activeIcon = document.getElementById(`sort-icon-${currentSortCol}`);
+    if (activeIcon) {
+        const iconI = activeIcon.querySelector('i');
+        if (iconI) {
+            iconI.className = currentSortDir === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
+        }
+        const parentTh = activeIcon.closest('.th-sortable');
+        if (parentTh) parentTh.classList.add('sorted-active');
+    }
+
+    // Prioritas Status
+    const statusPriority = {
+        'DIFF': 5,
+        'ROLLING': 4,
+        'TRIAGE': 3,
+        'NIHIL': 2,
+        'MATCH': 1,
+        'PENDING': 0
+    };
+
+    rows.sort((a, b) => {
+        let valA, valB;
+        if (currentSortCol === 'no') {
+            valA = parseInt(a.cells[0].textContent.trim(), 10) || 0;
+            valB = parseInt(b.cells[0].textContent.trim(), 10) || 0;
+            return currentSortDir === 'asc' ? valA - valB : valB - valA;
+        } else if (currentSortCol === 'idpel') {
+            valA = a.querySelector('.idpel-code') ? a.querySelector('.idpel-code').textContent.trim() : '';
+            valB = b.querySelector('.idpel-code') ? b.querySelector('.idpel-code').textContent.trim() : '';
+            return currentSortDir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        } else if (currentSortCol === 'nama') {
+            valA = a.querySelector('strong') ? a.querySelector('strong').textContent.trim() : '';
+            valB = b.querySelector('strong') ? b.querySelector('strong').textContent.trim() : '';
+            return currentSortDir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        } else if (currentSortCol === 'stan_lap') {
+            const inA = a.querySelectorAll('.input-table')[0];
+            const inB = b.querySelectorAll('.input-table')[0];
+            valA = inA ? parseFloat(inA.value) || 0 : 0;
+            valB = inB ? parseFloat(inB.value) || 0 : 0;
+            return currentSortDir === 'asc' ? valA - valB : valB - valA;
+        } else if (currentSortCol === 'diff') {
+            const elA = a.querySelector('.cell-diff');
+            const elB = b.querySelector('.cell-diff');
+            const txtA = elA ? elA.textContent.trim() : '-';
+            const txtB = elB ? elB.textContent.trim() : '-';
+            valA = (txtA === '-' || txtA === '') ? -999999 : Math.abs(parseFloat(txtA) || 0);
+            valB = (txtB === '-' || txtB === '') ? -999999 : Math.abs(parseFloat(txtB) || 0);
+            return currentSortDir === 'asc' ? valA - valB : valB - valA;
+        } else if (currentSortCol === 'status') {
+            const stA = a.getAttribute('data-status') || 'PENDING';
+            const stB = b.getAttribute('data-status') || 'PENDING';
+            valA = statusPriority[stA] !== undefined ? statusPriority[stA] : -1;
+            valB = statusPriority[stB] !== undefined ? statusPriority[stB] : -1;
+            return currentSortDir === 'asc' ? valA - valB : valB - valA;
+        } else if (currentSortCol === 'latency') {
+            const elA = a.querySelector('.cell-lat');
+            const elB = b.querySelector('.cell-lat');
+            valA = elA ? parseFloat(elA.textContent) || 0 : 0;
+            valB = elB ? parseFloat(elB.textContent) || 0 : 0;
+            return currentSortDir === 'asc' ? valA - valB : valB - valA;
+        }
+        return 0;
+    });
+
+    // Masukkan kembali baris yang sudah terurut ke dalam tabel
+    rows.forEach(r => tbody.appendChild(r));
+
+    // Refresh virtual pagination slice
+    currentPage = 1;
+    refreshTableDisplay();
+}
+
 /**
  * Enterprise Virtual Slicing & Pagination
  * Menggabungkan filter status kartu KPI, kata kunci pencarian,
@@ -716,10 +826,10 @@ document.addEventListener('keydown', (e) => {
         return;
     }
 
-    // Keyboard Arrow navigation di dalam Modal Inspector
+    // Keyboard Arrow navigation & Fast Verdict di dalam Modal Inspector
     if (isInspectorOpen) {
         const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-        const isEditingInput = (tag === 'input' || tag === 'textarea' || tag === 'select');
+        const isEditingInput = (tag === 'input' || tag === 'textarea');
 
         if (e.key === 'ArrowLeft' && (!isEditingInput || e.altKey)) {
             e.preventDefault();
@@ -727,6 +837,23 @@ document.addEventListener('keydown', (e) => {
         } else if (e.key === 'ArrowRight' && (!isEditingInput || e.altKey)) {
             e.preventDefault();
             navigateInspector(1);
+        } else if (!isEditingInput && !e.ctrlKey && !e.altKey && !e.metaKey) {
+            // Fast 1-click verdict hotkeys: 1=MATCH, 2=ROLLING, 3=DIFF, 4=TRIAGE, 5=NIHIL
+            let targetStatus = null;
+            let statusLabel = '';
+            if (e.key === '1') { targetStatus = 'MATCH'; statusLabel = 'Sesuai Match'; }
+            else if (e.key === '2') { targetStatus = 'ROLLING'; statusLabel = 'Rolling Digit'; }
+            else if (e.key === '3') { targetStatus = 'DIFF'; statusLabel = 'Beda Stand'; }
+            else if (e.key === '4') { targetStatus = 'TRIAGE'; statusLabel = 'Perlu Tinjau Ulang'; }
+            else if (e.key === '5') { targetStatus = 'NIHIL'; statusLabel = 'Bukan KWH / Nihil'; }
+
+            if (targetStatus) {
+                e.preventDefault();
+                onModalFieldChange('status', targetStatus);
+                if (typeof showToast === 'function') {
+                    showToast(`Hotkey [${e.key}]: Vonis diset ke [${statusLabel}]`, "info");
+                }
+            }
         }
     }
 });

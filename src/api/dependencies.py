@@ -111,3 +111,54 @@ def decode_base64_string(b64_str: str) -> np.ndarray:
 class Base64PredictRequest(BaseModel):
     image_base64: str
     filename: Optional[str] = "image_upload.jpg"
+
+
+def resolve_photo_path(filename: str, idpel: Optional[str] = None) -> Optional[Path]:
+    """
+    Mencari lokasi fisik file foto meteran secara cerdas melintasi beberapa direktori kandidat:
+    1. BASE_DIR / data / input_foto (dan subfolder di dalamnya)
+    2. BASE_DIR / Docs / DOkumentasi LBKB (dan subfolder di dalamnya)
+    3. Pencarian fuzzy berdasarkan nama file atau IDPEL
+    """
+    clean_name = Path(filename).name
+    candidate_roots = [
+        BASE_DIR / "data" / "input_foto",
+        BASE_DIR / "Docs" / "DOkumentasi LBKB",
+    ]
+
+    for root in candidate_roots:
+        if not root.is_dir():
+            continue
+
+        # 1. Direct path check
+        direct = root / filename
+        if direct.is_file():
+            return direct.resolve()
+
+        clean_path = root / clean_name
+        if clean_path.is_file():
+            return clean_path.resolve()
+
+        # 2. Match exact name in subdirectories (1 level deep)
+        matched = list(root.glob(f"**/{clean_name}"))
+        if matched and matched[0].is_file():
+            return matched[0].resolve()
+
+        # 3. Match IDPEL or pattern
+        search_terms = []
+        if idpel and len(str(idpel)) >= 8:
+            search_terms.append(str(idpel))
+        if "-" in clean_name:
+            parts = clean_name.replace(".jpg", "").replace(".jpeg", "").replace(".png", "").split("-")
+            for p in parts:
+                if len(p) >= 10 and p.isdigit():
+                    search_terms.append(p)
+
+        for term in search_terms:
+            m = list(root.glob(f"*{term}*"))
+            if not m:
+                m = list(root.glob(f"**/*{term}*"))
+            if m and m[0].is_file():
+                return m[0].resolve()
+
+    return None

@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
-from src.api.dependencies import BASE_DIR
+from src.api.dependencies import BASE_DIR, resolve_photo_path
 
 router = APIRouter(tags=["Excel ACMT & Export"])
 
@@ -191,7 +191,6 @@ async def export_audit_excel_endpoint(payload: ExportExcelRequest):
     """
     from src.audit_excel import export_audit_excel_file
 
-    photo_dir = BASE_DIR / "Docs" / "DOkumentasi LBKB"
     annotated_dir = BASE_DIR / "data" / "audit_results" / "annotated_samples"
 
     audit_results = []
@@ -201,12 +200,11 @@ async def export_audit_excel_endpoint(payload: ExportExcelRequest):
     }
 
     for item in payload.rows:
-        photo_path = photo_dir / item.filename
-        if not photo_path.is_file():
-            matched = list(photo_dir.glob(f"*{item.idpel}*.jpg"))
-            abs_photo = matched[0].resolve() if matched else photo_path.resolve()
+        resolved_photo = resolve_photo_path(item.filename, idpel=item.idpel)
+        if resolved_photo and resolved_photo.is_file():
+            abs_photo = resolved_photo.resolve()
         else:
-            abs_photo = photo_path.resolve()
+            abs_photo = (BASE_DIR / "data" / "input_foto" / item.filename).resolve()
 
         annotated_file = annotated_dir / f"result_crop_{item.filename}"
         abs_annotated = annotated_file.resolve() if annotated_file.is_file() else None

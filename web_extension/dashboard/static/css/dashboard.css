@@ -633,6 +633,33 @@ th:last-child {
     border-right: none;
 }
 
+/* TABLE SORTABLE HEADERS */
+th.th-sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s ease;
+}
+th.th-sortable:hover {
+    background: var(--pln-blue-dark) !important;
+}
+th.th-sortable .sort-icon {
+    font-size: 10px;
+    margin-left: 5px;
+    color: rgba(255, 255, 255, 0.45);
+    display: inline-block;
+    vertical-align: middle;
+    transition: color 0.15s ease, transform 0.15s ease;
+}
+th.th-sortable:hover .sort-icon {
+    color: var(--pln-yellow);
+}
+th.th-sortable.sorted-active {
+    background: #004D73 !important;
+}
+th.th-sortable.sorted-active .sort-icon {
+    color: var(--pln-yellow);
+}
+
 td {
     padding: 10px 14px;
     border-bottom: 1px solid var(--border-light);

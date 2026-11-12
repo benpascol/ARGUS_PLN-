@@ -4,18 +4,18 @@
         <table id="main-table">
             <thead>
                 <tr>
-                    <th>NO</th>
-                    <th>IDPEL</th>
-                    <th>NAMA PELANGGAN</th>
+                    <th class="th-sortable" onclick="handleSortTable('no')" title="Klik untuk mengurutkan No antrean">NO <span class="sort-icon" id="sort-icon-no"><i class="fas fa-sort"></i></span></th>
+                    <th class="th-sortable" onclick="handleSortTable('idpel')" title="Klik untuk mengurutkan IDPEL">IDPEL <span class="sort-icon" id="sort-icon-idpel"><i class="fas fa-sort"></i></span></th>
+                    <th class="th-sortable" onclick="handleSortTable('nama')" title="Klik untuk mengurutkan Nama Pelanggan">NAMA PELANGGAN <span class="sort-icon" id="sort-icon-nama"><i class="fas fa-sort"></i></span></th>
                     <th>TARIF / DAYA</th>
-                    <th>STAN LAPANGAN</th>
+                    <th class="th-sortable" onclick="handleSortTable('stan_lap')" title="Klik untuk mengurutkan Stan Lapangan">STAN LAPANGAN <span class="sort-icon" id="sort-icon-stan_lap"><i class="fas fa-sort"></i></span></th>
                     <th>FOTO METERAN</th>
                     <th>HASIL ANALISA ARGUS</th>
                     <th>HASIL STAN BACA (EDITABLE)</th>
-                    <th>SELISIH (kWh)</th>
-                    <th>VONIS AUDIT</th>
+                    <th class="th-sortable" onclick="handleSortTable('diff')" title="Klik untuk mengurutkan Selisih kWh (Anomali Terbesar)">SELISIH (kWh) <span class="sort-icon" id="sort-icon-diff"><i class="fas fa-sort"></i></span></th>
+                    <th class="th-sortable" onclick="handleSortTable('status')" title="Klik untuk mengurutkan Vonis Audit">VONIS AUDIT <span class="sort-icon" id="sort-icon-status"><i class="fas fa-sort"></i></span></th>
                     <th>CATATAN AUDITOR</th>
-                    <th>LATENSI</th>
+                    <th class="th-sortable" onclick="handleSortTable('latency')" title="Klik untuk mengurutkan Latensi AI">LATENSI <span class="sort-icon" id="sort-icon-latency"><i class="fas fa-sort"></i></span></th>
                     <th>AKSI</th>
                 </tr>
             </thead>
