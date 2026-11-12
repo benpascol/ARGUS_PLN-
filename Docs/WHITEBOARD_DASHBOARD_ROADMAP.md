@@ -2,7 +2,7 @@
 **PT PLN (Persero) UP3 Mojokerto**  
 *Lead Engineer: Benedictus Pascal*  
 *Dokumen Rencana Solusi & Optimasi Rekayasa Sistem Audit LBKB*  
-*Pembaruan Terakhir: 11 November 2026*
+*Pembaruan Terakhir: 12 November 2026*
 
 ---
 
@@ -151,15 +151,21 @@ Di dunia industri Computer Vision, model AI mentah (*vanilla model*) tidak akan 
 
 ### B. Apa Saja yang Bisa Dimaksimalkan & Dioptimasi Secara Keseluruhan?
 
-1. **Modularisasi Kode (Clean Architecture Refactoring):**
-   - Meskipun 1.000 baris ini fungsional, meletakkannya dalam 1 file monolitik membuat *code review* agak panjang.
-   - Kita bisa memecahnya ke dalam modul-modul elegan di bawah folder `src/vision_ai/`:
-     - `quality_filter.py` $\rightarrow$ Khusus filter blur & glare.
-     - `barcode_engine.py` $\rightarrow$ Khusus ZBar & CLAHE.
-     - `counter_detector.py` $\rightarrow$ Khusus Stage 1 dial localizer.
-     - `digit_ocr.py` $\rightarrow$ Khusus Stage 2 digit detector & consensus.
-     - `sequence_arbiter.py` $\rightarrow$ Khusus validator digit kontinu & decimal dot.
-     - `pipeline.py` $\rightarrow$ Tetap sebagai orkestrator ramping (cukup 150 baris yang memanggil sub-modul di atas).
+1. **Modularisasi Kode (Clean Architecture Refactoring) [STATUS: SELESAI & OPERASIONAL]:**
+   - Struktur backend telah berhasil direfaktor menjadi modular dan terisolasi dengan rapi:
+     - `src/vision_ai/`:
+       - `quality_filter.py`: Filter Blur (Laplacian ROI) & Glare (HSV Saturation Guard).
+       - `barcode_engine.py`: ZBar & CLAHE adaptif untuk pemindaian IDPEL/QR.
+       - `counter_detector.py`: Stage 1 YOLO Dial Detector dengan TTA fallback & stitching.
+       - `digit_ocr.py`: Stage 2 YOLO Digit Detector, IoU/IoA 2D deduplication, collinear filtering.
+       - `sequence_arbiter.py`: Validasi sekuensial horizontal, decimal dot separator, rolling digit guard, & sistem triage 3 warna.
+       - `pipeline.py`: Orchestrator ramping `ArgusVisionPipeline` yang mengintegrasikan submodul.
+     - `src/api/`:
+       - `server.py`: Entrypoint FastAPI ramping (~60 baris) dengan lifespan handler & router registration.
+       - `dependencies.py`: Singleton VRAM GPU pipeline, hardware detector (RTX 4060 GPU vs CPU), decoding OpenCV/Base64.
+       - `routes/audit.py`: Endpoint inferensi visual (`/predict`, `/predict-base64`).
+       - `routes/excel.py`: Parser ACMT (`/api/parse-acmt-excel`) & eksportir Excel resmi ber-Hyperlink (`/api/export-audit-excel`).
+       - `routes/views.py`: Endpoint UI & status (`/`, `/api/system-info`, `/dashboard`, `/simulator`).
 
 2. **Akselerasi Inferensi Model: Ekspor ke TensorRT Engine (`.engine`) / ONNX FP16:**
    - Saat ini model dijalankan via PyTorch `.pt` standar (FP32).
