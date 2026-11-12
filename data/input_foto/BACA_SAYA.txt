@@ -6,3 +6,4 @@ atau folder hasil pembacaan meteran cater di dalam folder ini.
 Saat berada di Dashboard, Anda cukup klik tombol:
 [📁 Unggah Folder Foto] atau [📄 Tambah File Foto]
 lalu arahkan ke folder ini.
+

@@ -47,27 +47,23 @@ async def lifespan(app: FastAPI):
     hw = get_hardware_info()
     dev_name = hw.get("device_name", "GPU / CPU")
 
-    print("\n" + "=" * 78)
-    print("⚡ PT PLN (PERSERO) UNIT INDUK DISTRIBUSI JAWA TIMUR")
-    print("   UP3 MOJOKERTO — SISTEM AUDIT STAND KWH METER (ARGUS AI V5)")
-    print("=" * 78)
-    print(f"🔧 [KOMPUTASI] : {dev_name}")
-    print("🔒 [MODE]      : 100% Pure Local & Offline (Host: 127.0.0.1:8000)")
-    print("🔄 Memuat Model AI Vision ke Memori...")
+    print(f"🔧 [KOMPUTASI] : {dev_name}", flush=True)
+    print("🔒 [MODE]      : 100% Pure Local & Offline (Host: 127.0.0.1:8000)", flush=True)
+    print("🔄 Memuat Model AI Vision ke Memori GPU...", flush=True)
 
     pipeline = ArgusVisionPipeline()
     set_pipeline(pipeline)
 
-    print("✅ Model AI Siap Menerima Pemeriksaan Meteran!")
-    print("\n🌐 Membuka Dashboard Mandiri di browser default Anda...")
-    print("   URL: http://127.0.0.1:8000/dashboard")
-    print("-" * 78)
-    print("💡 PETUNJUK PENGOPERASIAN:")
-    print("   • Biarkan jendela terminal ini tetap terbuka selama proses audit berlangsung.")
-    print("   • Untuk mematikan server dengan aman, tekan [Ctrl+C] atau tutup jendela ini.")
-    print("-" * 78)
-    print("   Sistem Pengawasan Visual Otomatis LBKB | Lead Engineer: Benedictus Pascal")
-    print("=" * 78 + "\n")
+    print("✅ Model AI Siap Menerima Pemeriksaan Meteran!", flush=True)
+    print("\n🌐 Membuka Dashboard Mandiri di browser default Anda...", flush=True)
+    print("   URL: http://127.0.0.1:8000/dashboard", flush=True)
+    print("-" * 78, flush=True)
+    print("💡 PETUNJUK PENGOPERASIAN:", flush=True)
+    print("   • Biarkan jendela terminal ini tetap terbuka selama proses audit berlangsung.", flush=True)
+    print("   • Untuk mematikan server dengan aman, tekan [Ctrl+C] atau tutup jendela ini.", flush=True)
+    print("-" * 78, flush=True)
+    print("   Sistem Pengawasan Visual Otomatis LBKB | Lead Engineer: Benedictus Pascal", flush=True)
+    print("=" * 78 + "\n", flush=True)
 
     # Auto-launch browser di thread terpisah
     def open_browser():
@@ -80,7 +76,7 @@ async def lifespan(app: FastAPI):
     threading.Thread(target=open_browser, daemon=True).start()
 
     yield
-    print("\n🛑 Mematikan Server ARGUS...")
+    print("\n🛑 Mematikan Server ARGUS...", flush=True)
 
 
 app = FastAPI(
