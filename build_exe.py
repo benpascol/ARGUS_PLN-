@@ -102,8 +102,17 @@ def build():
         shutil.copy2(src_web / "argus_evaluator.user.js", target_web / "argus_evaluator.user.js")
 
     # 5. Siapkan struktur folder data/
+    (app_dist_dir / "data" / "input_foto").mkdir(parents=True, exist_ok=True)
+    (app_dist_dir / "data" / "input_excel").mkdir(parents=True, exist_ok=True)
     (app_dist_dir / "data" / "audit_results").mkdir(parents=True, exist_ok=True)
     (app_dist_dir / "data" / "samples").mkdir(parents=True, exist_ok=True)
+
+    # Salin README panduan input folder
+    if (BASE_DIR / "data" / "input_foto" / "BACA_SAYA.txt").is_file():
+        shutil.copy2(BASE_DIR / "data" / "input_foto" / "BACA_SAYA.txt", app_dist_dir / "data" / "input_foto" / "BACA_SAYA.txt")
+    if (BASE_DIR / "data" / "input_excel" / "BACA_SAYA.txt").is_file():
+        shutil.copy2(BASE_DIR / "data" / "input_excel" / "BACA_SAYA.txt", app_dist_dir / "data" / "input_excel" / "BACA_SAYA.txt")
+
     # Salin beberapa contoh sampel jika ada
     samples_src = BASE_DIR / "data" / "samples"
     if samples_src.is_dir():
@@ -111,7 +120,12 @@ def build():
             shutil.copy2(s, app_dist_dir / "data" / "samples" / s.name)
         print("   [+] Menyalin contoh sampel foto meteran...")
 
-    # 6. Buat file batch launcher praktis
+    # 6. Salin Dokumen Panduan Penggunaan Lengkap
+    if (BASE_DIR / "PETUNJUK_PENGGUNAAN_ARGUS.txt").is_file():
+        shutil.copy2(BASE_DIR / "PETUNJUK_PENGGUNAAN_ARGUS.txt", app_dist_dir / "PETUNJUK_PENGGUNAAN_ARGUS.txt")
+        print("   [+] Menyalin PETUNJUK_PENGGUNAAN_ARGUS.txt...")
+
+    # 7. Buat file batch launcher praktis
     bat_content = (
         "@echo off\n"
         "title ARGUS AI Vision - PT PLN (Persero) UP3 Mojokerto\n"
