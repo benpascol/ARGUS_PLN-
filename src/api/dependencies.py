@@ -11,17 +11,23 @@ Manajemen dependensi global:
 =============================================================================
 """
 
+import sys
+from pathlib import Path
+
+# Pastikan root direktori proyek ARGUS masuk ke sys.path
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
+
 import cv2
 import base64
 import numpy as np
-from pathlib import Path
 from typing import Optional, Any, Dict
 from pydantic import BaseModel
 
 from src.vision_ai.pipeline import ArgusVisionPipeline
 
 # Root Paths
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
 DASHBOARD_DIR = BASE_DIR / "web_extension" / "dashboard"
 
 # Global Pipeline Singleton

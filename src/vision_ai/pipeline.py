@@ -29,6 +29,11 @@ if sys.platform == "win32":
     except Exception:
         pass
 
+# Pastikan root direktori proyek ARGUS masuk ke sys.path
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
+
 # Import Modul Terkapsulasi
 from src.vision_ai.quality_filter import (
     calculate_roi_blur,

@@ -13,12 +13,18 @@ Menangani integrasi data tabular:
 import io
 import re
 import csv
+import sys
 import time
 from pathlib import Path
 from typing import Optional, List
 from pydantic import BaseModel
 from fastapi import APIRouter, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse, FileResponse
+
+# Pastikan root direktori proyek ARGUS masuk ke sys.path
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
 
 from src.api.dependencies import BASE_DIR
 

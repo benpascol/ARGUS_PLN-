@@ -14,10 +14,16 @@ Menyediakan halaman web dan aset statis:
 =============================================================================
 """
 
+import sys
 from pathlib import Path
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.templating import Jinja2Templates
+
+# Pastikan root direktori proyek ARGUS masuk ke sys.path
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
 
 from src.api.dependencies import BASE_DIR, DASHBOARD_DIR, get_hardware_info
 

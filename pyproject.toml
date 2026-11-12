@@ -1,0 +1,6 @@
+[tool.pyright]
+include = ["src"]
+extraPaths = [".", "src"]
+pythonVersion = "3.11"
+venvPath = "."
+venv = ".venv_gpu"
