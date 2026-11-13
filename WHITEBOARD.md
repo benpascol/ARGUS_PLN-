@@ -8,17 +8,17 @@
 > - **Format Standar Log:** `[Tanggal] - [Nama Kontributor]` (contoh: `[31-10-2026] - Pascol`)
 
 > [!IMPORTANT]
-> **Fokus Utama Saat Ini:** Tahap 3: Peluncuran Local REST API Engine (FastAPI) pada `http://127.0.0.1:8000` & Integrasi Web Extension Tampermonkey (`argus_evaluator.user.js`), persiapan Standalone Packaging (.EXE) di Tahap 4, dan Sinkronisasi Batch Audit Excel LBKB di Tahap 5.
-> **Affected Areas:** Folder Citra `DOkumentasi LBKB/`, File Master `12 LBKB Billing Rek 12 2025 copy+foto.xlsx`, Script Portal `Tanpa judul.txt`, Dokumen Riset [`Docs/ARGUS_Research_Validation.md`](file:///d:/Hooh_Lah/PLN/ARGUS/Docs/ARGUS_Research_Validation.md), Roadmap Metodologi [`Docs/ARGUS_Methodology_Roadmap.md`](file:///d:/Hooh_Lah/PLN/ARGUS/Docs/ARGUS_Methodology_Roadmap.md), dan Skrip Pengujian Python.
-> **Dokumentasi Resmi:** [`README.md`](file:///d:/Hooh_Lah/PLN/ARGUS/README.md), [`RULEBOOK.md`](file:///d:/Hooh_Lah/PLN/ARGUS/RULEBOOK.md), [`ARGUS_Research_Validation.md`](file:///d:/Hooh_Lah/PLN/ARGUS/Docs/ARGUS_Research_Validation.md), [`ARGUS_Methodology_Roadmap.md`](file:///d:/Hooh_Lah/PLN/ARGUS/Docs/ARGUS_Methodology_Roadmap.md), [`Docs/STRATEGI_ARSITEKTUR_DAN_DEPLOYMENT.md`](file:///d:/Hooh_Lah/PLN/ARGUS/Docs/STRATEGI_ARSITEKTUR_DAN_DEPLOYMENT.md).
+> **Fokus Utama Saat Ini:** Tahap 4 & 5 SELESAI secara arsitektur dan implementasi: **Dashboard Mandiri ARGUS V5** (`/dashboard`), **Local REST API Engine (FastAPI)**, **Human-in-the-Loop Modal Inspector**, **Celengan Feedback AI Persisten (Target 1.000 Kasus)**, **Ekspor Excel Resmi UP3 Mojokerto**, dan **Standalone Portable Packaging (`dist/ARGUS/ARGUS.exe`)**. Kini bersiap menuju **Pilot Run & Ground Truth Sampling 100 Baris bersama PT PLN (Persero) UP3 Mojokerto**.
+> **Affected Areas:** Modul Visi (`src/vision_ai/`), API Backend (`src/api/`), Celengan Feedback (`src/feedback_vault.py`), Dashboard Mandiri (`web_extension/dashboard/`), Packaging (`build_exe.py`), Panduan (`PETUNJUK_PENGGUNAAN_ARGUS.txt`), dan Dokumen *Holy Trinity*.
+> **Dokumentasi Resmi:** [`README.md`](file:///d:/Hooh_Lah/PLN/ARGUS/README.md), [`RULEBOOK.md`](file:///d:/Hooh_Lah/PLN/ARGUS/RULEBOOK.md), [`WHITEBOARD.md`](file:///d:/Hooh_Lah/PLN/ARGUS/WHITEBOARD.md).
 > **Success Criteria:**
 >
-> 1. Terbuktinya metrik Laplacian Variance pada ROI dalam memisahkan foto buram/rusak dari foto layak audit pada sampel foto lapangan $\pm 20$ citra. _(Status: IN PROGRESS)_
-> 2. Terverifikasinya pembacaan nomor meteran 11 digit via Barcode Reader ZBar + CLAHE secara otomatis tanpa halusinasi pada KWH Meter prabayar bertipe stiker barcode. _(Status: IN PROGRESS)_
+> 1. Terbuktinya metrik Laplacian Variance pada ROI dalam memisahkan foto buram/rusak dari foto layak audit pada sampel foto lapangan $\pm 20$ citra. _(Status: DONE ✅ - `quality_filter.py`)_
+> 2. Terverifikasinya pembacaan nomor meteran 11 digit via Barcode Reader ZBar + CLAHE secara otomatis tanpa halusinasi pada KWH Meter prabayar bertipe stiker barcode. _(Status: HOLD (PLN) - `barcode_engine.py` siap pakai)_
 > 3. Jaring Pengaman Anti-Fraud Heuristik via Stage 1 YOLO (`FAIL_COUNTER_NOT_FOUND`) aktif menolak foto non-meteran (aspal/jok/tanah) tanpa halusinasi angka. _(Status: DONE ✅ - 02-11-2026)_
-> 4. Sinkronisasi logika Decision Engine dengan data kolom Excel sheet `Detail` (IDPEL, NAMA, KDBACA, KODE LBKB) menggunakan kontrak data formal (`ImageSignal` & `AuditVerdict`). _(Status: PLANNED)_
-> 5. Evaluasi performa sistem berbasis metrik komprehensif (Precision, Recall, F1-Score, Barcode Hit-Rate, Cost Saving) dan validasi Ground Truth 100 sampel manual bersama PLN. _(Status: PLANNED)_
-> 6. Eksekusi pengemasan ganda (_dual-mode packaging_): Userscript Browser ACMT (`web_extension/argus_evaluator.user.js`) dan Batch CLI Python (`src/pipeline.py`) untuk audit 8.000 foto. _(Status: PLANNED)_
+> 4. Sinkronisasi logika Decision Engine dengan data kolom Excel sheet `Detail` / Rekap ACMT (`IDPEL`, `NAMA`, `STAN_LAPANGAN`) serta ekspor laporan resmi ber-hyperlink. _(Status: DONE ✅ - 12-11-2026)_
+> 5. Evaluasi performa sistem berbasis metrik komprehensif (Precision, Recall, F1-Score, Barcode Hit-Rate, Cost Saving) dan validasi Ground Truth 100 sampel manual bersama PLN. _(Status: PLANNED — Menunggu Uji Lapangan PLN)_
+> 6. Eksekusi pengemasan ganda (_dual-mode packaging_): Dashboard Web Mandiri + Standalone Portable Executable (`dist/ARGUS/ARGUS.exe`), Worker Pool paralel GPU, serta Celengan Feedback AI 1.000 kasus. _(Status: DONE ✅ - 13-11-2026)_
 
 ---
 
@@ -72,14 +72,17 @@
 9. 🔲 **Langkah 2.4 — Evaluasi Decision Engine dengan Metrik Ganda (Bukan Hanya Akurasi):**
    - Menghitung **Precision**, **Recall** (terutama untuk menangkap fraud), **F1-Score**, **Barcode Hit-Rate**, dan **API Cost Saving** (target 70-80%).
 
-#### 🔹 FASE 3: Dual-Mode Packaging & Integrasi Operasional
+#### 🔹 FASE 3: Dual-Mode Packaging, Dashboard Mandiri V5 & Integrasi Operasional [SELESAI ✅ — 13-11-2026]
 
-10. 🔲 **Langkah 3.1 — Mode A: Script Batch Processing CLI Python (`src/pipeline.py`):**
-    - Multi-threading untuk pemrosesan massal 7.470 foto secara cepat dan efisien di komputer kantor.
-    - Ekspor output Excel terstruktur dengan kolom status audit, confidence, dan audit reason.
-11. 🔲 **Langkah 3.2 — Mode B: Userscript Browser Tampermonkey (`argus_evaluator.user.js`):**
-    - Integrasi langsung ke antarmuka web portal ACMT PLN (`portalapp.iconpln.co.id`).
-    - Evaluasi inline per baris tabel foto kelainan dan sinkronisasi hasil audit.
+10. ✅ **Langkah 3.1 — Modularisasi Backend Visi & Local FastAPI Engine (`src/vision_ai/`, `src/api/`):**
+    - Pemisahan bersih `quality_filter.py`, `barcode_engine.py`, `counter_detector.py`, `digit_ocr.py`, `sequence_arbiter.py`, dan orchestrator `pipeline.py`.
+    - Local FastAPI server (`src/api/server.py`, `routes/audit.py`, `routes/excel.py`, `routes/feedback.py`, `routes/views.py`) lengkap dengan deteksi hardware otomatis (`/api/system-info`) dan ekspor laporan Excel resmi ber-hyperlink (`src/audit_excel.py`).
+11. ✅ **Langkah 3.2 — Dashboard Mandiri ARGUS V5, Human-in-the-Loop & Celengan Feedback AI (`web_extension/dashboard/`):**
+    - Dual-mode upload + anti-duplikasi foto, auto-pairing rekap ACMT (`.xlsx`/`.csv`), mode audit `AUTO` / `MANDIRI` / `KOMPARASI`, Enterprise Virtual Pagination + quick sort kolom, serta Worker Pool batch paralel GPU.
+    - Modal Pratinjau HD (`inspectPhoto`) dengan zoom/pan, navigasi `←`/`→` mengikuti filter & sortir aktif, hotkey vonis `[1..5]`, Smart Baseline Un-Edit, dan pemisahan Catatan PLN vs Catatan Model AI (`Salah Baca Angka`, `Digit Terpotong`, `Rolling Meleset`).
+    - Celengan Feedback AI Persisten (`src/feedback_vault.py`, target 1.000 kasus unik, auto-pack ZIP ke `data/feedback_releases/`) dengan `#modal-vault-manager` dan tombol `Kemas Paket Sekarang`.
+12. ✅ **Langkah 3.3 — Standalone Portable Executable (`build_exe.py` → `dist/ARGUS/ARGUS.exe`):**
+    - Kemasan `--onedir` portabel dengan startup banner instan, unbuffered stdout, proteksi QuickEdit freeze Windows, auto-launch browser ke `/dashboard`, dan panduan lengkap [PETUNJUK_PENGGUNAAN_ARGUS.txt](file:///d:/Hooh_Lah/PLN/ARGUS/PETUNJUK_PENGGUNAAN_ARGUS.txt).
 
 #### 🔹 FASE 4: Pilot Test Skala Penuh, Evaluasi & Serah Terima
 
@@ -209,6 +212,23 @@ _Log ide abadi. Jangan pernah menghapus ide di section ini. Gunakan sebagai arsi
   2. **YOLOv8-Cls di-HOLD:** Klasifikasi rintangan lokal ditangguhkan sampai tersedianya arsip dataset internal rintangan dari PLN UP3 Mojokerto.
   3. **Jaring Pengaman Anti-Fraud Heuristik (Zero-Counter):** Penolakan fraud saat ini ditangani secara deterministik oleh Stage 1 YOLO (`FAIL_COUNTER_NOT_FOUND`). Foto aspal, tanah, atau jok motor secara otomatis tidak memiliki kotak dial meteran, sehingga sistem menolak menerbitkan stand tagih dan me-routing langsung ke antrean review manual. Tagihan PLN 100% aman dari manipulasi tembak stand!
 
+### [Status: TERTETAPKAN] Arsitektur Dashboard Mandiri ARGUS V5 & 5 Solusi Optimasi Skala Enterprise
+- **Tanggal & Inisiator:** `[12-11-2026]` - Benedictus Pascal
+- **Konteks & Latar Belakang:** Mengaudit 7.470+ foto di browser secara serial & merender seluruh baris DOM sekaligus menyebabkan browser lambat dan rawan duplikasi data, sementara tim PLN juga membutuhkan fleksibilitas audit baik dengan maupun tanpa file rekap ACMT.
+- **Keputusan Rekayasa:**
+  1. **Dual-Mode Upload + Anti-Duplikasi:** Memisahkan unggah folder/file dari tombol eksekusi `Mulai Audit Batch` dengan dialog konfirmasi duplikat (`Skip` / `Overwrite`).
+  2. **Auto-Pairing Rekap ACMT & Mode Mandiri:** Menambahkan parser multi-sheet `/api/parse-acmt-excel` dan sakelar mode `AUTO` / `MANDIRI` / `KOMPARASI`.
+  3. **Enterprise Virtual Slicing + Quick Sort:** Membatasi render aktif 25/50/100 baris/halaman menggunakan `URL.createObjectURL(file)`, persistensi sesi (`session_store.js`), serta pengurutan kolom cepat.
+  4. **Worker Pool Paralel GPU & Packaging `--onedir`:** Mengalirkan batch inferensi secara paralel sesuai kemampuan GPU/CPU (`/api/system-info`) dan membungkus aplikasi siap pakai lewat `build_exe.py` ke `dist/ARGUS/ARGUS.exe`.
+
+### [Status: TERTETAPKAN] Human-in-the-Loop V5, Smart Baseline Un-Edit & Celengan Feedback AI (Target 1.000 Kasus)
+- **Tanggal & Inisiator:** `[13-11-2026]` - Benedictus Pascal
+- **Konteks & Latar Belakang:** Auditor membutuhkan stasiun verifikasi cepat tanpa memperlebar tabel 13 kolom, hasil edit yang dikembalikan ke nilai awal tidak boleh terus tercatat sebagai koreksi, dan kasus sulit perlu dikumpulkan bertahap lintas sesi/bulan tanpa membanjiri laporan dinas PLN maupun hilang saat browser di-refresh/reset.
+- **Keputusan Rekayasa:**
+  1. **Smart Baseline Comparison:** Setiap baris menyimpan snapshot asli (`data-orig-stan-lap`, `data-orig-argus`, `data-orig-status`); label `Dikoreksi` otomatis hilang dan entri dihapus dari staging vault bila nilai dikembalikan persis ke baseline dan Catatan AI kosong.
+  2. **Pemisahan Catatan PLN vs Catatan Model AI:** Tabel tetap 13 kolom; `Catatan Evaluasi Model AI` ditempatkan di Modal Pratinjau dengan 3 tombol cepat *toggleable* (`Salah Baca Angka`, `Digit Terpotong`, `Rolling Meleset`), tombol clear (`×`), dan lencana robot ungu `Catatan AI` pada tabel.
+  3. **Navigasi Inspector Filter/Sort-Aware & Celengan AI Persisten:** `inspectPhoto` / `navigateInspector` mengikuti baris hasil filter & sortir aktif; koreksi otomatis tersinkron ke `data/feedback_staging/`, terkemas otomatis menjadi 1 berkas ZIP (`.xlsx` Master + `feedback_manifest.csv` + foto + pre-label YOLO) di `data/feedback_releases/` tiap genap 1.000 kasus unik, dan dapat dipantau/dikemas manual lewat `#modal-vault-manager`.
+
 ---
 
 ## 🩻 Section 3: Audit Plan (The Ruthless Audit)
@@ -221,6 +241,8 @@ _Log ide abadi. Jangan pernah menghapus ide di section ini. Gunakan sebagai arsi
 - `[26-09-2026]` **Fondasi Riset Ilmiah Kuat & Tervalidasi:** Arsitektur Cascading Multi-Tier telah divalidasi dan didokumentasikan di [`Docs/ARGUS_Research_Validation.md`](file:///d:/Hooh_Lah/PLN/ARGUS/Docs/ARGUS_Research_Validation.md) dengan dukungan 6 jurnal akademik internasional terindeks.
 - `[23-10-2026]` **Lonjakan Akurasi Digit YOLOv8s ke 96.1% mAP@50:** Pelatihan 30 epoch di GPU RTX 4060 tanpa flip horizontal menghasilkan Precision 94.6% dan Recall 92.8% dengan latensi hanya 4.2 ms/citra.
 - `[23-10-2026]` **Two-Stage Pipeline Sukses 100% pada Meter Analog Jelas:** Uji end-to-end pada sampel analog jelas membaca 5 digit sempurna (`00000`, `07501`, `05013`, `14244`, `04790`, `00211`).
+- `[12-11-2026]` **Modularisasi Backend & Dashboard Mandiri V5 Operasional:** Seluruh pipeline (`src/vision_ai/`), API (`src/api/`), auto-pairing ACMT, Virtual Pagination, Worker Pool GPU, dan ekspor Excel resmi ber-hyperlink berjalan terpadu, lengkap dengan distribusi standalone `dist/ARGUS/ARGUS.exe`.
+- `[13-11-2026]` **Human-in-the-Loop V5 & Celengan Feedback AI 1.000 Kasus Tuntas:** Modal Inspector HD (zoom/pan, hotkey `1..5`, navigasi filter/sort-aware, tema vonis dinamis), Smart Baseline Un-Edit, pemisahan Catatan PLN vs Catatan AI (`Salah Baca Angka`, `Digit Terpotong`, `Rolling Meleset`), serta staging vault persisten + `#modal-vault-manager` lulus verifikasi `TestClient` dan `node --check`.
 
 ### 🟡 The Bad
 
@@ -254,4 +276,6 @@ _Log ide abadi. Jangan pernah menghapus ide di section ini. Gunakan sebagai arsi
 |  🟢   | `23-10-2026` | **Akurasi Model Digit Rendah (~75% di Teammate):** Pelatihan sebelumnya terjebak flip horizontal default yang merusak geometri angka asimetris (`2, 3, 5, 6, 7`). | Menonaktifkan `fliplr` dan `flipud` di Roboflow & YOLO. Akurasi melonjak ke 96.1% mAP@50 (latensi 4.2 ms). | Pascol | `DONE` | `23-10-2026` |
 |  🟢   | `23-10-2026` | **Kasus Sampel #6: Glare Silau Menghasilkan Angka Sebatang Kara ("6"):** Silau matahari menghapus 4 digit analog, tapi 1 digit lolos dengan confidence tinggi dan diteruskan ke billing. | Menerapkan Tier 1 Glare Masking (HSV) + Strict Sequence Validator (minimal 5 digit kontinu untuk analog). Tolak pembacaan parsial. | Pascol | `DONE` | `31-10-2026` |
 |  🟢   | `23-10-2026` | **Kasus Sampel #8: Meter Digital Dinamis & Desimal Belum Terbaca:** Angka digital memiliki koma dan panjang dinamis (`20,163` terbaca `2, 6, 3`), berisiko memboroskan token jika dibuang ke VLM. | Memperluas dataset model lokal dengan kelas `dot` (11 kelas) + Inter-Digit Gap Detector. Berhasil menangkap anomali dan me-routing ke 🟡 Triage Manual. | Pascol | `DONE` | `31-10-2026` |
-|  🟡   | `31-10-2026` | **Packaging Standalone Demo (.exe) & Integrasi Web Extension:** Kebutuhan demonstrasi mandiri ke manajemen PLN tanpa ketergantungan konfigurasi Python laptop dinas. | Membungkus backend FastAPI + YOLO pipeline menjadi standalone `.exe` (PyInstaller) dan menghubungkan `argus_evaluator.user.js` ke port 8000. | Pascol | `PLANNED` | - |
+|  🟢   | `31-10-2026` | **Packaging Standalone Demo (.exe) & Integrasi Web Extension:** Kebutuhan demonstrasi mandiri ke manajemen PLN tanpa ketergantungan konfigurasi Python laptop dinas. | Membungkus backend FastAPI + YOLO pipeline menjadi standalone `.exe` (PyInstaller `--onedir`) di `dist/ARGUS/ARGUS.exe` beserta Dashboard Web Mandiri & launcher bebas freeze QuickEdit. | Benedictus Pascal | `DONE` | `13-11-2026` |
+|  🟢   | `12-11-2026` | **Skala Ribuan Foto & Duplikasi Antrean di Dashboard Web:** Merender 7.475 baris + Base64 membebani RAM browser dan eksekusi batch serial lambat. | Menerapkan Enterprise Virtual Pagination (25/50/100/ALL), `URL.createObjectURL`, anti-duplikasi foto, auto-pairing ACMT, quick sort, serta Worker Pool paralel GPU/CPU. | Benedictus Pascal | `DONE` | `12-11-2026` |
+|  🟢   | `13-11-2026` | **Evaluasi Model AI, Smart Baseline Un-Edit & Risiko Hilangnya Feedback Saat Refresh/Reset:** Mengembalikan nilai edit masih tertanda `Dikoreksi`, catatan AI berisiko mengotori Excel dinas PLN, serta kasus sulit hilang saat tabel di-reset. | Menerapkan Smart Baseline Un-Edit, memisahkan Catatan AI ke modal pratinjau (3 chip toggle + tombol clear), memperbaiki navigasi modal filter/sort-aware + paginasi `goToPage()`, dan membangun Celengan Feedback AI persisten (target 1.000 kasus + `#modal-vault-manager`). | Benedictus Pascal | `DONE` | `13-11-2026` |

@@ -131,7 +131,7 @@ ARGUS/
      label 'Dikoreksi' otomatis terhapus dari baris dan kartu KPI).
    - Memberikan 'Catatan Auditor (Laporan Excel PLN)' untuk keperluan operasional.
    - Memberikan 'Catatan Evaluasi Model AI (Celengan 1.000)' beserta tombol cepat
-     (mis. 9↔3, 2↔5, 1↔7, Digit Terpotong, Rolling Meleset) untuk evaluasi AI.
+     (mis. Salah Baca Angka, Digit Terpotong, Rolling Meleset) untuk evaluasi AI.
      Baris yang diberi catatan AI akan menampilkan lencana robot ungu 'Catatan AI'.
 3. Tekan tombol [Esc] atau klik [X] untuk keluar.
 4. Seluruh tabel, angka selisih, dan kartu ringkasan KPI langsung tersinkronisasi
