@@ -113,15 +113,19 @@ async function handleExcelUpload(event) {
                     row.cells[3].textContent = rec.tarif_daya;
                 }
 
-                // Update Stan Lapangan
+                // Update Stan Lapangan & perbarui baseline asli agar impor Excel tidak dianggap koreksi auditor
                 const stanInput = row.querySelectorAll('.input-table')[0];
                 if (stanInput && rec.stan_lapangan) {
                     stanInput.value = rec.stan_lapangan;
+                    row.setAttribute('data-orig-stan-lap', rec.stan_lapangan);
                 }
 
-                // Jika baris sudah pernah diaudit, hitung ulang selisih
+                // Jika baris sudah pernah diaudit, hitung ulang selisih dan evaluasi baseline
                 if (row.getAttribute('data-status') !== 'PENDING' && typeof recalculateRowDiffAndStatus === 'function') {
                     recalculateRowDiffAndStatus(row);
+                    if (typeof evaluateRowEditedState === 'function') {
+                        evaluateRowEditedState(row, false);
+                    }
                 }
             }
         });
@@ -256,13 +260,25 @@ function resolveDuplicateAction(action) {
             photoImg.setAttribute('onerror', `if(!this.src.includes('/sample-photo/')){this.src='/sample-photo/' + encodeURIComponent('${item.file.name}')}`);
             r.setAttribute('data-photo', item.file.name);
             r.setAttribute('data-status', 'PENDING');
+            r.setAttribute('data-orig-stan-lap', stanInputVal);
+            r.setAttribute('data-orig-argus', '-');
+            r.setAttribute('data-orig-status', 'PENDING');
+            r.setAttribute('data-ai-notes', '');
+            r.removeAttribute('data-edited');
+            r.classList.remove('row-edited');
+            r._aiPrelabelMeta = null;
             r.querySelector('.cell-raw').textContent = '-';
             r.querySelector('.cell-argus').value = '-';
             r.querySelector('.cell-diff').textContent = '-';
             r.querySelector('.cell-lat').textContent = '-';
+            const editSlot = r.querySelector('.edit-badge-slot');
+            if (editSlot) editSlot.innerHTML = '';
+            const aiSlot = r.querySelector('.ai-note-badge-slot');
+            if (aiSlot) aiSlot.innerHTML = '';
             const sel = r.querySelector('.select-status');
             sel.value = 'PENDING';
             if (typeof updateSelectStyle === 'function') updateSelectStyle(sel);
+            if (typeof updateRowStyle === 'function') updateRowStyle(r);
         });
         appendFilesToTable(newFiles);
         showToast(`Berhasil menimpa ${duplicateFiles.length} foto dan menambahkan ${newFiles.length} foto baru.`, "success");
@@ -306,13 +322,17 @@ function appendFilesToTable(files) {
         newRow.setAttribute('data-idpel', idpel);
         newRow.setAttribute('data-photo', file.name);
         newRow.setAttribute('data-status', 'PENDING');
+        newRow.setAttribute('data-orig-stan-lap', stanLapValue);
+        newRow.setAttribute('data-orig-argus', '-');
+        newRow.setAttribute('data-orig-status', 'PENDING');
+        newRow.setAttribute('data-ai-notes', '');
 
         newRow.innerHTML = `
             <td>${rowIdx + 1}</td>
             <td class="idpel-code">${idpel}</td>
             <td><strong>${namaDisplay}</strong></td>
             <td>${tarifDayaDisplay}</td>
-            <td><input type="text" class="input-table" value="${stanLapValue}" onchange="onFieldChange(${rowIdx})" onkeydown="handleRowKeydown(event, ${rowIdx}, 'stan_lap')"></td>
+            <td><input type="text" class="input-table" value="${stanLapValue}" onchange="onFieldChange(${rowIdx}, 'stan_lap')" onkeydown="handleRowKeydown(event, ${rowIdx}, 'stan_lap')"></td>
             <td>
                 <img class="photo-thumbnail" loading="lazy" src="${objectUrl}" onerror="if(!this.src.includes('/sample-photo/')){this.src='/sample-photo/' + encodeURIComponent('${file.name}')}" onclick="inspectPhoto(${rowIdx})" alt="Foto Meter">
             </td>
@@ -332,7 +352,10 @@ function appendFilesToTable(files) {
                     <option value="TRIAGE">Perlu Tinjau Ulang</option>
                 </select>
             </td>
-            <td><input type="text" class="input-notes" placeholder="Catatan auditor..." onchange="onFieldChange(${rowIdx})" onkeydown="handleRowKeydown(event, ${rowIdx}, 'notes')"></td>
+            <td>
+                <input type="text" class="input-notes" placeholder="Catatan auditor..." onchange="onFieldChange(${rowIdx}, 'notes')" onkeydown="handleRowKeydown(event, ${rowIdx}, 'notes')">
+                <div class="ai-note-badge-slot"></div>
+            </td>
             <td class="cell-lat" style="font-family:'JetBrains Mono'; font-size:11.5px;">-</td>
             <td><button class="btn-row-audit" onclick="auditSingleRow(${rowIdx})"><i class="fas fa-bolt"></i> Audit</button></td>
         `;
@@ -357,9 +380,18 @@ function resetTable() {
     else executeResetTable();
 }
 
-function executeResetTable() {
+async function executeResetTable() {
     const modal = document.getElementById('modal-reset-confirm');
     if (modal) modal.style.display = 'none';
+
+    // 0. Pastikan seluruh koreksi/catatan AI yang ada masuk aman ke Celengan Feedback AI di disk sebelum tabel dihapus!
+    if (typeof flushAllEditedFeedbackToVault === 'function') {
+        try {
+            await flushAllEditedFeedbackToVault();
+        } catch (err) {
+            console.warn('Flush feedback AI sebelum reset tabel gagal:', err);
+        }
+    }
 
     // 1. Kosongkan antrean baris tabel di DOM
     const tbody = document.getElementById('table-body');

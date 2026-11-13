@@ -93,6 +93,13 @@ async function auditSingleRow(rowIndex) {
         if (!isAlreadyEdited) {
             stanArgusInput.value = data.stand_baca || '-';
         }
+        // Simpan metadata pre-labeling YOLO (bounding box kotak & digit) untuk Celengan AI
+        row._aiPrelabelMeta = {
+            counter_box: data.counter_box || null,
+            crop_shape: data.crop_shape || null,
+            digits_detail: data.digits_detail || []
+        };
+
         cellLat.textContent = `${data.latency_ms || 0} ms`;
 
         row.setAttribute('data-blur', data.blur_score || 0);
@@ -107,42 +114,51 @@ async function auditSingleRow(rowIndex) {
 
         if (isAlreadyEdited) {
             // Jika sudah dikoreksi auditor, pertahankan koreksi dan hitung ulang selisihnya
+            row.setAttribute('data-orig-argus', data.stand_baca || '-');
             recalculateRowDiffAndStatus(row);
-        } else if (data.status === 'FAIL_COUNTER_NOT_FOUND' || data.status === 'TIDAK_TERDETEKSI_KWH') {
-            cellDiff.textContent = '-';
-            statusSelect.value = 'NIHIL';
-            row.setAttribute('data-status', 'NIHIL');
-        } else if (data.status === 'FOTO_BURAM' || data.status === 'ANOMALI_GLARE_TERHALANG') {
-            cellDiff.textContent = '-';
-            statusSelect.value = 'TRIAGE';
-            row.setAttribute('data-status', 'TRIAGE');
-        } else if (numAi !== null) {
-            if (isMandiriMode) {
-                // Mode Ekstraksi Mandiri (Murni AI): Tidak ada komparasi terhadap 0
+        } else {
+            if (data.status === 'FAIL_COUNTER_NOT_FOUND' || data.status === 'TIDAK_TERDETEKSI_KWH') {
                 cellDiff.textContent = '-';
-                statusSelect.value = 'MATCH';
-                row.setAttribute('data-status', 'MATCH');
-            } else {
-                // Mode Komparasi Lapangan: Hitung selisih angka riil terhadap stan lapangan
-                const diff = numAi - numPln;
-                cellDiff.textContent = diff === 0 ? '0' : diff;
-
-                if (diff === 0) {
+                statusSelect.value = 'NIHIL';
+                row.setAttribute('data-status', 'NIHIL');
+            } else if (data.status === 'FOTO_BURAM' || data.status === 'ANOMALI_GLARE_TERHALANG') {
+                cellDiff.textContent = '-';
+                statusSelect.value = 'TRIAGE';
+                row.setAttribute('data-status', 'TRIAGE');
+            } else if (numAi !== null) {
+                if (isMandiriMode) {
+                    // Mode Ekstraksi Mandiri (Murni AI): Tidak ada komparasi terhadap 0
+                    cellDiff.textContent = '-';
                     statusSelect.value = 'MATCH';
                     row.setAttribute('data-status', 'MATCH');
-                } else if (Math.abs(diff) <= 2) {
-                    statusSelect.value = 'ROLLING';
-                    row.setAttribute('data-status', 'ROLLING');
                 } else {
-                    statusSelect.value = 'DIFF';
-                    row.setAttribute('data-status', 'DIFF');
+                    // Mode Komparasi Lapangan: Hitung selisih angka riil terhadap stan lapangan
+                    const diff = numAi - numPln;
+                    cellDiff.textContent = diff === 0 ? '0' : diff;
+
+                    if (diff === 0) {
+                        statusSelect.value = 'MATCH';
+                        row.setAttribute('data-status', 'MATCH');
+                    } else if (Math.abs(diff) <= 2) {
+                        statusSelect.value = 'ROLLING';
+                        row.setAttribute('data-status', 'ROLLING');
+                    } else {
+                        statusSelect.value = 'DIFF';
+                        row.setAttribute('data-status', 'DIFF');
+                    }
                 }
+            } else {
+                // Kotak tidak terbaca atau stan kosong: Selisih wajib '-'
+                cellDiff.textContent = '-';
+                statusSelect.value = 'TRIAGE';
+                row.setAttribute('data-status', 'TRIAGE');
             }
-        } else {
-            // Kotak tidak terbaca atau stan kosong: Selisih wajib '-'
-            cellDiff.textContent = '-';
-            statusSelect.value = 'TRIAGE';
-            row.setAttribute('data-status', 'TRIAGE');
+
+            // Rekam snapshot baseline asli AI untuk Smart Baseline Comparison ("Dikoreksi Auditor")
+            row.setAttribute('data-orig-stan-lap', stanLapInput.value.trim());
+            row.setAttribute('data-orig-argus', stanArgusInput.value.trim());
+            row.setAttribute('data-orig-status', statusSelect.value);
+            evaluateRowEditedState(row, false);
         }
 
         updateSelectStyle(statusSelect);
@@ -347,8 +363,8 @@ function onArgusChange(rowIndex) {
     const row = document.getElementById(`row-${rowIndex}`);
     if (!row) return;
 
-    markRowAsEdited(row);
     recalculateRowDiffAndStatus(row);
+    evaluateRowEditedState(row, true);
     if (typeof updateKPIs === 'function') updateKPIs();
     if (typeof persistCurrentSession === 'function') persistCurrentSession();
 }
@@ -365,23 +381,28 @@ function triggerRowPulseHighlight(row) {
     }, 1250);
 }
 
-function onFieldChange(rowIndex) {
+function onFieldChange(rowIndex, fieldKind = 'stan_lap') {
     const row = document.getElementById(`row-${rowIndex}`);
     if (!row) return;
 
-    markRowAsEdited(row);
+    // Catatan operasional PLN (kolom Excel) tidak mengubah status/selisih AI ataupun memicu "Dikoreksi"
+    if (fieldKind === 'notes') {
+        if (typeof persistCurrentSession === 'function') persistCurrentSession();
+        return;
+    }
+
     recalculateRowDiffAndStatus(row);
+    evaluateRowEditedState(row, true);
     if (typeof updateKPIs === 'function') updateKPIs();
     if (typeof persistCurrentSession === 'function') persistCurrentSession();
 }
 
-function onStatusSelectChange(rowIndex, selectElem) {
-    const row = document.getElementById(`row-${rowIndex}`);
+function applyStatusChangeToRow(row, newStatus, pulseOnEdit = true) {
     if (!row) return;
+    const selectElem = row.querySelector('.select-status');
+    if (selectElem) selectElem.value = newStatus;
 
-    const newStatus = selectElem.value;
     row.setAttribute('data-status', newStatus);
-    markRowAsEdited(row);
 
     const cellDiff = row.querySelector('.cell-diff');
     // Aturan Permintaan User:
@@ -407,20 +428,100 @@ function onStatusSelectChange(rowIndex, selectElem) {
         }
     }
 
-    updateSelectStyle(selectElem);
+    if (selectElem) updateSelectStyle(selectElem);
     updateRowStyle(row);
+    evaluateRowEditedState(row, pulseOnEdit);
     if (typeof updateKPIs === 'function') updateKPIs();
     if (typeof persistCurrentSession === 'function') persistCurrentSession();
 }
 
-function markRowAsEdited(row) {
-    row.setAttribute('data-edited', 'true');
-    row.classList.add('row-edited');
-    const slot = row.querySelector('.edit-badge-slot');
-    if (slot && !slot.innerHTML) {
-        slot.innerHTML = '<span class="tag-manual"><i class="fas fa-pen"></i> Dikoreksi</span>';
+function onStatusSelectChange(rowIndex, selectElem) {
+    const row = document.getElementById(`row-${rowIndex}`);
+    if (!row || !selectElem) return;
+    applyStatusChangeToRow(row, selectElem.value, true);
+}
+
+function normalizeArgusBaselineVal(val) {
+    const trimmed = String(val ?? '').trim();
+    return trimmed === '' ? '-' : trimmed;
+}
+
+/**
+ * Mengevaluasi secara cerdas apakah baris masih menyimpang dari nilai asli AI/baseline
+ * (atau memiliki catatan evaluasi model AI). Jika dikembalikan persis ke nilai asli dan
+ * tidak ada catatan AI, status "Dikoreksi" otomatis dihapus.
+ */
+function evaluateRowEditedState(row, pulseOnEdit = true) {
+    if (!row) return false;
+
+    const stanLapInput = row.querySelectorAll('.input-table')[0];
+    const stanArgusInput = row.querySelector('.cell-argus');
+
+    const currStanLap = (stanLapInput ? stanLapInput.value : '').trim();
+    const currArgus = normalizeArgusBaselineVal(stanArgusInput ? stanArgusInput.value : '-');
+    const currStatus = (row.getAttribute('data-status') || 'PENDING').trim();
+    const aiNotes = (row.getAttribute('data-ai-notes') || '').trim();
+
+    const origStanLap = (row.hasAttribute('data-orig-stan-lap') ? row.getAttribute('data-orig-stan-lap') : currStanLap).trim();
+    const origArgus = normalizeArgusBaselineVal(row.hasAttribute('data-orig-argus') ? row.getAttribute('data-orig-argus') : currArgus);
+    const origStatus = (row.hasAttribute('data-orig-status') ? row.getAttribute('data-orig-status') : currStatus).trim();
+
+    const isEdited = (
+        currStanLap !== origStanLap ||
+        currArgus !== origArgus ||
+        currStatus !== origStatus ||
+        aiNotes.length > 0
+    );
+
+    const wasEdited = row.getAttribute('data-edited') === 'true';
+    const editSlot = row.querySelector('.edit-badge-slot');
+
+    if (isEdited) {
+        row.setAttribute('data-edited', 'true');
+        row.classList.add('row-edited');
+        if (editSlot && !editSlot.innerHTML) {
+            editSlot.innerHTML = '<span class="tag-manual"><i class="fas fa-pen"></i> Dikoreksi</span>';
+        }
+        if (!wasEdited && pulseOnEdit) {
+            triggerRowPulseHighlight(row);
+        }
+    } else {
+        row.removeAttribute('data-edited');
+        row.classList.remove('row-edited');
+        if (editSlot) editSlot.innerHTML = '';
     }
-    triggerRowPulseHighlight(row);
+
+    // Perbarui logo khusus Catatan AI di baris tabel utama (tetap 13 kolom)
+    const aiSlot = row.querySelector('.ai-note-badge-slot');
+    if (aiSlot) {
+        aiSlot.innerHTML = '';
+        if (aiNotes.length > 0) {
+            const badge = document.createElement('span');
+            badge.className = 'tag-ai-note';
+            badge.title = aiNotes;
+            badge.innerHTML = '<i class="fas fa-robot"></i> Catatan AI';
+            aiSlot.appendChild(badge);
+        }
+    }
+
+    // Sinkronkan tag modal jika baris ini sedang dibuka di modal pratinjau
+    if (typeof currentInspectedRowIndex !== 'undefined' && row.id === `row-${currentInspectedRowIndex}`) {
+        const modalTagSlot = document.getElementById('modal-edit-tag-slot');
+        if (modalTagSlot) {
+            modalTagSlot.innerHTML = isEdited ? '<span class="tag-manual"><i class="fas fa-pen"></i> Dikoreksi</span>' : '';
+        }
+    }
+
+    // Sinkronkan ke Celengan Feedback AI persisten di backend
+    if (typeof queueFeedbackSyncForRow === 'function') {
+        queueFeedbackSyncForRow(row, isEdited);
+    }
+
+    return isEdited;
+}
+
+function markRowAsEdited(row) {
+    return evaluateRowEditedState(row, true);
 }
 
 function recalculateRowDiffAndStatus(row) {

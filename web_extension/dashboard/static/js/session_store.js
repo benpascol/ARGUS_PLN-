@@ -55,6 +55,9 @@ async function doPersistCurrentSession() {
             const r = rows[i];
             const img = r.querySelector('.photo-thumbnail');
             const photoName = r.getAttribute('data-photo') || '';
+            const currStanLap = r.querySelectorAll('.input-table')[0] ? r.querySelectorAll('.input-table')[0].value : '';
+            const currArgus = r.querySelector('.cell-argus') ? r.querySelector('.cell-argus').value : '-';
+            const currStatus = r.getAttribute('data-status') || 'PENDING';
             sessionData.push({
                 index: i,
                 idpel: r.getAttribute('data-idpel') || '',
@@ -63,14 +66,19 @@ async function doPersistCurrentSession() {
                 photo_src: (img && img.src && !img.src.startsWith('blob:')) ? img.src : `/sample-photo/${encodeURIComponent(photoName)}`,
                 nama: r.querySelector('strong') ? r.querySelector('strong').textContent : '',
                 tarif_daya: r.cells[3] ? r.cells[3].textContent : '',
-                stan_lapangan: r.querySelectorAll('.input-table')[0] ? r.querySelectorAll('.input-table')[0].value : '',
+                stan_lapangan: currStanLap,
                 raw_display: r.querySelector('.cell-raw') ? r.querySelector('.cell-raw').textContent : '-',
-                stan_argus: r.querySelector('.cell-argus') ? r.querySelector('.cell-argus').value : '-',
+                stan_argus: currArgus,
                 selisih: r.querySelector('.cell-diff') ? r.querySelector('.cell-diff').textContent : '-',
-                status: r.getAttribute('data-status') || 'PENDING',
+                status: currStatus,
                 verdict_select: r.querySelector('.select-status') ? r.querySelector('.select-status').value : 'PENDING',
                 is_edited: r.getAttribute('data-edited') === 'true',
+                orig_stan_lap: r.hasAttribute('data-orig-stan-lap') ? r.getAttribute('data-orig-stan-lap') : currStanLap,
+                orig_argus: r.hasAttribute('data-orig-argus') ? r.getAttribute('data-orig-argus') : currArgus,
+                orig_status: r.hasAttribute('data-orig-status') ? r.getAttribute('data-orig-status') : currStatus,
                 notes: r.querySelector('.input-notes') ? r.querySelector('.input-notes').value : '',
+                ai_notes: r.getAttribute('data-ai-notes') || '',
+                ai_prelabel_meta: r._aiPrelabelMeta || null,
                 latensi: r.querySelector('.cell-lat') ? r.querySelector('.cell-lat').textContent : '-',
                 blur: r.getAttribute('data-blur') || '0',
                 glare: r.getAttribute('data-glare') || '0',
@@ -132,6 +140,11 @@ async function restoreSessionOnStartup() {
                     tr.setAttribute('data-idpel', data.idpel);
                     tr.setAttribute('data-photo', data.photo_name);
                     tr.setAttribute('data-status', data.status);
+                    tr.setAttribute('data-orig-stan-lap', data.orig_stan_lap !== undefined ? data.orig_stan_lap : (data.stan_lapangan || ''));
+                    tr.setAttribute('data-orig-argus', data.orig_argus !== undefined ? data.orig_argus : (data.stan_argus || '-'));
+                    tr.setAttribute('data-orig-status', data.orig_status !== undefined ? data.orig_status : (data.status || 'PENDING'));
+                    tr.setAttribute('data-ai-notes', data.ai_notes || '');
+                    tr._aiPrelabelMeta = data.ai_prelabel_meta || null;
                     tr.setAttribute('data-blur', data.blur);
                     tr.setAttribute('data-glare', data.glare);
                     tr.setAttribute('data-tier', data.tier);
@@ -182,10 +195,23 @@ async function restoreSessionOnStartup() {
                                 <option value="TRIAGE" ${data.verdict_select === 'TRIAGE' ? 'selected' : ''}>Perlu Tinjau Ulang</option>
                             </select>
                         </td>
-                        <td><input type="text" class="input-notes" placeholder="Catatan auditor..." value="${data.notes || ''}" onchange="onFieldChange(${i})" onkeydown="handleRowKeydown(event, ${i}, 'notes')"></td>
+                        <td>
+                            <input type="text" class="input-notes" placeholder="Catatan auditor..." value="" onchange="onFieldChange(${i}, 'notes')" onkeydown="handleRowKeydown(event, ${i}, 'notes')">
+                            <div class="ai-note-badge-slot"></div>
+                        </td>
                         <td class="cell-lat" style="font-family:'JetBrains Mono'; font-size:11.5px;">${data.latensi}</td>
                         <td><button class="btn-row-audit" onclick="auditSingleRow(${i})"><i class="fas fa-bolt"></i> Audit</button></td>
                     `;
+
+                    const restoredStanInput = tr.querySelectorAll('.input-table')[0];
+                    if (restoredStanInput) restoredStanInput.value = data.stan_lapangan || '';
+                    const restoredArgusInput = tr.querySelector('.cell-argus');
+                    if (restoredArgusInput) restoredArgusInput.value = data.stan_argus || '-';
+                    const restoredNotesInput = tr.querySelector('.input-notes');
+                    if (restoredNotesInput) restoredNotesInput.value = data.notes || '';
+                    if (typeof evaluateRowEditedState === 'function') {
+                        evaluateRowEditedState(tr, false);
+                    }
                     fragment.appendChild(tr);
 
                     const sel = tr.querySelector('.select-status');

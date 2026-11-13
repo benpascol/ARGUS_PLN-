@@ -38,7 +38,7 @@ from fastapi.staticfiles import StaticFiles
 
 from src.api.dependencies import DASHBOARD_DIR, set_pipeline, get_hardware_info
 from src.vision_ai.pipeline import ArgusVisionPipeline
-from src.api.routes import audit, excel, views
+from src.api.routes import audit, excel, feedback, views
 
 
 @asynccontextmanager
@@ -103,6 +103,7 @@ if (DASHBOARD_DIR / "static").is_dir():
 app.include_router(views.router)
 app.include_router(audit.router)
 app.include_router(excel.router)
+app.include_router(feedback.router)
 
 if __name__ == "__main__":
     import uvicorn

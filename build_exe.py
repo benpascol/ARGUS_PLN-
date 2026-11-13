@@ -106,6 +106,8 @@ def build():
     (app_dist_dir / "data" / "input_excel").mkdir(parents=True, exist_ok=True)
     (app_dist_dir / "data" / "audit_results").mkdir(parents=True, exist_ok=True)
     (app_dist_dir / "data" / "samples").mkdir(parents=True, exist_ok=True)
+    (app_dist_dir / "data" / "feedback_staging").mkdir(parents=True, exist_ok=True)
+    (app_dist_dir / "data" / "feedback_releases").mkdir(parents=True, exist_ok=True)
 
     # Salin README panduan input folder
     if (BASE_DIR / "data" / "input_foto" / "BACA_SAYA.txt").is_file():

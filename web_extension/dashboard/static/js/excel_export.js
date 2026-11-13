@@ -15,6 +15,16 @@ async function exportOfficialExcel() {
     const rows = document.querySelectorAll('#table-body tr');
     const payloadRows = [];
 
+    // Pastikan seluruh koreksi/catatan model AI terbungkus aman ke Celengan Feedback AI di disk
+    // Catatan AI tidak ikut dicampur ke file Excel operasional PLN di bawah ini.
+    if (typeof flushAllEditedFeedbackToVault === 'function') {
+        try {
+            await flushAllEditedFeedbackToVault();
+        } catch (err) {
+            console.warn('Flush feedback AI saat ekspor gagal:', err);
+        }
+    }
+
     rows.forEach((r, idx) => {
         const idpel = r.querySelector('.idpel-code').textContent.trim();
         const nama = r.querySelector('strong').textContent.trim();

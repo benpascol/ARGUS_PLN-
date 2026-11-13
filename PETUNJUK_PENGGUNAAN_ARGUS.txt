@@ -121,23 +121,41 @@ ARGUS/
 
 --- LANGKAH D: REVIEW AUDITOR & EDIT LIVE (HUMAN-IN-THE-LOOP) ---
 1. Klik salah satu thumbnail foto di tabel untuk membuka 'Pratinjau Stand KWH Meter'.
-2. Di dalam kotak pratinjau, Anda dapat:
+2. Di dalam kotak pratinjau, kartu latar belakang vonis akan berwarna elegan sesuai
+   status audit (jika masih Belum Diaudit, kartu tetap bersih netral). Anda dapat:
    - Melihat foto meteran yang di-zoom secara tajam.
    - Menavigasi ke foto sebelum/sesudahnya dengan tombol [◀ Foto Sebelumnya] dan
      [Foto Berikutnya ▶], atau cukup tekan tombol PANAH KANAN / KIRI di keyboard.
    - Mengubah langsung 'Stand Lapangan', 'Stand Hasil Baca AI', atau 'Vonis Audit'.
-   - Memberikan 'Catatan Khusus Auditor'.
+     (Jika nilai dikembalikan persis ke hasil asli ARGUS & Catatan AI kosong,
+     label 'Dikoreksi' otomatis terhapus dari baris dan kartu KPI).
+   - Memberikan 'Catatan Auditor (Laporan Excel PLN)' untuk keperluan operasional.
+   - Memberikan 'Catatan Evaluasi Model AI (Celengan 1.000)' beserta tombol cepat
+     (mis. 9↔3, 2↔5, 1↔7, Digit Terpotong, Rolling Meleset) untuk evaluasi AI.
+     Baris yang diberi catatan AI akan menampilkan lencana robot ungu 'Catatan AI'.
 3. Tekan tombol [Esc] atau klik [X] untuk keluar.
 4. Seluruh tabel, angka selisih, dan kartu ringkasan KPI langsung tersinkronisasi
    otomatis tanpa perlu memuat ulang halaman!
 
---- LANGKAH E: MENGUNDUH LAPORAN RESMI EXCEL ---
+--- LANGKAH E: CELENGAN FEEDBACK AI (TARGET 1.000 KASUS) ---
+1. Pil 'Celengan AI: X / 1000' pada Header memantau jumlah kasus koreksi/evaluasi
+   model yang telah ditabung (tersimpan fisik di data/feedback_staging/).
+2. Setiap baris yang dikoreksi atau diberi Catatan Model AI otomatis tersimpan
+   aman di harddisk lokal.
+3. Tabungan Celengan AI TIDAK akan hilang meskipun browser di-Refresh (F5),
+   aplikasi ditutup, ataupun petugas menekan tombol [🔄 Reset Tabel].
+4. Begitu terkumpul genap 1.000 kasus unik, sistem otomatis membungkus 1 paket
+   ZIP siap latih ulang (foto + crop + pre-label YOLO + Excel Master Feedback)
+   di folder data/feedback_releases/ untuk tim IT/Engineer.
+
+--- LANGKAH F: MENGUNDUH LAPORAN RESMI EXCEL ---
 1. Setelah audit dan verifikasi selesai, klik tombol:
    [📥 Unduh Laporan Excel Resmi (.xlsx)].
 2. Browser akan mengunduh file laporan resmi Excel standar UP3 Mojokerto.
 3. Di dalam Excel tersebut:
    - Terdapat 4 baris Header Resmi Eksekutif & Legenda Status.
-   - 19 kolom data lengkap dengan pewarnaan baris otomatis sesuai vonis.
+   - 19 kolom data lengkap dengan pewarnaan baris otomatis sesuai vonis, termasuk
+     Catatan Auditor operasional (Catatan Evaluasi Model AI TIDAK dicampurkan).
    - Kolom foto dilengkapi formula interaktif '=HYPERLINK(...)' sehingga jika
      diklik langsung membuka foto terkait.
 

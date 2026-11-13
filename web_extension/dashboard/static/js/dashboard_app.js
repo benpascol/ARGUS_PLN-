@@ -577,10 +577,24 @@ function inspectPhoto(rowIndex) {
         modalStatusSel.value = statusSel.value;
     }
 
-    // 6. Catatan Auditor (Editable)
+    // 6. Catatan Auditor (Operasional Excel PLN) & Catatan Evaluasi Model AI (Celengan 1.000)
     const inputNotes = document.getElementById('modal-input-notes');
     if (inputNotes && notesInput) {
         inputNotes.value = notesInput.value;
+    }
+
+    const aiNotesVal = row.getAttribute('data-ai-notes') || '';
+    const inputAiNotes = document.getElementById('modal-input-ai-notes');
+    if (inputAiNotes) {
+        inputAiNotes.value = aiNotesVal;
+    }
+    const cardAiFeedback = document.getElementById('modal-card-ai-feedback');
+    if (cardAiFeedback) {
+        cardAiFeedback.classList.toggle('has-ai-note', aiNotesVal.trim().length > 0);
+    }
+    const aiFeedbackStatus = document.getElementById('modal-ai-feedback-status');
+    if (aiFeedbackStatus) {
+        aiFeedbackStatus.textContent = aiNotesVal.trim().length > 0 ? 'Tersimpan ke Celengan' : '';
     }
 
     // 7. Update Navigasi & Counter Modal
@@ -737,26 +751,44 @@ function onModalFieldChange(fieldType, val) {
         if (typeof recalculateRowDiffAndStatus === 'function') {
             recalculateRowDiffAndStatus(row);
         }
+        if (typeof evaluateRowEditedState === 'function') {
+            evaluateRowEditedState(row, true);
+        }
     } else if (fieldType === 'stan_ai') {
         const input = row.querySelector('.cell-argus');
-        if (input) input.value = val.trim();
-        if (typeof markRowAsEdited === 'function') {
-            markRowAsEdited(row);
-        }
+        const normalized = val.trim() || '-';
+        if (input) input.value = normalized;
         if (typeof recalculateRowDiffAndStatus === 'function') {
             recalculateRowDiffAndStatus(row);
         }
+        if (typeof evaluateRowEditedState === 'function') {
+            evaluateRowEditedState(row, true);
+        }
     } else if (fieldType === 'status') {
-        const sel = row.querySelector('.select-status');
-        if (sel) {
-            sel.value = val;
-            if (typeof updateSelectStyle === 'function') updateSelectStyle(sel);
-            if (typeof markRowAsEdited === 'function') markRowAsEdited(row);
-            if (typeof updateRowStyle === 'function') updateRowStyle(row);
+        if (typeof applyStatusChangeToRow === 'function') {
+            applyStatusChangeToRow(row, val, true);
+        } else {
+            const sel = row.querySelector('.select-status');
+            if (sel) sel.value = val;
+            row.setAttribute('data-status', val);
         }
     } else if (fieldType === 'notes') {
         const notesInput = row.querySelector('.input-notes');
         if (notesInput) notesInput.value = val.trim();
+    } else if (fieldType === 'ai_notes') {
+        const cleanedAiNotes = val.trim();
+        row.setAttribute('data-ai-notes', cleanedAiNotes);
+        const cardAiFeedback = document.getElementById('modal-card-ai-feedback');
+        if (cardAiFeedback) {
+            cardAiFeedback.classList.toggle('has-ai-note', cleanedAiNotes.length > 0);
+        }
+        const aiFeedbackStatus = document.getElementById('modal-ai-feedback-status');
+        if (aiFeedbackStatus) {
+            aiFeedbackStatus.textContent = cleanedAiNotes.length > 0 ? 'Tersimpan ke Celengan' : '';
+        }
+        if (typeof evaluateRowEditedState === 'function') {
+            evaluateRowEditedState(row, true);
+        }
     }
 
     // Sinkronisasi balik tampilan in-modal secara real-time
@@ -787,6 +819,19 @@ function onModalFieldChange(fieldType, val) {
 
     if (typeof updateKPIs === 'function') updateKPIs();
     if (typeof persistCurrentSession === 'function') persistCurrentSession();
+}
+
+function appendAiFeedbackTag(tagText) {
+    const inputEl = document.getElementById('modal-input-ai-notes');
+    if (!inputEl) return;
+
+    const current = inputEl.value.trim();
+    const parts = current ? current.split(',').map(s => s.trim()).filter(Boolean) : [];
+    if (!parts.includes(tagText)) {
+        parts.push(tagText);
+    }
+    inputEl.value = parts.join(', ');
+    onModalFieldChange('ai_notes', inputEl.value);
 }
 
 function handleModalKeydown(event, fieldType) {
@@ -888,4 +933,5 @@ document.addEventListener('DOMContentLoaded', () => {
     updateKPIs();
     if (typeof refreshTableDisplay === 'function') refreshTableDisplay();
     fetchSystemHardwareInfo();
+    if (typeof fetchVaultStatus === 'function') fetchVaultStatus();
 });
