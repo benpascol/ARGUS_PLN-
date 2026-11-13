@@ -1356,10 +1356,41 @@ tr.row-just-edited td {
     cursor: pointer;
     transition: all 0.15s ease;
 }
-.ai-chip-btn:hover {
+.ai-chip-btn:hover,
+.ai-chip-btn.active {
     background: #7C3AED;
     color: #FFFFFF;
     border-color: #7C3AED;
+    box-shadow: 0 2px 5px rgba(124, 58, 237, 0.22);
+}
+
+.ai-note-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.ai-note-input-wrap .modal-input-field {
+    padding-right: 30px;
+}
+.ai-note-clear-btn {
+    position: absolute;
+    right: 6px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: none;
+    background: #E9D5FF;
+    color: #6B21A8;
+    font-size: 11px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+.ai-note-clear-btn:hover {
+    background: #7C3AED;
+    color: #FFFFFF;
 }
 
 .info-card-label {
@@ -1658,4 +1689,70 @@ tr.row-just-edited td {
 .pln-footer .engineer-credit {
     color: #475569;
     font-weight: 600;
+}
+
+/* VAULT MANAGER MODAL */
+.vault-summary-box {
+    background: #FAF5FF;
+    border: 1px solid #E9D5FF;
+    border-radius: 10px;
+    padding: 14px 16px;
+}
+.vault-progress-track {
+    width: 100%;
+    height: 10px;
+    background: #E9D5FF;
+    border-radius: 999px;
+    overflow: hidden;
+}
+.vault-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #7C3AED, #9333EA);
+    border-radius: 999px;
+    transition: width 0.25s ease;
+}
+.vault-releases-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: #F8FAFC;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.vault-release-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 12px;
+}
+.vault-release-meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.vault-release-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: var(--text-heading);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.vault-release-size {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+.vault-release-empty {
+    text-align: center;
+    padding: 16px 10px;
+    font-size: 12px;
+    color: var(--text-muted);
 }

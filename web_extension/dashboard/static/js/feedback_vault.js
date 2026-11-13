@@ -191,28 +191,96 @@ async function flushAllEditedFeedbackToVault() {
     return await flushPendingVaultSync();
 }
 
-function showVaultInfo() {
-    fetchVaultStatus().then(() => {
-        const pct = Math.min(100, Math.round((currentVaultCount / currentVaultTarget) * 100));
-        let releaseInfo = '';
-        if (latestVaultReleases.length > 0) {
-            const latest = latestVaultReleases[0];
-            releaseInfo = `\n\nPaket Rilis Siap (data/feedback_releases/):\n• ${latest.filename} (${latest.size_kb} KB)`;
-        }
-        const msg =
-            `Celengan Feedback AI: ${currentVaultCount} / ${currentVaultTarget} kasus (${pct}%)\n` +
-            `• Tersimpan persisten di harddisk lokal (data/feedback_staging/).\n` +
-            `• 100% AMAN dari Refresh Browser maupun tombol Reset Tabel.\n` +
-            `• Otomatis dikemas ke 1 berkas ZIP (Excel + Foto + Pre-Label) saat genap 1.000 kasus.` +
-            releaseInfo;
+function renderVaultManagerModal() {
+    const pct = Math.min(100, Math.round((currentVaultCount / Math.max(1, currentVaultTarget)) * 100));
+    const counterEl = document.getElementById('vault-modal-counter');
+    const fillEl = document.getElementById('vault-modal-progress-fill');
+    const countLabelEl = document.getElementById('vault-releases-count');
+    const listEl = document.getElementById('vault-releases-list');
+    const pkgBtn = document.getElementById('btn-vault-package-now');
 
-        if (latestVaultReleases.length > 0) {
-            const dl = confirm(`${msg}\n\nIngin mengunduh paket rilis terbaru (${latestVaultReleases[0].filename}) sekarang?`);
-            if (dl) {
-                window.open(`/api/feedback/download/${encodeURIComponent(latestVaultReleases[0].filename)}`, '_blank');
-            }
+    if (counterEl) {
+        counterEl.textContent = `${currentVaultCount} / ${currentVaultTarget} (${pct}%)`;
+    }
+    if (fillEl) {
+        fillEl.style.width = `${pct}%`;
+    }
+    if (pkgBtn) {
+        pkgBtn.disabled = currentVaultCount <= 0;
+    }
+    if (countLabelEl) {
+        countLabelEl.textContent = `${latestVaultReleases.length} paket`;
+    }
+    if (listEl) {
+        if (!latestVaultReleases.length) {
+            listEl.innerHTML = '<div class="vault-release-empty">Belum ada paket rilis ZIP yang terbentuk.</div>';
         } else {
-            alert(msg);
+            listEl.innerHTML = latestVaultReleases.map((rel) => {
+                const safeName = String(rel.filename || '').replace(/[<>&"']/g, '');
+                const sizeKb = Number(rel.size_kb || 0);
+                const dlUrl = `/api/feedback/download/${encodeURIComponent(rel.filename)}`;
+                return `
+                    <div class="vault-release-item">
+                        <div class="vault-release-meta">
+                            <span class="vault-release-name" title="${safeName}">${safeName}</span>
+                            <span class="vault-release-size">${sizeKb} KB</span>
+                        </div>
+                        <a class="btn btn-secondary" style="padding:4px 10px; font-size:11.5px; text-decoration:none;" href="${dlUrl}" target="_blank" rel="noopener">
+                            <i class="fas fa-download"></i> Unduh
+                        </a>
+                    </div>
+                `;
+            }).join('');
         }
+    }
+}
+
+function closeVaultManagerModal() {
+    const modal = document.getElementById('modal-vault-manager');
+    if (modal) modal.style.display = 'none';
+}
+
+async function triggerManualVaultPackage() {
+    if (currentVaultCount <= 0) return;
+    const btn = document.getElementById('btn-vault-package-now');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengemas ZIP...';
+    }
+    try {
+        await flushAllEditedFeedbackToVault();
+        const resp = await fetch('/api/feedback/package-now', { method: 'POST' });
+        const result = await resp.json();
+        updateVaultHeaderBadge(result.staging_count, result.target, result.releases);
+        renderVaultManagerModal();
+        if (typeof showToast === 'function') {
+            if (result.packaged) {
+                showToast(`Paket ZIP (${result.release_zip_name}) berhasil dibuat dari ${result.packaged_count} kasus.`, 'success');
+            } else {
+                showToast(result.message || 'Belum ada data di staging untuk dikemas.', 'info');
+            }
+        }
+    } catch (err) {
+        console.warn('Gagal mengemas paket Celengan AI:', err);
+        if (typeof showToast === 'function') {
+            showToast('Gagal mengemas paket Celengan AI.', 'error');
+        }
+    } finally {
+        if (btn) {
+            btn.innerHTML = '<i class="fas fa-file-zipper"></i> Kemas Paket Sekarang';
+            btn.disabled = currentVaultCount <= 0;
+        }
+    }
+}
+
+function showVaultInfo() {
+    const modal = document.getElementById('modal-vault-manager');
+    if (modal) {
+        renderVaultManagerModal();
+        modal.style.display = 'flex';
+    }
+    fetchVaultStatus().then(() => {
+        renderVaultManagerModal();
     });
 }
+

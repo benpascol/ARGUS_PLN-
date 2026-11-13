@@ -274,13 +274,14 @@ async function auditAllRows() {
     btn.innerHTML = '<i class="fas fa-check-double"></i> Selesai Diaudit';
 
     // POP-UP MODAL SELESAI AUDIT BATCH (UX 6)
-    let match = 0, rolling = 0, diff = 0, nihil = 0, edited = 0;
+    let match = 0, rolling = 0, diff = 0, triage = 0, nihil = 0, edited = 0;
     rows.forEach(r => {
         const st = r.getAttribute('data-status');
         if (st === 'MATCH') match++;
         else if (st === 'ROLLING') rolling++;
         else if (st === 'DIFF') diff++;
-        else if (st === 'NIHIL' || st === 'TRIAGE') nihil++;
+        else if (st === 'TRIAGE') triage++;
+        else if (st === 'NIHIL') nihil++;
         if (r.getAttribute('data-edited') === 'true') edited++;
     });
 
@@ -288,6 +289,7 @@ async function auditAllRows() {
     const mMatch = document.getElementById('batch-modal-match');
     const mRolling = document.getElementById('batch-modal-rolling');
     const mDiff = document.getElementById('batch-modal-diff');
+    const mTriage = document.getElementById('batch-modal-triage');
     const mNihil = document.getElementById('batch-modal-nihil');
     const mEdited = document.getElementById('batch-modal-edited');
     const mNotes = document.getElementById('batch-modal-notes');
@@ -297,10 +299,14 @@ async function auditAllRows() {
     if (mMatch) mMatch.textContent = `${match} (${totalCount ? Math.round(match/totalCount*100) : 0}%)`;
     if (mRolling) mRolling.textContent = `${rolling} (${totalCount ? Math.round(rolling/totalCount*100) : 0}%)`;
     if (mDiff) mDiff.textContent = `${diff} (${totalCount ? Math.round(diff/totalCount*100) : 0}%)`;
+    if (mTriage) mTriage.textContent = `${triage} (${totalCount ? Math.round(triage/totalCount*100) : 0}%)`;
     if (mNihil) mNihil.textContent = nihil;
     if (mEdited) mEdited.textContent = edited;
     if (mNotes) {
-        let noteMsg = `Total waktu: ${totalBatchDuration} detik (Akselerasi 4x Worker GPU RTX 4060).`;
+        const hwInfo = window.ARGUS_HARDWARE_INFO || {};
+        const concurrency = hwInfo.concurrency || window.BATCH_CONCURRENCY || 4;
+        const deviceName = hwInfo.device_name || 'Local Engine';
+        let noteMsg = `Total waktu: ${totalBatchDuration} detik (Akselerasi ${concurrency}x Worker • ${deviceName}).`;
         if (protectedCount > 0) {
             noteMsg += ` ${protectedCount} baris hasil koreksi auditor tetap aman terlindungi.`;
         }

@@ -73,13 +73,16 @@
                         <span id="modal-ai-feedback-status" style="font-size:10px; font-weight:700; color:#7C3AED;"></span>
                     </div>
                     <div class="ai-quick-chips">
-                        <button type="button" class="ai-chip-btn" onclick="appendAiFeedbackTag('9↔3')" title="Tambahkan tag kekeliruan angka 9 dan 3">9 ↔ 3</button>
-                        <button type="button" class="ai-chip-btn" onclick="appendAiFeedbackTag('2↔5')" title="Tambahkan tag kekeliruan angka 2 dan 5">2 ↔ 5</button>
-                        <button type="button" class="ai-chip-btn" onclick="appendAiFeedbackTag('1↔7')" title="Tambahkan tag kekeliruan angka 1 dan 7">1 ↔ 7</button>
-                        <button type="button" class="ai-chip-btn" onclick="appendAiFeedbackTag('Digit Kurang/Terpotong')" title="Tambahkan tag angka kurang atau terpotong">Digit Terpotong</button>
-                        <button type="button" class="ai-chip-btn" onclick="appendAiFeedbackTag('Rolling Meleset')" title="Tambahkan tag salah baca drum rolling">Rolling Meleset</button>
+                        <button type="button" class="ai-chip-btn" data-ai-tag="Salah Baca Angka" onclick="appendAiFeedbackTag('Salah Baca Angka')" title="Klik untuk pasang/lepas tag klasifikasi salah baca atau tertukar angka">Salah Baca Angka</button>
+                        <button type="button" class="ai-chip-btn" data-ai-tag="Digit Kurang/Terpotong" onclick="appendAiFeedbackTag('Digit Kurang/Terpotong')" title="Klik untuk pasang/lepas tag angka kurang atau terpotong">Digit Terpotong</button>
+                        <button type="button" class="ai-chip-btn" data-ai-tag="Rolling Meleset" onclick="appendAiFeedbackTag('Rolling Meleset')" title="Klik untuk pasang/lepas tag salah baca drum rolling">Rolling Meleset</button>
                     </div>
-                    <input type="text" id="modal-input-ai-notes" class="modal-input-field" placeholder="Catat salah baca AI (tersimpan ke Celengan AI, bukan ke Excel PLN)..." onchange="onModalFieldChange('ai_notes', this.value)" onkeydown="handleModalKeydown(event, 'ai_notes')">
+                    <div class="ai-note-input-wrap">
+                        <input type="text" id="modal-input-ai-notes" class="modal-input-field" placeholder="Catat salah baca AI (tersimpan ke Celengan AI, bukan ke Excel PLN)..." oninput="onModalFieldChange('ai_notes', this.value)" onchange="onModalFieldChange('ai_notes', this.value)" onkeydown="handleModalKeydown(event, 'ai_notes')">
+                        <button type="button" id="btn-clear-ai-notes" class="ai-note-clear-btn" onclick="clearAiFeedbackNotes()" title="Kosongkan catatan AI" style="display:none;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -193,12 +196,16 @@
                 <div class="batch-stat-num" id="batch-modal-diff" style="color:#DC2626;">0</div>
                 <div class="batch-stat-label">Beda Stand</div>
             </div>
+            <div class="batch-stat-box" style="border-top:3px solid #7C3AED;">
+                <div class="batch-stat-num" id="batch-modal-triage" style="color:#7C3AED;">0</div>
+                <div class="batch-stat-label">Perlu Tinjau Ulang</div>
+            </div>
             <div class="batch-stat-box" style="border-top:3px solid #64748B;">
                 <div class="batch-stat-num" id="batch-modal-nihil" style="color:#64748B;">0</div>
-                <div class="batch-stat-label">Nihil / Triage</div>
+                <div class="batch-stat-label">Bukan KWH / Nihil</div>
             </div>
-            <div class="batch-stat-box" style="border-top:3px solid #7C3AED;">
-                <div class="batch-stat-num" id="batch-modal-edited" style="color:#7C3AED;">0</div>
+            <div class="batch-stat-box" style="border-top:3px solid #0284C7;">
+                <div class="batch-stat-num" id="batch-modal-edited" style="color:#0284C7;">0</div>
                 <div class="batch-stat-label">Koreksi Auditor</div>
             </div>
         </div>
@@ -240,6 +247,56 @@
             </button>
             <button class="btn btn-run" style="background:#DC2626;" onclick="executeResetTable()">
                 <i class="fas fa-trash"></i> Ya, Reset Tabel
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL KELOLA CELENGAN FEEDBACK AI (PERSISTENT STAGING & RELEASES) -->
+<div class="modal-backdrop" id="modal-vault-manager" style="display:none;" onclick="closeVaultManagerModal()">
+    <div class="modal-window" style="max-width: 560px; padding: 24px;" onclick="event.stopPropagation()">
+        <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border-color); padding-bottom:14px; margin-bottom:16px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:42px; height:42px; border-radius:50%; background:#F3E8FF; color:#7C3AED; display:flex; align-items:center; justify-content:center; font-size:19px; flex-shrink:0;">
+                    <i class="fas fa-piggy-bank"></i>
+                </div>
+                <div>
+                    <h4 style="font-size:16px; font-weight:800; color:var(--text-heading); margin:0;">Celengan Feedback AI (Active Learning)</h4>
+                    <p style="font-size:12px; color:var(--text-muted); margin:0;">Tersimpan persisten di disk lokal & aman dari Refresh / Reset Tabel</p>
+                </div>
+            </div>
+            <button type="button" class="btn btn-secondary" style="padding:4px 10px;" onclick="closeVaultManagerModal()" title="Tutup (ESC)"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="vault-summary-box">
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;">
+                <span style="font-size:12.5px; font-weight:700; color:#581C87;">Progres Tabungan Kasus Sulit / Koreksi</span>
+                <strong id="vault-modal-counter" style="font-family:'JetBrains Mono'; font-size:14px; color:#7C3AED;">0 / 1000 (0%)</strong>
+            </div>
+            <div class="vault-progress-track">
+                <div class="vault-progress-fill" id="vault-modal-progress-fill" style="width:0%;"></div>
+            </div>
+            <p style="font-size:11.5px; color:#6B21A8; margin:8px 0 0 0; line-height:1.45;">
+                Folder staging: <code>data/feedback_staging/</code>. Otomatis dikemas ke 1 berkas ZIP (Excel Master + Foto + Pre-Label YOLO) ke <code>data/feedback_releases/</code> saat mencapai 1.000 kasus unik.
+            </p>
+        </div>
+
+        <div style="margin-top:16px;">
+            <div style="font-size:12px; font-weight:700; color:var(--text-heading); margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                <span><i class="fas fa-box-archive" style="color:#7C3AED; margin-right:5px;"></i>Paket Rilis ZIP Siap Unduh</span>
+                <span id="vault-releases-count" style="font-size:11px; color:var(--text-muted);">0 paket</span>
+            </div>
+            <div id="vault-releases-list" class="vault-releases-list">
+                <div class="vault-release-empty">Belum ada paket rilis ZIP yang terbentuk.</div>
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:20px; padding-top:14px; border-top:1px solid var(--border-color); flex-wrap:wrap;">
+            <button type="button" class="btn btn-secondary" id="btn-vault-package-now" onclick="triggerManualVaultPackage()" title="Kemas kasus yang ada di staging menjadi file ZIP sekarang (khusus Tim IT / Engineer)">
+                <i class="fas fa-file-zipper"></i> Kemas Paket Sekarang
+            </button>
+            <button type="button" class="btn btn-run" onclick="closeVaultManagerModal()">
+                <i class="fas fa-check"></i> Tutup
             </button>
         </div>
     </div>
