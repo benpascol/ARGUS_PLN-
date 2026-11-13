@@ -256,6 +256,38 @@ function handleSortTable(colKey) {
 }
 
 /**
+ * Memeriksa apakah baris memenuhi filter KPI dan kata kunci pencarian aktif.
+ * Menjadi sumber tunggal untuk paginasi, penyaringan tabel, dan navigasi modal.
+ */
+function rowMatchesFilterAndSearch(row, filterKey = currentFilter, query = currentSearchQuery) {
+    if (!row) return false;
+    const st = row.getAttribute('data-status') || '';
+    const isEdited = row.getAttribute('data-edited') === 'true';
+
+    let passFilter = false;
+    if (filterKey === 'ALL') {
+        passFilter = true;
+    } else if (filterKey === 'EDITED') {
+        passFilter = isEdited;
+    } else {
+        passFilter = (st === filterKey);
+    }
+
+    if (!passFilter) return false;
+
+    const q = (query || '').trim().toLowerCase();
+    if (q && !row.textContent.toLowerCase().includes(q)) {
+        return false;
+    }
+    return true;
+}
+
+function getMatchingTableRows() {
+    const allRows = Array.from(document.querySelectorAll('#table-body tr:not(#empty-state-row)'));
+    return allRows.filter(r => rowMatchesFilterAndSearch(r));
+}
+
+/**
  * Enterprise Virtual Slicing & Pagination
  * Menggabungkan filter status kartu KPI, kata kunci pencarian,
  * dan pembagian halaman (pagination) dalam 1 alur terpadu secepat kilat (<1ms).
@@ -274,42 +306,13 @@ function refreshTableDisplay() {
     if (emptyRow) emptyRow.style.display = 'none';
 
     // 1. Tentukan baris yang lolos filter status dan kata kunci pencarian
-    const q = (currentSearchQuery || '').trim().toLowerCase();
     const matchingRows = [];
-
     for (let i = 0; i < totalRows; i++) {
         const r = allRows[i];
-        const st = r.getAttribute('data-status') || '';
-        const isEdited = r.getAttribute('data-edited') === 'true';
-
-        // Filter status matching
-        let passFilter = false;
-        if (currentFilter === 'ALL') {
-            passFilter = true;
-        } else if (currentFilter === 'EDITED') {
-            passFilter = isEdited;
-        } else if (currentFilter === 'TRIAGE') {
-            passFilter = (st === 'TRIAGE');
-        } else if (currentFilter === 'NIHIL') {
-            passFilter = (st === 'NIHIL');
-        } else {
-            passFilter = (st === currentFilter);
-        }
-
-        if (!passFilter) {
+        if (!rowMatchesFilterAndSearch(r)) {
             r.style.display = 'none';
             continue;
         }
-
-        // Search text matching
-        if (q) {
-            const text = r.textContent.toLowerCase();
-            if (!text.includes(q)) {
-                r.style.display = 'none';
-                continue;
-            }
-        }
-
         matchingRows.push(r);
     }
 
@@ -392,21 +395,7 @@ function updatePaginationUI(start, end, total, page, totalPages) {
 }
 
 function goToPage(action) {
-    const allRows = Array.from(document.querySelectorAll('#table-body tr:not(#empty-state-row)'));
-    const q = (currentSearchQuery || '').trim().toLowerCase();
-    let matchingCount = 0;
-    for (let i = 0; i < allRows.length; i++) {
-        const r = allRows[i];
-        const st = r.getAttribute('data-status') || '';
-        const isEdited = r.getAttribute('data-edited') === 'true';
-        let passFilter = (currentFilter === 'ALL') ||
-                         (currentFilter === 'EDITED' && isEdited) ||
-                         (currentFilter === 'NIHIL' && (st === 'NIHIL' || st === 'TRIAGE')) ||
-                         (st === currentFilter);
-        if (!passFilter) continue;
-        if (q && !r.textContent.toLowerCase().includes(q)) continue;
-        matchingCount++;
-    }
+    const matchingCount = getMatchingTableRows().length;
 
     const effectivePageSize = (pageSize === 'ALL' || pageSize >= 999999) ? (matchingCount || 1) : parseInt(pageSize, 10);
     const totalPages = Math.max(1, Math.ceil(matchingCount / effectivePageSize));
@@ -509,18 +498,48 @@ window.addEventListener('mouseup', () => {
     }
 });
 
+function getInspectorOrderedRows(currentRow = null) {
+    const filteredRows = getMatchingTableRows();
+    if (!currentRow || filteredRows.includes(currentRow)) {
+        return filteredRows;
+    }
+    return Array.from(document.querySelectorAll('#table-body tr:not(#empty-state-row)'));
+}
+
+function syncAiFeedbackCardUI(aiNotesText) {
+    const cleaned = String(aiNotesText || '').trim();
+    const cardAiFeedback = document.getElementById('modal-card-ai-feedback');
+    if (cardAiFeedback) {
+        cardAiFeedback.classList.toggle('has-ai-note', cleaned.length > 0);
+    }
+    const aiFeedbackStatus = document.getElementById('modal-ai-feedback-status');
+    if (aiFeedbackStatus) {
+        aiFeedbackStatus.textContent = cleaned.length > 0 ? 'Tersimpan ke Celengan' : '';
+    }
+    const clearBtn = document.getElementById('btn-clear-ai-notes');
+    if (clearBtn) {
+        clearBtn.style.display = cleaned.length > 0 ? 'inline-flex' : 'none';
+    }
+
+    const activeTags = cleaned
+        ? cleaned.split(',').map(s => s.trim()).filter(Boolean)
+        : [];
+    document.querySelectorAll('#modal-card-ai-feedback .ai-chip-btn').forEach(btn => {
+        const tag = btn.getAttribute('data-ai-tag') || '';
+        btn.classList.toggle('active', tag.length > 0 && activeTags.includes(tag));
+    });
+}
+
 function inspectPhoto(rowIndex) {
-    const allRows = Array.from(document.querySelectorAll('#table-body tr:not(#empty-state-row)'));
-    const totalCount = allRows.length;
-    if (totalCount === 0) return;
-
-    // Clamp index
-    if (rowIndex < 0) rowIndex = 0;
-    if (rowIndex >= totalCount) rowIndex = totalCount - 1;
-
-    currentInspectedRowIndex = rowIndex;
     const row = document.getElementById(`row-${rowIndex}`);
     if (!row) return;
+
+    const navRows = getInspectorOrderedRows(row);
+    const totalCount = navRows.length;
+    if (totalCount === 0) return;
+
+    const navPos = Math.max(0, navRows.indexOf(row));
+    currentInspectedRowIndex = rowIndex;
 
     resetZoom();
 
@@ -588,29 +607,22 @@ function inspectPhoto(rowIndex) {
     if (inputAiNotes) {
         inputAiNotes.value = aiNotesVal;
     }
-    const cardAiFeedback = document.getElementById('modal-card-ai-feedback');
-    if (cardAiFeedback) {
-        cardAiFeedback.classList.toggle('has-ai-note', aiNotesVal.trim().length > 0);
-    }
-    const aiFeedbackStatus = document.getElementById('modal-ai-feedback-status');
-    if (aiFeedbackStatus) {
-        aiFeedbackStatus.textContent = aiNotesVal.trim().length > 0 ? 'Tersimpan ke Celengan' : '';
-    }
+    syncAiFeedbackCardUI(aiNotesVal);
 
-    // 7. Update Navigasi & Counter Modal
+    // 7. Update Navigasi & Counter Modal (mengikuti urutan filter & sortir aktif)
     const counterBadge = document.getElementById('modal-counter-badge');
-    if (counterBadge) counterBadge.textContent = `Foto #${rowIndex + 1} dari ${totalCount}`;
+    if (counterBadge) counterBadge.textContent = `Foto #${navPos + 1} dari ${totalCount}`;
 
     const rowNum = document.getElementById('modal-current-row-num');
-    if (rowNum) rowNum.textContent = rowIndex + 1;
+    if (rowNum) rowNum.textContent = navPos + 1;
 
     const totalRowNum = document.getElementById('modal-total-rows-num');
     if (totalRowNum) totalRowNum.textContent = totalCount;
 
     const btnPrev = document.getElementById('btn-modal-prev');
     const btnNext = document.getElementById('btn-modal-next');
-    if (btnPrev) btnPrev.disabled = (rowIndex <= 0);
-    if (btnNext) btnNext.disabled = (rowIndex >= totalCount - 1);
+    if (btnPrev) btnPrev.disabled = (navPos <= 0);
+    if (btnNext) btnNext.disabled = (navPos >= totalCount - 1);
 
     // 8. Terapkan Tema Warna Dinamis In-Modal sesuai Vonis Audit (Neutral jika belum diaudit)
     const currentStatus = row.getAttribute('data-status') || (statusSel ? statusSel.value : 'PENDING');
@@ -731,11 +743,36 @@ function updateModalVerdictTheme(status, diffVal) {
     }
 }
 
+function commitFocusedModalFieldIfNeeded() {
+    const active = document.activeElement;
+    if (!active) return;
+    const fieldMap = {
+        'modal-stan-lap': 'stan_lap',
+        'modal-stan-ai': 'stan_ai',
+        'modal-input-notes': 'notes',
+        'modal-input-ai-notes': 'ai_notes'
+    };
+    const fieldType = fieldMap[active.id];
+    if (fieldType) {
+        onModalFieldChange(fieldType, active.value);
+    }
+}
+
 function navigateInspector(delta) {
     if (currentInspectedRowIndex < 0) return;
-    const allRows = Array.from(document.querySelectorAll('#table-body tr:not(#empty-state-row)'));
-    const targetIdx = currentInspectedRowIndex + delta;
-    if (targetIdx >= 0 && targetIdx < allRows.length) {
+    commitFocusedModalFieldIfNeeded();
+    const currentRow = document.getElementById(`row-${currentInspectedRowIndex}`);
+    if (!currentRow) return;
+
+    const navRows = getInspectorOrderedRows(currentRow);
+    const currentPos = navRows.indexOf(currentRow);
+    if (currentPos < 0) return;
+
+    const targetRow = navRows[currentPos + delta];
+    if (!targetRow || !targetRow.id) return;
+
+    const targetIdx = parseInt(targetRow.id.replace('row-', ''), 10);
+    if (!isNaN(targetIdx)) {
         inspectPhoto(targetIdx);
     }
 }
@@ -778,14 +815,7 @@ function onModalFieldChange(fieldType, val) {
     } else if (fieldType === 'ai_notes') {
         const cleanedAiNotes = val.trim();
         row.setAttribute('data-ai-notes', cleanedAiNotes);
-        const cardAiFeedback = document.getElementById('modal-card-ai-feedback');
-        if (cardAiFeedback) {
-            cardAiFeedback.classList.toggle('has-ai-note', cleanedAiNotes.length > 0);
-        }
-        const aiFeedbackStatus = document.getElementById('modal-ai-feedback-status');
-        if (aiFeedbackStatus) {
-            aiFeedbackStatus.textContent = cleanedAiNotes.length > 0 ? 'Tersimpan ke Celengan' : '';
-        }
+        syncAiFeedbackCardUI(cleanedAiNotes);
         if (typeof evaluateRowEditedState === 'function') {
             evaluateRowEditedState(row, true);
         }
@@ -826,12 +856,21 @@ function appendAiFeedbackTag(tagText) {
     if (!inputEl) return;
 
     const current = inputEl.value.trim();
-    const parts = current ? current.split(',').map(s => s.trim()).filter(Boolean) : [];
-    if (!parts.includes(tagText)) {
+    let parts = current ? current.split(',').map(s => s.trim()).filter(Boolean) : [];
+    if (parts.includes(tagText)) {
+        parts = parts.filter(p => p !== tagText);
+    } else {
         parts.push(tagText);
     }
     inputEl.value = parts.join(', ');
     onModalFieldChange('ai_notes', inputEl.value);
+}
+
+function clearAiFeedbackNotes() {
+    const inputEl = document.getElementById('modal-input-ai-notes');
+    if (!inputEl) return;
+    inputEl.value = '';
+    onModalFieldChange('ai_notes', '');
 }
 
 function handleModalKeydown(event, fieldType) {
@@ -841,6 +880,7 @@ function handleModalKeydown(event, fieldType) {
 }
 
 function closeInspector() {
+    commitFocusedModalFieldIfNeeded();
     const modal = document.getElementById('modal-inspector');
     if (modal) modal.style.display = 'none';
 }
@@ -860,7 +900,8 @@ document.addEventListener('keydown', (e) => {
             'modal-batch-complete',
             'modal-excel-result',
             'modal-duplicate',
-            'modal-reset-confirm'
+            'modal-reset-confirm',
+            'modal-vault-manager'
         ];
         otherModals.forEach(id => {
             const m = document.getElementById(id);
@@ -911,6 +952,7 @@ async function fetchSystemHardwareInfo() {
             const data = await resp.json();
             const hw = data.hardware;
             if (hw) {
+                window.ARGUS_HARDWARE_INFO = hw;
                 const badge = document.getElementById('engine-hardware-badge');
                 if (badge) {
                     badge.textContent = hw.engine_label || `ENGINE: ARGUS AI V5 (${hw.type})`;
