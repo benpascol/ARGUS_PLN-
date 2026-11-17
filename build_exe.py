@@ -127,7 +127,7 @@ def build():
         shutil.copy2(BASE_DIR / "PETUNJUK_PENGGUNAAN_ARGUS.txt", app_dist_dir / "PETUNJUK_PENGGUNAAN_ARGUS.txt")
         print("   [+] Menyalin PETUNJUK_PENGGUNAAN_ARGUS.txt...")
 
-    # 7. Buat file batch launcher praktis
+    # 7. Buat file batch launcher praktis (Dashboard & Panduan Tutorial)
     bat_content = (
         "@echo off\n"
         "title ARGUS AI Vision - PT PLN (Persero) UP3 Mojokerto\n"
@@ -135,6 +135,21 @@ def build():
         "start \"\" \"%~dp0ARGUS.exe\"\n"
     )
     (app_dist_dir / "Mulai_ARGUS.bat").write_text(bat_content, encoding="utf-8")
+
+    tutorial_bat_content = (
+        "@echo off\n"
+        "title Panduan ARGUS AI V5 - PT PLN (Persero) UP3 Mojokerto\n"
+        "cd /d \"%~dp0\"\n"
+        "powershell -NoProfile -Command \"$ok = $false; try { $c = New-Object System.Net.Sockets.TcpClient; $ar = $c.BeginConnect('127.0.0.1', 8000, $null, $null); if ($ar.AsyncWaitHandle.WaitOne(250)) { $c.EndConnect($ar); $ok = $true }; $c.Close() } catch {}; if ($ok) { exit 0 } else { exit 1 }\"\n"
+        "if %errorlevel%==0 (\n"
+        "    start \"\" \"http://127.0.0.1:8000/tutorial\"\n"
+        "    exit /b 0\n"
+        ")\n"
+        "echo Menyalakan engine ARGUS terlebih dahulu untuk membuka Panduan Interaktif...\n"
+        "start \"\" \"%~dp0ARGUS.exe\"\n"
+        "powershell -NoProfile -Command \"for ($i=0; $i -lt 60; $i++) { try { $r = Invoke-WebRequest -Uri 'http://127.0.0.1:8000/tutorial' -UseBasicParsing -TimeoutSec 1; if ($r.StatusCode -eq 200) { Start-Process 'http://127.0.0.1:8000/tutorial'; exit 0 } } catch {}; Start-Sleep -Milliseconds 500 }; Start-Process 'http://127.0.0.1:8000/tutorial'\"\n"
+    )
+    (app_dist_dir / "Buka_Panduan_ARGUS.bat").write_text(tutorial_bat_content, encoding="utf-8")
 
     print("\n" + "=" * 80)
     print("🎉 SUKSES! PAKET APLIKASI PORTABLE ARGUS SELESAI DIBANGUN!")
@@ -146,6 +161,8 @@ def build():
     print(f"   2. Klik ganda pada berkas 'ARGUS.exe' (atau 'Mulai_ARGUS.bat').")
     print("   3. Jendela terminal PLN akan terbuka, dan browser akan otomatis menuju ke:")
     print("      http://127.0.0.1:8000/dashboard")
+    print("   4. Untuk membaca tutorial lengkap di browser, klik ganda 'Buka_Panduan_ARGUS.bat'")
+    print("      (atau buka http://127.0.0.1:8000/tutorial).")
     print("=" * 80)
 
 if __name__ == "__main__":

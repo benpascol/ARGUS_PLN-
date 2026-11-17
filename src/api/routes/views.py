@@ -8,9 +8,10 @@ Menyediakan halaman web dan aset statis:
 1. GET /                    : Health check status
 2. GET /api/system-info     : Deteksi hardware riil GPU RTX / CPU
 3. GET /dashboard           : Halaman antarmuka utama Dashboard Modular
-4. GET /simulator           : Halaman simulator portal ACMT PLN
-5. GET /favicon.ico         : Favicon SVG resmi PLN
-6. GET /sample-photo/{path} : Foto sampel meteran dengan fuzzy matcher
+4. GET /tutorial            : Halaman panduan operasional & tutorial ARGUS V5
+5. GET /simulator           : Halaman simulator portal ACMT PLN
+6. GET /favicon.ico         : Favicon SVG resmi PLN
+7. GET /sample-photo/{path} : Foto sampel meteran dengan fuzzy matcher
 =============================================================================
 """
 
@@ -76,6 +77,17 @@ def get_dashboard(request: Request):
     if dash_path.is_file():
         return HTMLResponse(content=dash_path.read_text(encoding="utf-8"))
     raise HTTPException(status_code=404, detail="Berkas dashboard tidak ditemukan.")
+
+
+@router.get("/tutorial", response_class=HTMLResponse)
+def get_tutorial(request: Request):
+    """Halaman Panduan & Tutorial Operasional ARGUS V5 untuk Tim PLN UP3 Mojokerto."""
+    tutorial_path = DASHBOARD_DIR / "tutorial.html"
+    if templates and tutorial_path.is_file():
+        return templates.TemplateResponse(request=request, name="tutorial.html")
+    if tutorial_path.is_file():
+        return HTMLResponse(content=tutorial_path.read_text(encoding="utf-8"))
+    raise HTTPException(status_code=404, detail="Berkas tutorial.html tidak ditemukan.")
 
 
 @router.get("/favicon.ico")

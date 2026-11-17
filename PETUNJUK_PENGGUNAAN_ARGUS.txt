@@ -138,15 +138,20 @@ ARGUS/
    otomatis tanpa perlu memuat ulang halaman!
 
 --- LANGKAH E: CELENGAN FEEDBACK AI (TARGET 1.000 KASUS) ---
-1. Pil 'Celengan AI: X / 1000' pada Header memantau jumlah kasus koreksi/evaluasi
-   model yang telah ditabung (tersimpan fisik di data/feedback_staging/).
+1. Kartu mini 'CELENGAN AI' pada Header memantau jumlah kasus koreksi/evaluasi
+   model yang telah ditabung (tersimpan persisten di direktori profil Windows:
+   %LOCALAPPDATA%\ARGUS_PLN\feedback_vault\ sehingga aman meski aplikasi di-repack
+   atau di-upgrade ke versi baru).
 2. Setiap baris yang dikoreksi atau diberi Catatan Model AI otomatis tersimpan
    aman di harddisk lokal.
 3. Tabungan Celengan AI TIDAK akan hilang meskipun browser di-Refresh (F5),
    aplikasi ditutup, ataupun petugas menekan tombol [🔄 Reset Tabel].
-4. Begitu terkumpul genap 1.000 kasus unik, sistem otomatis membungkus 1 paket
+4. Klik kartu 'CELENGAN AI' di Header untuk membuka jendela pengelola,
+   mengklik [📁 Buka Folder Celengan] langsung di File Explorer, atau mengunduh
+   paket ZIP rilis yang sudah siap.
+5. Begitu terkumpul genap 1.000 kasus unik, sistem otomatis membungkus 1 paket
    ZIP siap latih ulang (foto + crop + pre-label YOLO + Excel Master Feedback)
-   di folder data/feedback_releases/ untuk tim IT/Engineer.
+   ke subfolder releases\ untuk tim IT/Engineer.
 
 --- LANGKAH F: MENGUNDUH LAPORAN RESMI EXCEL ---
 1. Setelah audit dan verifikasi selesai, klik tombol:
