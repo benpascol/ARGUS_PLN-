@@ -8,12 +8,15 @@ Menyediakan endpoint manajemen Celengan Feedback AI (Target 1.000 kasus):
 1. GET  /api/feedback/status            : Jumlah tabungan aktif & daftar rilis ZIP
 2. POST /api/feedback/sync              : Simpan/hapus entri koreksi & catatan AI secara persisten
 3. POST /api/feedback/package-now       : Kemas paksa tabungan menjadi ZIP (opsional)
-4. GET  /api/feedback/download/{fname}  : Unduh berkas paket ZIP rilis tim IT
+4. POST /api/feedback/open-folder       : Buka direktori %LOCALAPPDATA% Celengan AI di File Explorer
+5. GET  /api/feedback/download/{fname}  : Unduh berkas paket ZIP rilis tim IT
 =============================================================================
 """
 
+import os
 import sys
 import asyncio
+import subprocess
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel
@@ -92,6 +95,36 @@ async def feedback_package_now():
     """Mengemas tabungan celengan saat ini menjadi berkas ZIP lebih awal."""
     result = await asyncio.to_thread(force_package_release)
     return JSONResponse(content=result)
+
+
+@router.post("/open-folder")
+async def feedback_open_folder():
+    """Membuka direktori penyimpanan Celengan AI (%LOCALAPPDATA%) langsung di File Explorer."""
+    status = await asyncio.to_thread(get_vault_status)
+    target_dir = Path(status["vault_dir"])
+    target_dir.mkdir(parents=True, exist_ok=True)
+    opened = False
+    try:
+        if os.name == "nt":
+            os.startfile(str(target_dir))
+            opened = True
+        elif sys.platform == "darwin":
+            subprocess.Popen(["open", str(target_dir)])
+            opened = True
+        else:
+            subprocess.Popen(["xdg-open", str(target_dir)])
+            opened = True
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Gagal membuka folder Celengan AI: {exc}")
+
+    return JSONResponse(
+        content={
+            "opened": opened,
+            "vault_dir": str(target_dir),
+            "staging_dir": status.get("staging_dir", ""),
+            "releases_dir": status.get("releases_dir", ""),
+        }
+    )
 
 
 @router.get("/download/{filename}")

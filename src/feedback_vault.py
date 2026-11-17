@@ -5,12 +5,13 @@ PT PLN (Persero) UP3 Mojokerto
 Lead Engineer: Benedictus Pascal
 =============================================================================
 Menyimpan dan mengakumulasi kasus koreksi auditor & catatan evaluasi model AI
-secara persisten di disk lokal (data/feedback_staging/) lintas sesi, lintas
-refresh browser, dan aman dari tombol Reset Tabel.
+secara persisten di direktori profil pengguna lokal (%LOCALAPPDATA%\ARGUS_PLN\feedback_vault\)
+sehingga aman lintas sesi, lintas refresh browser, aman dari tombol Reset Tabel,
+dan 100% kebal saat aplikasi di-repack atau di-upgrade ke versi baru.
 
 Ketika tabungan kasus mencapai target kuota (1.000 kasus unik), sistem
 otomatis mengemas 1 Paket Rilis ZIP lengkap (Excel Master Feedback + Citra +
-AI Pre-Label YOLOv8) ke data/feedback_releases/ lalu mengosongkan celengan.
+AI Pre-Label YOLOv8) ke subfolder releases/ lalu mengosongkan staging.
 =============================================================================
 """
 
@@ -32,13 +33,74 @@ from src.api.dependencies import BASE_DIR, decode_base64_string, resolve_photo_p
 
 FEEDBACK_TARGET_COUNT = 1000
 
-STAGING_DIR = BASE_DIR / "data" / "feedback_staging"
+
+def get_default_vault_dir() -> Path:
+    """Mengembalikan direktori persisten Celengan AI di profil user (%LOCALAPPDATA%\\ARGUS_PLN\\feedback_vault)."""
+    if sys_local := os.environ.get("LOCALAPPDATA"):
+        return Path(sys_local) / "ARGUS_PLN" / "feedback_vault"
+    if os.name == "nt":
+        return Path.home() / "AppData" / "Local" / "ARGUS_PLN" / "feedback_vault"
+    return Path.home() / ".local" / "share" / "ARGUS_PLN" / "feedback_vault"
+
+
+VAULT_BASE_DIR = get_default_vault_dir()
+_DEFAULT_VAULT_BASE_DIR = VAULT_BASE_DIR
+
+STAGING_DIR = VAULT_BASE_DIR / "staging"
 STAGING_IMAGES_DIR = STAGING_DIR / "images"
 STAGING_LABELS_DIR = STAGING_DIR / "labels"
 MANIFEST_FILE = STAGING_DIR / "manifest.json"
-RELEASES_DIR = BASE_DIR / "data" / "feedback_releases"
+RELEASES_DIR = VAULT_BASE_DIR / "releases"
 
 _VAULT_LOCK = threading.Lock()
+_LEGACY_MIGRATED = False
+
+
+def _migrate_legacy_vault_if_needed():
+    """Memindahkan data Celengan lama dari folder aplikasi (data/feedback_*) ke %LOCALAPPDATA% sekali saja."""
+    global _LEGACY_MIGRATED
+    if _LEGACY_MIGRATED:
+        return
+    _LEGACY_MIGRATED = True
+
+    # Hanya lakukan migrasi otomatis saat memakai direktori default produksi (bukan direktori test terisolasi)
+    if STAGING_DIR != _DEFAULT_VAULT_BASE_DIR / "staging":
+        return
+    if MANIFEST_FILE.is_file():
+        try:
+            existing = json.loads(MANIFEST_FILE.read_text(encoding="utf-8"))
+            if isinstance(existing, dict) and len(existing) > 0:
+                return
+        except Exception:
+            pass
+
+    legacy_staging = BASE_DIR / "data" / "feedback_staging"
+    legacy_manifest = legacy_staging / "manifest.json"
+    if legacy_manifest.is_file():
+        try:
+            legacy_data = json.loads(legacy_manifest.read_text(encoding="utf-8"))
+            if isinstance(legacy_data, dict) and len(legacy_data) > 0:
+                for sub in ("images", "labels"):
+                    src_sub = legacy_staging / sub
+                    dst_sub = STAGING_DIR / sub
+                    if src_sub.is_dir():
+                        dst_sub.mkdir(parents=True, exist_ok=True)
+                        for f in src_sub.iterdir():
+                            if f.is_file() and not (dst_sub / f.name).exists():
+                                shutil.copy2(str(f), str(dst_sub / f.name))
+                shutil.copy2(str(legacy_manifest), str(MANIFEST_FILE))
+        except Exception:
+            pass
+
+    legacy_releases = BASE_DIR / "data" / "feedback_releases"
+    if legacy_releases.is_dir():
+        RELEASES_DIR.mkdir(parents=True, exist_ok=True)
+        for z in legacy_releases.glob("ARGUS_AI_Feedback_*.zip"):
+            if z.is_file() and not (RELEASES_DIR / z.name).exists():
+                try:
+                    shutil.copy2(str(z), str(RELEASES_DIR / z.name))
+                except Exception:
+                    pass
 
 
 def make_item_key(idpel: str, filename: str) -> str:
@@ -53,6 +115,7 @@ def _ensure_dirs():
     STAGING_IMAGES_DIR.mkdir(parents=True, exist_ok=True)
     STAGING_LABELS_DIR.mkdir(parents=True, exist_ok=True)
     RELEASES_DIR.mkdir(parents=True, exist_ok=True)
+    _migrate_legacy_vault_if_needed()
 
 
 def _load_manifest_unlocked() -> Dict[str, Dict[str, Any]]:
@@ -328,6 +391,11 @@ def _package_release_locked(manifest: Dict[str, Dict[str, Any]]) -> Optional[str
     return zip_name
 
 
+def get_vault_base_dir() -> Path:
+    """Mengembalikan direktori induk aktif Celengan AI (selalu mengikuti STAGING_DIR.parent)."""
+    return STAGING_DIR.parent
+
+
 def get_vault_status() -> Dict[str, Any]:
     """Mengembalikan jumlah tabungan celengan aktif, target kuota (1000), dan daftar rilis."""
     with _VAULT_LOCK:
@@ -336,6 +404,7 @@ def get_vault_status() -> Dict[str, Any]:
             "staging_count": len(manifest),
             "target": FEEDBACK_TARGET_COUNT,
             "releases": _list_releases_unlocked(),
+            "vault_dir": str(get_vault_base_dir()),
             "staging_dir": str(STAGING_DIR),
             "releases_dir": str(RELEASES_DIR),
         }
@@ -406,6 +475,9 @@ def sync_feedback_items(
             "milestone_triggered": milestone_triggered,
             "release_zip_name": release_zip_name,
             "releases": _list_releases_unlocked(),
+            "vault_dir": str(get_vault_base_dir()),
+            "staging_dir": str(STAGING_DIR),
+            "releases_dir": str(RELEASES_DIR),
         }
 
 
@@ -421,11 +493,16 @@ def force_package_release() -> Dict[str, Any]:
                 "target": FEEDBACK_TARGET_COUNT,
                 "releases": _list_releases_unlocked(),
             }
+        pkg_count = len(manifest)
         zip_name = _package_release_locked(manifest)
         return {
             "packaged": bool(zip_name),
             "release_zip_name": zip_name,
+            "packaged_count": pkg_count,
             "staging_count": 0,
             "target": FEEDBACK_TARGET_COUNT,
             "releases": _list_releases_unlocked(),
+            "vault_dir": str(get_vault_base_dir()),
+            "staging_dir": str(STAGING_DIR),
+            "releases_dir": str(RELEASES_DIR),
         }
