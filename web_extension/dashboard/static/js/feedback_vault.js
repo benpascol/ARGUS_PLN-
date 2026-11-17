@@ -10,6 +10,7 @@
 let currentVaultCount = 0;
 let currentVaultTarget = 1000;
 let latestVaultReleases = [];
+let currentVaultDir = '%LOCALAPPDATA%\\ARGUS_PLN\\feedback_vault';
 
 const pendingVaultUpserts = new Map(); // key -> row element
 const pendingVaultRemovals = new Set(); // key string
@@ -29,10 +30,19 @@ function updateVaultHeaderBadge(count, target, releases = null) {
         latestVaultReleases = releases;
     }
 
+    const pct = Math.min(100, Math.round((currentVaultCount / Math.max(1, currentVaultTarget)) * 100));
     const textEl = document.getElementById('ai-vault-count-text');
+    const pctEl = document.getElementById('ai-vault-pct-badge');
+    const miniFillEl = document.getElementById('ai-vault-mini-fill');
     const pillEl = document.getElementById('ai-vault-badge');
     if (textEl) {
-        textEl.textContent = `Celengan AI: ${currentVaultCount} / ${currentVaultTarget}`;
+        textEl.textContent = `${currentVaultCount} / ${currentVaultTarget}`;
+    }
+    if (pctEl) {
+        pctEl.textContent = `(${pct}%)`;
+    }
+    if (miniFillEl) {
+        miniFillEl.style.width = `${pct}%`;
     }
     if (pillEl) {
         if (latestVaultReleases.length > 0 && currentVaultCount === 0) {
@@ -48,6 +58,9 @@ async function fetchVaultStatus() {
         const resp = await fetch('/api/feedback/status');
         if (!resp.ok) return;
         const data = await resp.json();
+        if (data.vault_dir) {
+            currentVaultDir = data.vault_dir;
+        }
         updateVaultHeaderBadge(data.staging_count, data.target, data.releases);
     } catch (err) {
         console.warn('Gagal memeriksa status Celengan AI:', err);
@@ -162,11 +175,14 @@ async function flushPendingVaultSync() {
         });
         if (!resp.ok) return null;
         const result = await resp.json();
+        if (result.vault_dir) {
+            currentVaultDir = result.vault_dir;
+        }
         updateVaultHeaderBadge(result.staging_count, result.target, result.releases);
 
         if (result.milestone_triggered && typeof showToast === 'function') {
             showToast(
-                `Target 1.000 Kasus Tercapai! Paket Rilis AI (${result.release_zip_name}) siap di folder data/feedback_releases/.`,
+                `Target 1.000 Kasus Tercapai! Paket Rilis AI (${result.release_zip_name}) siap diunduh di Celengan AI.`,
                 'success'
             );
         }
@@ -195,6 +211,7 @@ function renderVaultManagerModal() {
     const pct = Math.min(100, Math.round((currentVaultCount / Math.max(1, currentVaultTarget)) * 100));
     const counterEl = document.getElementById('vault-modal-counter');
     const fillEl = document.getElementById('vault-modal-progress-fill');
+    const pathEl = document.getElementById('vault-modal-path');
     const countLabelEl = document.getElementById('vault-releases-count');
     const listEl = document.getElementById('vault-releases-list');
     const pkgBtn = document.getElementById('btn-vault-package-now');
@@ -204,6 +221,9 @@ function renderVaultManagerModal() {
     }
     if (fillEl) {
         fillEl.style.width = `${pct}%`;
+    }
+    if (pathEl && currentVaultDir) {
+        pathEl.textContent = currentVaultDir;
     }
     if (pkgBtn) {
         pkgBtn.disabled = currentVaultCount <= 0;
@@ -270,6 +290,29 @@ async function triggerManualVaultPackage() {
             btn.innerHTML = '<i class="fas fa-file-zipper"></i> Kemas Paket Sekarang';
             btn.disabled = currentVaultCount <= 0;
         }
+    }
+}
+
+async function openVaultFolderInExplorer() {
+    const btn = document.getElementById('btn-vault-open-folder');
+    if (btn) btn.disabled = true;
+    try {
+        const resp = await fetch('/api/feedback/open-folder', { method: 'POST' });
+        const data = await resp.json();
+        if (data.vault_dir) {
+            currentVaultDir = data.vault_dir;
+            renderVaultManagerModal();
+        }
+        if (resp.ok && typeof showToast === 'function') {
+            showToast(`Folder Celengan AI dibuka di File Explorer: ${data.vault_dir || currentVaultDir}`, 'info');
+        }
+    } catch (err) {
+        console.warn('Gagal membuka folder Celengan AI:', err);
+        if (typeof showToast === 'function') {
+            showToast('Gagal membuka folder Celengan AI secara otomatis.', 'error');
+        }
+    } finally {
+        if (btn) btn.disabled = false;
     }
 }
 

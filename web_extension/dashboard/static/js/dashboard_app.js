@@ -955,7 +955,8 @@ async function fetchSystemHardwareInfo() {
                 window.ARGUS_HARDWARE_INFO = hw;
                 const badge = document.getElementById('engine-hardware-badge');
                 if (badge) {
-                    badge.textContent = hw.engine_label || `ENGINE: ARGUS AI V5 (${hw.type})`;
+                    const cleanLabel = (hw.engine_label || '').replace(/^ENGINE:\s*/i, '');
+                    badge.textContent = cleanLabel || `ARGUS AI V5 (${hw.type})`;
                 }
                 const batchLabel = document.getElementById('batch-progress-label');
                 if (batchLabel) {

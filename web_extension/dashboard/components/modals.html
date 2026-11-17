@@ -276,8 +276,8 @@
             <div class="vault-progress-track">
                 <div class="vault-progress-fill" id="vault-modal-progress-fill" style="width:0%;"></div>
             </div>
-            <p style="font-size:11.5px; color:#6B21A8; margin:8px 0 0 0; line-height:1.45;">
-                Folder staging: <code>data/feedback_staging/</code>. Otomatis dikemas ke 1 berkas ZIP (Excel Master + Foto + Pre-Label YOLO) ke <code>data/feedback_releases/</code> saat mencapai 1.000 kasus unik.
+            <p style="font-size:11.5px; color:#6B21A8; margin:8px 0 0 0; line-height:1.5;">
+                Lokasi penyimpanan aman (kebal repack &amp; upgrade aplikasi): <code id="vault-modal-path">%LOCALAPPDATA%\ARGUS_PLN\feedback_vault</code>. Otomatis dikemas ke 1 berkas ZIP (Excel Master + Foto + Pre-Label YOLO) saat genap 1.000 kasus unik.
             </p>
         </div>
 
@@ -292,9 +292,14 @@
         </div>
 
         <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:20px; padding-top:14px; border-top:1px solid var(--border-color); flex-wrap:wrap;">
-            <button type="button" class="btn btn-secondary" id="btn-vault-package-now" onclick="triggerManualVaultPackage()" title="Kemas kasus yang ada di staging menjadi file ZIP sekarang (khusus Tim IT / Engineer)">
-                <i class="fas fa-file-zipper"></i> Kemas Paket Sekarang
-            </button>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <button type="button" class="btn btn-secondary" id="btn-vault-open-folder" onclick="openVaultFolderInExplorer()" title="Buka langsung lokasi folder %LOCALAPPDATA% Celengan AI di File Explorer">
+                    <i class="fas fa-folder-open"></i> Buka Folder Celengan
+                </button>
+                <button type="button" class="btn btn-secondary" id="btn-vault-package-now" onclick="triggerManualVaultPackage()" title="Kemas kasus yang ada di staging menjadi file ZIP sekarang (khusus Tim IT / Engineer)">
+                    <i class="fas fa-file-zipper"></i> Kemas Paket Sekarang
+                </button>
+            </div>
             <button type="button" class="btn btn-run" onclick="closeVaultManagerModal()">
                 <i class="fas fa-check"></i> Tutup
             </button>

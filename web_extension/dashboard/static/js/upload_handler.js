@@ -462,7 +462,11 @@ async function executeResetTable() {
     // 7. Bersihkan Penyimpanan Database Persisten Lokal (IndexedDB)
     if (typeof clearPersistedSession === 'function') clearPersistedSession();
 
-    showToast("Seluruh tabel, antrean foto, dan data impor Excel ACMT telah dibersihkan total.", "info");
+    const vaultCount = (typeof currentVaultCount !== 'undefined') ? Number(currentVaultCount) || 0 : 0;
+    const vaultInfo = vaultCount > 0
+        ? ` (${vaultCount} kasus tetap tersimpan aman di Celengan AI)`
+        : '';
+    showToast(`Seluruh tabel, antrean foto, dan data impor Excel ACMT telah dibersihkan total.${vaultInfo}`, "info");
 }
 
 // DRAG & DROP SUPPORT (UX ENHANCEMENT)
