@@ -17,6 +17,8 @@ Rilis produksi resmi perdana **ARGUS Portable Desktop & Web Dashboard** yang sia
 
 ### Added
 - **Distribusi Rilis Mandiri Siap Pakai:** Paket kompilasi `--onedir` (`ARGUS.exe`), skrip peluncur cepat (`Mulai_ARGUS.bat` & `Buka_Panduan_ARGUS.bat`), serta aset antarmuka bersih tanpa file prototipe usang.
+- **Alat Evaluasi Ground Truth 100 Sampel (`src/evaluate_ground_truth.py`):** Perkakas CLI `prepare` (sampling acak terukur) dan `score` (Precision, Recall, F1-Score, Exact Stand Accuracy, MAE kWh, & False Billing Escape Rate) untuk validasi lapangan Fase 4 bersama PLN.
+- **Automated Smoke Test Suite (`tests/test_release_smoke.py`):** Pengujian terisolasi end-to-end (Quality Filter, Sequence Arbiter, Feedback Vault, Ground Truth, & FastAPI Routes) serta pengarsipan `test_vlm.py` ke `tests/archive/`.
 - **Dokumentasi & Panduan Operasional Terpadu:** Pembaruan [`README.md`](./README.md) bergambar penuh, diagram vektor 6 langkah ([`Docs/assets/alur_kerja_6_langkah.svg`](./Docs/assets/alur_kerja_6_langkah.svg)), serta panduan teks [`PETUNJUK_PENGGUNAAN_ARGUS.txt`](./PETUNJUK_PENGGUNAAN_ARGUS.txt).
 - **Kesesuaian Standar Versi Industri:** Pemisahan tegas antara **Versi Aplikasi (`v1.0.0`)** dan **Versi Bobot AI Vision (`Model V5`)**.
 

@@ -21,8 +21,10 @@
 
 Bagi petugas lapangan, auditor, maupun supervisor PT PLN (Persero) yang ingin langsung menjalankan aplikasi **tanpa perlu instalasi Python maupun memahami kode sumber**:
 
-1. **Unduh Paket Portable Siap Pakai (`.zip`):**  
-   Buka panel **`Releases`** di sisi kanan halaman repositori GitHub ini, lalu pilih rilis **`v1.0.0`** dan unduh berkas paket `.zip` portabel (*atau tautan distribusi internal UP3 Mojokerto*).
+1. **Unduh Paket Portable Siap Pakai (`ARGUS_v1.0.0_Portable.zip` ~2,48 GiB):**  
+   - 👉 **[Unduh langsung via Google Drive Distribusi PLN UP3 Mojokerto](https://drive.google.com/drive/folders/17sT3Ab5qJGD-8bqnpvFPkGp7aKSDk-MC?usp=sharing)**  
+   - *(Atau buka panel **`Releases`** `v1.0.0` di sisi kanan halaman repositori GitHub ini)*  
+   - **SHA-256 Checksum:** `E8CB251BC79A469D3ED3071B11FFD4E8576A63D6B9D1C4880911DA4AE6DA150F`
 2. **Ekstrak Berkas ZIP:**  
    Ekstrak seluruh isi folder ke direktori kerja di komputer/laptop Windows Anda (contoh: `D:\ARGUS\`).
 3. **Jalankan Dashboard Audit:**  
@@ -33,12 +35,12 @@ Bagi petugas lapangan, auditor, maupun supervisor PT PLN (Persero) yang ingin la
    👉 `http://127.0.0.1:8000/tutorial`
 
 > [!WARNING]
-> **Perbedaan Unduh Paket Siap Pakai (`Releases`) vs Kode Sumber (`<> Code → Download ZIP`):**
+> **Perbedaan Unduh Paket Siap Pakai (`Google Drive / Releases`) vs Kode Sumber (`<> Code → Download ZIP`):**
 >
 > ![Dropdown Code GitHub](./Docs/assets/dropdown_code_untukdownload.png)
 >
 > Tombol hijau **`<> Code` → `Download ZIP`** di halaman utama repo **HANYA mengunduh kode sumber (`.py`, `.html`, `.js`)** untuk keperluan pengembang/tim IT, dan **TIDAK berisi `ARGUS.exe`**.  
-> Untuk operasional langsung oleh petugas PLN, selalu unduh paket portabel dari menu **`Releases`** (di kolom kanan GitHub).
+> Untuk operasional langsung oleh petugas PLN, selalu unduh **`ARGUS_v1.0.0_Portable.zip`** melalui tautan **Google Drive di atas** atau halaman **`Releases`**.
 
 ---
 
@@ -170,6 +172,7 @@ ARGUS/
 │
 ├── src/
 │   ├── audit_excel.py                 # Engine penyusun laporan resmi Excel ber-hyperlink PLN
+│   ├── evaluate_ground_truth.py       # Alat sampling acak & hitung Precision/Recall/F1 100 sampel
 │   ├── excel.py                       # Helper utilitas Excel
 │   ├── feedback_vault.py              # Pengelola Celengan Feedback AI di %LOCALAPPDATA%
 │   ├── train_finetune.py              # Pipeline pelatihan ulang / fine-tuning model dari vault
@@ -190,8 +193,8 @@ ARGUS/
 │       └── sequence_arbiter.py        # Validator urutan digit, splitter desimal & Triage 3 warna
 │
 ├── tests/
-│   ├── test_vlm.py                    # Pengujian kompatibilitas historis
-│   └── archive/                       # Skrip verifikasi kasus batch & kalibrasi awal
+│   ├── test_release_smoke.py          # Rangkaian smoke test otomatis v1.0.0 (unittest & FastAPI TestClient)
+│   └── archive/                       # Arsip skrip eksperimen historis & pengujian VLM awal
 │
 └── web_extension/
     └── dashboard/                     # Antarmuka Web Mandiri V1 (Dashboard & Tutorial)
@@ -260,6 +263,20 @@ Untuk membungkus ulang aplikasi siap sebar ke direktori `dist/ARGUS/`:
 ```powershell
 .\.venv_gpu\Scripts\python.exe build_exe.py
 ```
+
+### 6. Uji Kesehatan Sistem (`Smoke Test`) & Evaluasi Ground Truth 100 Sampel
+- **Menjalankan Smoke Test Otomatis:**
+  ```powershell
+  .\.venv_gpu\Scripts\python.exe -m unittest tests/test_release_smoke.py -v
+  ```
+- **Validasi Ground Truth 100 Sampel (Fase 4 bersama Supervisor PLN):**
+  ```powershell
+  # 1) Ambil 100 sampel acak dari file hasil ekspor ARGUS menjadi formulir cek manual
+  .\.venv_gpu\Scripts\python.exe -m src.evaluate_ground_truth prepare --input "hasil_audit.xlsx" --output "formulir_gt_100.xlsx" --samples 100
+
+  # 2) Setelah pengawas PLN mengisi kolom GT, hitung Akurasi Stand, Precision, Recall & F1-Score
+  .\.venv_gpu\Scripts\python.exe -m src.evaluate_ground_truth score --input "formulir_gt_100.xlsx"
+  ```
 
 ---
 
