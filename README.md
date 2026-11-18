@@ -1,267 +1,277 @@
-# ARGUS — Automated Recognition & Grid Utility Surveillance
+# ⚡ ARGUS v1.0.0 — Automated Recognition & Grid Utility Surveillance
 
-Sistem cerdas klasifikasi dan audit otomatis berkas **LBKB (Lembar Bukti Kelainan Bacaan)** pelanggan KWH Meter PLN UP3 Mojokerto berbasis **Cascading Multi-Tier Computer Vision**, **Barcode Checksum Decoding**, dan **Multimodal Vision-Language Model (VLM)**.
+**Sistem Audit Otomatis Stand KWH Meter LBKB 100% Lokal & Offline**  
+**PT PLN (Persero) UID Jawa Timur — UP3 Mojokerto** | **Lead Engineer:** Benedictus Pascal
 
-Sistem ini berfungsi sebagai inspektur digital garis depan untuk memvalidasi $\pm 8.000$ foto dokumentasi kelainan lapangan per bulan, menyaring manipulasi/fraud petugas, mendeteksi foto buram, serta mencocokkan nomor seri fisik meteran prabayar/pascabayar terhadap master database penagihan PLN secara instan dan akuntabel.
+![Release](https://img.shields.io/badge/Release-v1.0.0_(Official)-0284C7?style=for-the-badge)
+![AI Model](https://img.shields.io/badge/Vision_Engine-YOLOv8s_Model_V5-059669?style=for-the-badge)
+![Offline](https://img.shields.io/badge/Mode-100%25_Pure_Local_%26_Offline-0F172A?style=for-the-badge)
+![Platform](https://img.shields.io/badge/Platform-Windows_10%2F11_Portable-FDB913?style=for-the-badge&logoColor=0F172A)
+
+**ARGUS (*Automated Recognition & Grid Utility Surveillance*)** adalah sistem inspeksi visual digital garis depan berbasis *Two-Stage Computer Vision* untuk memvalidasi ribuan foto dokumentasi **LBKB (*Lembar Bukti Kelainan Bacaan*)** KWH Meter pelanggan setiap bulan secara lokal di lingkungan komputer PLN tanpa ketergantungan internet ataupun API cloud pihak ketiga.
+
+> [!NOTE]
+> **Kebijakan Penomoran Versi (Semantic Versioning):**
+> - **Versi Rilis Aplikasi (`v1.0.0`):** Rilis produksi resmi perdana aplikasi desktop & dashboard PLN UP3 Mojokerto.
+> - **Versi Bobot Model AI (`Model V5`):** Otak pengenalan angka di dalamnya menggunakan bobot `digit_ocr_detector_v5.pt` hasil 5 generasi pelatihan dataset Roboflow/YOLO serta 8 siklus penyempurnaan pra-rilis (`0.1.0` s.d. `0.8.0`). Seluruh rekam jejak *trial-and-error* tercatat lengkap di [`CHANGELOG.md`](./CHANGELOG.md).
 
 ---
 
-## 🏗 Arsitektur Sistem & Cascading Multi-Tier Pipeline
+## 🚀 Jalur Cepat Pengguna PLN (Siap Pakai — Tanpa Install Python)
 
-![Arsitektur Cascading Pipeline ARGUS](./Docs/arsitektur_pipeline.svg)
+Bagi petugas lapangan, auditor, maupun supervisor PT PLN (Persero) yang ingin langsung menjalankan aplikasi **tanpa perlu instalasi Python maupun memahami kode sumber**:
 
-<details>
-<summary><b>🔍 Klik di sini untuk melihat Definisi Kode Mermaid (GitHub Native)</b></summary>
+1. **Unduh Paket Portable Siap Pakai (`.zip`):**  
+   Buka panel **`Releases`** di sisi kanan halaman repositori GitHub ini, lalu pilih rilis **`v1.0.0`** dan unduh berkas paket `.zip` portabel (*atau tautan distribusi internal UP3 Mojokerto*).
+2. **Ekstrak Berkas ZIP:**  
+   Ekstrak seluruh isi folder ke direktori kerja di komputer/laptop Windows Anda (contoh: `D:\ARGUS\`).
+3. **Jalankan Dashboard Audit:**  
+   Klik ganda **`Mulai_ARGUS.bat`** (atau **`ARGUS.exe`**). Jendela terminal PLN akan memuat model AI ke GPU/CPU, lalu browser otomatis membuka:  
+   👉 `http://127.0.0.1:8000/dashboard`
+4. **Buka Buku Panduan Operasional Kapan Saja:**  
+   Klik ganda **`Buka_Panduan_ARGUS.bat`** (atau klik kartu **PANDUAN / Buka Tutorial** di kanan atas dashboard) untuk membuka panduan lengkap langkah demi langkah di:  
+   👉 `http://127.0.0.1:8000/tutorial`
+
+> [!WARNING]
+> **Perbedaan Unduh Paket Siap Pakai (`Releases`) vs Kode Sumber (`<> Code → Download ZIP`):**
+>
+> ![Dropdown Code GitHub](./Docs/assets/dropdown_code_untukdownload.png)
+>
+> Tombol hijau **`<> Code` → `Download ZIP`** di halaman utama repo **HANYA mengunduh kode sumber (`.py`, `.html`, `.js`)** untuk keperluan pengembang/tim IT, dan **TIDAK berisi `ARGUS.exe`**.  
+> Untuk operasional langsung oleh petugas PLN, selalu unduh paket portabel dari menu **`Releases`** (di kolom kanan GitHub).
+
+---
+
+## 🗺️ Alur Kerja Operasional (End-to-End 6 Langkah)
+
+Berikut ringkasan alur penggunaan harian **ARGUS v1.0.0** dari menyalakan aplikasi hingga menghasilkan laporan Excel resmi PLN:
+
+![Alur Kerja Operasional ARGUS End-to-End 6 Langkah](./Docs/assets/alur_kerja_6_langkah.svg)
+
+---
+
+## 🖥️ Galeri Antarmuka & Fitur Utama
+
+### 1. Dashboard Mandiri Korporat & 7 Kartu Filter KPI
+Antarmuka utama bergaya korporat PT PLN (Persero) yang teroptimasi untuk memproses ribuan foto sekaligus tanpa membebani memori browser (*Virtual Slicing Pagination* & `URL.createObjectURL`).
+
+![Dashboard Utama ARGUS](./Docs/assets/Dashboard_Utama.png)
+
+- **3 Kartu Header Glass-Blue Interaktif:** Akses instan ke halaman `/tutorial`, monitor tabungan **Celengan Feedback AI**, serta status akselerasi perangkat keras (*GPU NVIDIA RTX* / *CPU Fallback*).
+- **7 Kartu Filter KPI Instan:** *Total Sampel*, *Sesuai Match*, *Rolling Digit*, *Beda Stand*, *Perlu Tinjau Ulang*, *Bukan KWH / Nihil*, dan *Dikoreksi Auditor*.
+- **Auto-Pairing Rekap ACMT:** Mengimpor berkas rekap `.xlsx`/`.csv` ACMT (`POST /api/parse-acmt-excel`) untuk memasangkan IDPEL, Nama Pelanggan, Tarif/Daya, dan Stan Lapangan secara otomatis dengan berkas foto.
+- **3 Mode Audit & Worker Pool Paralel:** Mendukung mode **Auto (Sesuai Data)**, **Mandiri (Tanpa Excel)**, dan **Komparasi**, dengan eksekusi batch paralel adaptif (4 *worker* untuk GPU CUDA, 2 *worker* untuk CPU).
+
+### 2. Modal Pratinjau HD (Human-in-the-Loop) & Celengan AI Persisten
+Dirancang untuk tinjauan cepat auditor lapangan saat memverifikasi baris *Beda Stand* atau *Perlu Tinjau Ulang*:
+
+![Modal Pratinjau Human-in-the-Loop](./Docs/assets/Pratinjau_Human-in-the-loop.png)
+
+- **Stasiun Inspeksi Cepat:** Dilengkapi *Zoom & Pan* beresolusi penuh, navigasi papan ketik (`←` / `→` mengikuti filter & urutan sortir aktif), serta *hotkey* vonis `[1..5]`.
+- **Smart Baseline Un-Edit:** Jika koreksi auditor dikembalikan sama persis dengan pembacaan awal AI dan catatan AI dikosongkan, status *Dikoreksi* otomatis dibatalkan.
+- **Pemisahan Catatan PLN vs Catatan Model AI:**
+  - *Catatan Auditor:* Khusus keterangan operasional yang masuk ke laporan dinas Excel PLN.
+  - *Catatan Evaluasi Model AI:* Tag cepat sekali klik (*`Salah Baca Angka`*, *`Digit Terpotong`*, *`Rolling Meleset`*) untuk melatih ulang AI tanpa mengotori laporan dinas PLN.
+- **Celengan Feedback AI di `%LOCALAPPDATA%`:** Setiap kasus koreksi tersimpan persisten di `%LOCALAPPDATA%\ARGUS_PLN\feedback_vault\` (aman dari *Refresh*, *Reset Tabel*, maupun pembaruan EXE). Otomatis terkemas menjadi arsip **ZIP siap latih** (*Master Excel + Manifest CSV + Foto + Crop + Pre-Label YOLO*) ketika genap **1.000 kasus unik**, lengkap dengan tombol **Buka Folder Celengan** langsung ke File Explorer.
+- **Ekspor Laporan Resmi Excel PLN (`.xlsx`):** Menghasilkan buku kerja standar UP3 Mojokerto berisi 4 baris header legenda eksekutif, pewarnaan otomatis status, serta rumus aktif `=HYPERLINK(...)` menuju bukti foto terkait.
+
+### 3. Buku Panduan Operasional Interaktif (`/tutorial`)
+Tersedia halaman panduan visual lengkap secara *offline* dengan bilah navigasi penuh ujung-ke-ujung (*sticky navbar*), dukungan cetak PDF, panduan *hotkey*, serta pemecahan masalah umum.
+
+![Halaman Panduan Operasional ARGUS](./Docs/assets/Halaman_Tutorial.png)
+
+---
+
+## 🏗️ Arsitektur Teknis (`100% Pure Local & Offline`)
+
+Seluruh tahapan pemrosesan citra, pembacaan angka, hingga pelaporan berjalan sepenuhnya di perangkat lokal tanpa memanggil API eksternal:
 
 ```mermaid
 flowchart TD
-    %% Definisi Gaya Node
-    classDef inputClass fill:#e1f5fe,stroke:#0288d1,stroke-width:2px,color:#01579b;
-    classDef tierClass fill:#ffffff,stroke:#455a64,stroke-width:2px,color:#263238;
-    classDef resultOk fill:#e8f8f5,stroke:#27ae60,stroke-width:2px,color:#1e8449;
-    classDef resultFail fill:#fdedec,stroke:#e74c3c,stroke-width:2px,color:#922b21;
-    classDef resultBlur fill:#fef9e7,stroke:#f39c12,stroke-width:2px,color:#b7950b;
+    classDef inputNode fill:#0284c7,stroke:#0369a1,color:#ffffff,stroke-width:2px;
+    classDef localNode fill:#ffffff,stroke:#475569,color:#0f172a,stroke-width:1.5px;
+    classDef okNode fill:#ecfdf5,stroke:#059669,color:#065f46,stroke-width:2px;
+    classDef warnNode fill:#fefce8,stroke:#d97706,color:#92400e,stroke-width:2px;
+    classDef errNode fill:#fef2f2,stroke:#dc2626,color:#991b1b,stroke-width:2px;
+    classDef vaultNode fill:#faf5ff,stroke:#7c3aed,color:#5b21b6,stroke-width:2px;
 
-    RawInput["📁 FOTO DOKUMENTASI LBKB<br/>(7.470+ File .jpg, Resolusi 540x960)"]:::inputClass
+    A["📁 Foto Dokumentasi LBKB + Opsional Rekap ACMT (.xlsx / .csv)"]:::inputNode --> B["Tier 1: Quality Gatekeeper (quality_filter.py)<br/>• ROI Laplacian Variance Blur Check<br/>• HSV Glare Masking (V > 240, S < 30)"]:::localNode
 
-    subgraph T1 ["TIER 1: Gatekeeper Kualitas, Blur & Silau (OpenCV)"]
-        BlurFilter{"Uji Kualitas Citra<br/>• Var(Laplacian) < Ambang Batas?<br/>• Glare HSV (V>240, S<30) > 20%?"}:::tierClass
-    end
+    B --> C["Tier 2A: Barcode & QR Engine (barcode_engine.py)<br/>• OpenCV Barcode & QR Detector + Multi-Scale CLAHE<br/>• Ekstraksi IDPEL Pelanggan 11–12 Digit"]:::localNode
 
-    subgraph T2 ["TIER 2: Ekstraksi Lokal 100% Offline (ZBar & Two-Stage YOLO)"]
-        BarcodeScan{"Scan Barcode Nomor Seri<br/>(ZBar + CLAHE)"}:::tierClass
-        YoloDigits{"Two-Stage Local YOLO Digits<br/>1. Crop Dial Box (meter_counter_detector)<br/>2. Read Digits & Dot (digit_ocr_detector)"}:::tierClass
-    end
+    C --> D["Tier 2B — Stage 1: Counter Dial Detector (counter_detector.py)<br/>• Model: meter_counter_detector.pt<br/>• Deteksi & Crop Kotak Dial / LCD Meteran"]:::localNode
 
-    subgraph T3 ["TIER 3: Hakim Semantik & Fraud Detector (VLM)"]
-        VLMProc{"NVIDIA NIM LLaMA 3.2 11B Vision<br/>(Eksklusif: Fraud aspal/jok, pagar, ketiadaan meter)<br/>⚠️ ANTI-PEMBOROSAN TOKEN: Dilarang untuk digit rutin!"}:::tierClass
-    end
+    D -- "Kotak Dial Tidak Ditemukan (Aspal/Pagar/Non-Meter)" --> F_ANTI["🔴 Heuristic Anti-Fraud / Zero-Counter<br/>Tolak halusinasi stand (FAIL_COUNTER_NOT_FOUND)"]:::errNode
 
-    subgraph T4 ["TIER 4: Deterministic Decision Engine"]
-        Arbiter{"Arbitrase Integritas & SOP PLN<br/>• Validasi Sequence (Tolak angka parsial)<br/>• Split integer kWh di depan desimal 'dot'<br/>• Cocokkan STAN_BACA vs STAN_METER"}:::tierClass
-    end
+    D -- "Kotak Dial Valid Ditemukan" --> E["Multi-Pass Crop Enhancement<br/>RAW → Dehaze CLAHE → Bicubic Super-Res → Deskew"]:::localNode
 
-    %% Node Hasil Akhir
-    ResBlur["3. Hasil Foto Blur / Glare<br/>(Alasan: Fokus Rendah / Silau Ekstrem)"]:::resultBlur
-    ResSesuai["1. Sesuai dengan Data<br/>(Stand Cocok / Rintangan Sah Terverifikasi)"]:::resultOk
-    ResTidak["2. Tidak Sesuai dengan Data<br/>(Kelainan Stand / Foto Fraud Tidak Relevan)"]:::resultFail
+    E --> F["Tier 2B — Stage 2: Digit OCR Detector (digit_ocr.py)<br/>• Model V5: digit_ocr_detector_v5.pt (11 Kelas: 0–9 & dot)<br/>• No-Flip Geometry Preservation (96.1% mAP@50)"]:::localNode
 
-    %% Alur Relasi & Keputusan
-    RawInput --> BlurFilter
-    BlurFilter -- "Ya (Buram Parah / Silau Menutup Angka)" --> ResBlur
-    BlurFilter -- "Tidak (Foto Tajam & Jelas)" --> BarcodeScan
+    F --> G["Tier 3: Sequence & Reading Arbiter (sequence_arbiter.py)<br/>• Validasi Urutan Kontinu & Gap Antar-Digit<br/>• Split Desimal 'dot' (Ambil Integer kWh Depan Koma)<br/>• Guard Rolling Digit (±1 s.d. ±2 kWh)"]:::localNode
 
-    BarcodeScan -- "Barcode Terbaca (Prabayar 11 Digit)" --> Arbiter
-    BarcodeScan -- "Bukan Meter Barcode / Meter Pascabayar" --> YoloDigits
+    G --> R1["🟢 MATCH / ROLLING DIGIT<br/>(Sesuai Stand / Toleransi Drum)"]:::okNode
+    G --> R2["🟡 PERLU TINJAU ULANG<br/>(Triage Confidence / Beda Stand)"]:::warnNode
+    G --> R3["🔴 BUKAN KWH / SILAU / BURAM<br/>(Stand Tidak Lengkap / Ditolak)"]:::errNode
 
-    YoloDigits -- "Angka Stand Terbaca (Analog/Digital)" --> Arbiter
-    YoloDigits -- "Bukan Meteran / Anomali Pemandangan" --> VLMProc
-
-    VLMProc --> Arbiter
-
-    Arbiter -- "Stand Valid Cocok ATAU Pagar Sah Sesuai Kode" --> ResSesuai
-    Arbiter -- "Stand Beda ATAU Terbukti Foto Fraud" --> ResTidak
-    Arbiter -- "Angka Parsial Silau / Ragu" --> ResBlur
+    R1 & R2 & R3 & F_ANTI --> H["🖥️ Dashboard Review Station & 📊 Ekspor Excel Resmi (.xlsx)"]:::inputNode
+    H -- "Koreksi Auditor / Tag Salah Baca AI" --> V["🟣 Celengan Feedback AI (%LOCALAPPDATA%)<br/>Auto-Pack ZIP (Foto + Crop + YOLO Labels) tiap 1.000 Kasus"]:::vaultNode
 ```
 
-</details>
+---
+
+## 🛠️ Technology Stack (ARGUS v1.0.0)
+
+| Lapisan Sistem | Teknologi / Pustaka Utama | Fungsi dalam Sistem |
+| :--- | :--- | :--- |
+| **Compute & Hardware** | PC Windows 10/11 (64-bit), NVIDIA RTX CUDA (`fallback` Multi-Core CPU) | Akselerasi inferensi lokal paralel tanpa internet |
+| **Deep Learning & AI** | Python `3.11`, PyTorch (`2.6+cu124`), Ultralytics YOLOv8 (`8.4+`) | Two-Stage Counter Localizer + 11-Class Digit OCR (`Model V5`) |
+| **Computer Vision** | OpenCV (`5.0+`), NumPy (`2.4+`) | Laplacian blur, HSV glare masking, CLAHE, Super-Res, Barcode/QR |
+| **Training & Anotasi** | Roboflow (*strict No-Flip augmentation*), Google Colab GPU (`T4`/`A100`) | Kurasi dataset 11 kelas & pelatihan bobot `v1`–`v5` |
+| **Backend & Local API** | FastAPI, Uvicorn (ASGI), Pydantic V2, Python `asyncio` | REST API lokal (`/predict*`, `/api/*`), parsing Excel & status hardware |
+| **Pelaporan Dinas** | OpenPyXL (`3.1+`), modul CSV standar | Generator laporan `.xlsx` ber-hyperlink foto & formula otomatis |
+| **Frontend Dashboard** | HTML5, Jinja2 Templates, Vanilla JavaScript (ES6+), Corporate CSS3 | Dashboard modular, Virtual Pagination, Modal Inspector, `/tutorial` |
+| **Active Learning Vault** | `%LOCALAPPDATA%\ARGUS_PLN\feedback_vault\`, `zipfile` | Penyimpanan kasus koreksi kebal *reset/repack* + ekspor label YOLO |
+| **Packaging & Otomasi** | PyInstaller (`--onedir`, `6.22+`), Windows Batch Scripts (`.bat`), Git | Kompilasi `ARGUS.exe` mandiri & peluncur instan *zero-config* |
 
 ---
 
-## 🎯 3 Kategori Output Klasifikasi Resmi
-
-Sesuai standar pengawasan transaksi energi PT PLN (Persero), setiap rekaman foto akan diklasifikasikan ke dalam 3 status definitif:
-
-1. **`Sesuai dengan Data`**:
-   - Bukti foto terbukti valid: nomor barcode/nomor seri meteran identik dengan data master pelanggan di PLN.
-   - ATAU bukti foto rintangan (pagar terkunci, rumah tutup, anjing galak) terverifikasi secara visual selaras dengan `KODE LBKB` (`E`, `F`, `4`) yang dilaporkan petugas.
-2. **`Tidak Sesuai dengan Data`**:
-   - Nomor meter fisik yang tertera di foto berbeda dengan data pelanggan (salah objek / foto meteran tetangga).
-   - ATAU terindikasi manipulasi/fraud: petugas melaporkan rumah tutup/pagar terkunci namun foto yang diunggah adalah aspal jalan, tanah, dinding kosong, atau meteran menyala normal.
-3. **`Hasil foto blur`**:
-   - Kualitas foto rusak parah, goyang (_motion blur_), gelap gulita, atau silau ekstrem sehingga nomor meter maupun kondisi lapangan tidak dapat diidentifikasi secara sah.
-
----
-
-## 📂 Struktur Repositori
+## 📂 Struktur Repositori Bersih
 
 ```text
 ARGUS/
-├── .env                                       # [IGNORED] Secret API Key (NVIDIA NIM)
-├── .gitignore                                 # [TRACKED] Filter file besar & credentials
-├── README.md                                  # [TRACKED] Wajah Proyek & Arsitektur Pipeline
-├── RULEBOOK.md                                # [TRACKED] Konstitusi Hukum & Gitflow
-├── WHITEBOARD.md                              # [TRACKED] Roadmap, Ide & Audit Issue
+├── .env.example                       # Template variabel konfigurasi lokal
+├── .gitignore                         # Proteksi data rahasia PLN, model biner, & cache
+├── ARGUS.ico                          # Ikon resmi aplikasi ARGUS
+├── ARGUS.spec                         # Spesifikasi build PyInstaller
+├── CHANGELOG.md                       # Rekam jejak rilis & trial-and-error (0.1.0 → 1.0.0)
+├── PETUNJUK_PENGGUNAAN_ARGUS.txt      # Panduan operasional versi teks untuk distribusi ZIP
+├── README.md                          # Dokumentasi utama proyek (berkas ini)
+├── RULEBOOK.md                        # Konstitusi standar rekayasa & integritas Computer Vision
+├── WHITEBOARD.md                      # Roadmap pengembangan, log ide & audit log
+├── build_exe.py                       # Otomasi build paket portabel dist/ARGUS/
+├── launcher.py                        # Entrypoint portabel dengan proteksi QuickEdit freeze CMD
+├── pyproject.toml                     # Konfigurasi interpreter Python & Pyright
 │
-├── data/                                      # Data Citra & Master Dokumen
-│   ├── raw_excel/                             # [IGNORED] Master File 12 LBKB Rek 12 2025 (277MB)
-│   ├── raw_images/                            # [IGNORED] Folder DOkumentasi LBKB (7.470+ File .jpg)
-│   ├── samples/                               # [TRACKED] 15-20 Foto Sampel Terpilih untuk Benchmark
-│   │   ├── A_barcode_jelas/                   # Sampel prabayar barcode ideal
-│   │   ├── B_barcode_terhambat/               # Sampel silau mika / debu lapangan (uji CLAHE)
-│   │   ├── C_teks_spidol/                     # Sampel pascabayar spidol / LCD
-│   │   ├── D_rintangan_fisik/                 # Sampel pagar gembok / pintu tutup (kode E & F)
-│   │   └── E_foto_fraud/                      # Sampel manipulasi oknum (aspal, jok motor)
-│   └── output/                                # [IGNORED] Hasil Ekspor Excel Klasifikasi & Log Audit
+├── Docs/
+│   ├── requirements.txt               # Daftar dependensi runtime Python
+│   └── assets/                        # Aset gambar & diagram vektor SVG untuk dokumentasi
+│       ├── alur_kerja_6_langkah.svg
+│       ├── Dashboard_Utama.png
+│       ├── Halaman_Tutorial.png
+│       ├── Pratinjau_Human-in-the-loop.png
+│       └── dropdown_code_untukdownload.png
 │
-├── src/                                       # Core Python Cascading Engine
-│   ├── quality/                               # Tier 1: OpenCV Laplacian Blur Detector
-│   ├── barcode/                               # Tier 2: ZBar / PyZbar Barcode Scanner
-│   ├── vision_ai/                             # Tier 3: Multimodal VLM (NVIDIA LLaMA Vision)
-│   ├── decision/                              # Tier 4: Deterministic Decision Engine
-│   └── pipeline.py                            # Master Batch Processor Runner
+├── data/
+│   ├── input_excel/                   # Direktori default berkas rekap ACMT + BACA_SAYA.txt
+│   ├── input_foto/                    # Direktori default folder foto dokumentasi + BACA_SAYA.txt
+│   └── samples/                       # 10 sampel foto meteran resmi untuk smoke test instan
 │
-├── web_extension/                             # Userscript Browser untuk Portal ACMT PLN
-│   └── argus_evaluator.user.js                # Refactor & renaming dari Tanpa judul.txt
+├── models/                            # [GITIGNORED] Bobot model AI (.pt): meter_counter & digit_ocr_v5
 │
-├── tests/                                     # Script Benchmark & Evaluasi Akurasi
-│   ├── benchmark_blur.py                      # Uji Coba Threshold Laplacian
-│   └── benchmark_barcode.py                   # Uji Coba Hit-Rate Barcode ZBar
+├── src/
+│   ├── audit_excel.py                 # Engine penyusun laporan resmi Excel ber-hyperlink PLN
+│   ├── excel.py                       # Helper utilitas Excel
+│   ├── feedback_vault.py              # Pengelola Celengan Feedback AI di %LOCALAPPDATA%
+│   ├── train_finetune.py              # Pipeline pelatihan ulang / fine-tuning model dari vault
+│   ├── api/
+│   │   ├── dependencies.py            # Manajemen singleton GPU pipeline, deteksi hardware & JSON sanitizer
+│   │   ├── server.py                  # Aplikasi utama FastAPI, lifespan & auto-launch browser
+│   │   └── routes/
+│   │       ├── audit.py               # /predict & /predict-base64
+│   │       ├── excel.py               # /api/parse-acmt-excel & /api/export-audit-excel
+│   │       ├── feedback.py            # /api/feedback/* (status, sync, package-now, open-folder, download)
+│   │       └── views.py               # /, /dashboard, /tutorial, /api/system-info, /sample-photo/*
+│   └── vision_ai/
+│       ├── barcode_engine.py          # Detektor Barcode/QR OpenCV + CLAHE
+│       ├── counter_detector.py        # Stage 1 YOLO Counter Dial Localizer + Zero-Counter Anti-Fraud
+│       ├── digit_ocr.py               # Stage 2 YOLO 11-Class Digit Reader + Multi-Candidate Consensus
+│       ├── pipeline.py                # Orkestrator pipeline visi lokal end-to-end
+│       ├── quality_filter.py          # Filter Blur Laplacian ROI, Glare HSV & Enhancer CLAHE
+│       └── sequence_arbiter.py        # Validator urutan digit, splitter desimal & Triage 3 warna
 │
-└── Docs/                                      # Dokumentasi & Aset Visual
-    ├── ARGUS_Research_Validation.md           # Laporan Validasi Riset Ilmiah (MDPI, IEEE, CMC)
-    ├── ARGUS_Methodology_Roadmap.md           # Roadmap Metodologi Pengembangan Berbasis IEEE & MLLC
-    ├── arsitektur_pipeline.svg                # Vektor Diagram Pipeline Sistem
-    └── requirements.txt                       # Daftar Dependensi Resmi Python
+├── tests/
+│   ├── test_vlm.py                    # Pengujian kompatibilitas historis
+│   └── archive/                       # Skrip verifikasi kasus batch & kalibrasi awal
+│
+└── web_extension/
+    └── dashboard/                     # Antarmuka Web Mandiri V1 (Dashboard & Tutorial)
+        ├── index.html                 # Shell halaman utama Dashboard Audit
+        ├── tutorial.html              # Halaman Panduan Operasional Interaktif (/tutorial)
+        ├── components/                # Komponen modular Jinja2 (header, kpi_cards, toolbar, table, modals, footer)
+        └── static/
+            ├── css/                   # pln_theme.css, dashboard.css, tutorial.css
+            ├── js/                    # dashboard_app.js, audit_engine.js, feedback_vault.js, excel_export.js, upload_handler.js, session_store.js
+            └── favicon.svg
 ```
 
 ---
 
-## 🔬 Spesifikasi Komponen Pipeline
+## 💻 Panduan Pengembang / Tim IT PLN (Dari Source Code)
 
-### 1. Gatekeeper Kualitas Citra: Blur & Glare (OpenCV Laplacian & HSV)
+Bagian ini ditujukan bagi Tim IT atau pengembang yang ingin menjalankan server langsung dari kode sumber Python, memodifikasi kode, atau mengompilasi ulang paket portabel `.exe`:
 
-- **Deteksi Blur (Laplacian ROI):** Konvolusi kernel Laplacian $3 \times 3$ pada ROI meteran grayscale:
-  $$\sigma^2 = \frac{1}{N} \sum_{x,y} (L(x,y) - \mu)^2$$
-  Fokus pada ROI tengah meteran untuk mencegah tekstur kasar background memicu *false sharpness*.
-- **Deteksi Silau / Glare (HSV Masking):** Mengevaluasi piksel overexposure dengan intensitas Value > 240 dan Saturation < 30. Jika silau menutupi > 20% area angka, proses dihentikan dengan status `ANOMALI_GLARE_TERHALANG` (mencegah output angka sebatang kara).
-
-### 2. Barcode & QR Scanner (ZBar Engine + CLAHE)
-
-- **Karakteristik:** Ekstraksi pola garis Code 128 / Code 39 / QR Code pada stiker KWH Meter prabayar.
-- **Pre-processing CLAHE:** Dilengkapi *Contrast Limited Adaptive Histogram Equalization* dan binarisasi Otsu untuk menembus debu lapangan.
-- **Keunggulan:** Menggunakan _built-in parity checksum_ 11 digit tanpa risiko halusinasi visual.
-
-### 3. Two-Stage Local YOLO Digit Reader (Dual Neural Networks, 4.2 ms)
-
-- **Stage 1 (Crop Area Stand):** `models/meter_counter_detector.pt` mendeteksi dan memotong kotak dial roller / display LCD.
-- **Stage 2 (OCR Angka & Desimal):** `models/digit_ocr_detector.pt` (YOLOv8s, mAP@50 96.1%) membaca digit `0-9` dan titik desimal `dot`.
-- **Strict Sequence & Logic PLN:**
-  - *Meter Analog:* Wajib deretan kontinu 4–6 digit (tolak angka parsial).
-  - *Meter Digital:* Mengurutkan koordinat sumbu X. Seluruh angka di depan tanda `dot` diambil sebagai stand integer kWh resmi, angka di belakang koma diabaikan sesuai SOP penagihan PLN.
-
-### 4. VLM Semantic Auditor (NVIDIA NIM LLaMA 3.2 11B Vision)
-
-- **Prinsip Anti-Pemborosan Token:** VLM **dilarang** untuk membaca angka digital rutin (100% dialihkan ke model lokal Tier 2).
-- **Peran Eksklusif:** Hakim anomali semantik tingkat tinggi: memvalidasi fraud (aspal jalan, jok motor, dinding kosong), rintangan fisik nyata (pagar gembok, rumah kosong, anjing galak), dan ketiadaan/kerusakan fisik meteran.
-- **Format Output:** Pure JSON Response deterministik:
-  ```json
-  {
-    "scene_type": "meteran_listrik | pagar_terkunci | rumah_tutup | fraud_anomali",
-    "extracted_meter_no": "86700824276",
-    "extracted_idpel": "514500001376",
-    "is_blurry": false,
-    "confidence_score": 0.95
-  }
-  ```
-
----
-
-## 📚 Landasan Teori & Validasi Riset Ilmiah
-
-Arsitektur Cascading Multi-Tier dan Metodologi Pengembangan ARGUS telah divalidasi dan terbukti secara ilmiah sejalan dengan best practice industri utilitas internasional serta standar rekayasa perangkat lunak ISO/IEC/IEEE 12207:
-- 📄 **Validasi Riset Arsitektur & Sitasi Ilmiah:** [`Docs/ARGUS_Research_Validation.md`](./Docs/ARGUS_Research_Validation.md)
-- 🗺️ **Roadmap Metodologi & Tahapan Pengembangan MLLC:** [`Docs/ARGUS_Methodology_Roadmap.md`](./Docs/ARGUS_Methodology_Roadmap.md)
-
-### Intisari Justifikasi Akademik:
-1. **Efisiensi Cascading Multi-Tier (*Applied Sciences MDPI, 2023 & Barkat, 2024*):**
-   Memisahkan filter citra cepat (OpenCV), ekstraktor lokal ber-checksum (ZBar), dan penalaran semantik (VLM) memangkas biaya API 70–80%, mempercepat proses batch dari >3 jam menjadi belasan menit, dan cocok untuk komputer kantor PLN tanpa GPU khusus.
-2. **Keunggulan Barcode Checksum vs Model Deep Learning OCR (*VFAST, 2024*):**
-   Untuk deretan angka 11 digit transaksi penagihan listrik, pembacaan berbasis *parity checksum* ZBar mengeliminasi risiko halusinasi angka (misal angka `8` terbaca `3` atau `0` terbaca `O`) yang kerap menjangkiti OCR/VLM.
-3. **Penyaringan Kualitas Citra & ROI (*Computers, Materials & Continua, 2023*):**
-   *Image quality assessment* no-reference berbasis Laplacian Variance adalah gerbang wajib (*gatekeeper*) sebelum data masuk ke tahap ekstraksi, dengan rekomendasi eksekusi pada ROI objek meteran (menghindari background clutter).
-4. **Verifikasi Kepatuhan & Deteksi Manipulasi (*IEEE ICASSP, 2024 & MDPI Sensors, 2024*):**
-   VLM multimodal terbukti efektif mendeteksi citra anomali atau foto manipulasi (petugas mengunggah aspal, tanah, atau jok motor saat mengklaim kendala rintangan lapangan).
-5. **Standarisasi Metodologi MLLC & Ground Truth Sampling (*IEEE Computer Society & MDPI 2024*):**
-   Pengembangan visi komputer utilitas mengikuti alur *Data Acquisition → Preprocessing Benchmark → Decision Engine → Full-Scale Ground Truth Sampling (100 baris)* dengan metrik komprehensif (Precision, Recall, F1-Score).
-
----
-
-## 🛠 Panduan Instalasi & Setup Lingkungan Kerja
-
-Ikuti langkah-langkah berikut untuk mengonfigurasi lingkungan kerja lokal ARGUS:
-
-### 1. Prasyarat Sistem
-
-- **Python:** Versi 3.10 s.d. 3.14 (64-bit).
-- **Git:** Pastikan Git terpasang dan SSH key terdaftar di GitHub.
-
-### 2. Inisialisasi Virtual Environment & Dependensi
-
-Buka PowerShell pada direktori proyek `ARGUS/` dan jalankan:
+### 1. Prasyarat & Lingkungan Virtual
+Pastikan **Python 3.11 (64-bit)** dan **Git** sudah terpasang di Windows, lalu jalankan di PowerShell:
 
 ```powershell
-# 1. Buat lingkungan virtual terisolasi
-python -m venv .venv
+git clone https://github.com/benpascol/ARGUS_PLN-.git
+cd ARGUS_PLN-
 
-# 2. Aktifkan virtual environment (Windows PowerShell)
-.\.venv\Scripts\activate
-
-# 3. Instal seluruh dependensi resmi ARGUS
+python -m venv .venv_gpu
+.\.venv_gpu\Scripts\Activate.ps1
 pip install -r Docs/requirements.txt
 ```
 
-### 3. Konfigurasi Kredensial Environment (`.env`)
-
-Salin template konfigurasi dan masukkan kunci akses API:
-
+*(Opsional untuk GPU NVIDIA RTX)*: Pastikan PyTorch terpasang dengan dukungan CUDA (mis. CUDA 12.4) sesuai driver GPU agar pemrosesan batch berjalan optimal:
 ```powershell
-# Salin template .env.example menjadi .env
-Copy-Item .env.example .env
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
 ```
 
-Buka berkas `.env` dan masukkan API Key:
+### 2. Penempatan Bobot Model AI (`.pt`)
+Salin berkas bobot model terlatih ke dalam folder `models/`:
+- `models/meter_counter_detector.pt` *(Stage 1 Counter Localizer)*
+- `models/digit_ocr_detector_v5.pt` *(atau `digit_ocr_detector.pt` — Stage 2 OCR 11-Class)*
 
-```env
-API=your_nvidia_nim_api_key_here
-BLUR_THRESHOLD=30.0
-CONCURRENCY_LIMIT=5
+### 3. Menjalankan Aplikasi (Mode Pengembangan)
+```powershell
+.\.venv_gpu\Scripts\python.exe launcher.py
 ```
+Server akan menyala pada `http://127.0.0.1:8000` dan otomatis membuka browser ke `/dashboard`.
 
-### 4. Ekstensi VS Code / Antigravity IDE yang Diperlukan
+### 4. Referensi Endpoint REST API Lokal
+| Method | Endpoint | Fungsi Utama |
+| :--- | :--- | :--- |
+| `GET` | `/` | Status *health-check* engine & metadata versi (`1.0.0`) |
+| `GET` | `/dashboard` | Antarmuka utama Dashboard Audit Stand KWH Meter |
+| `GET` | `/tutorial` | Halaman Panduan Operasional Interaktif *Offline* |
+| `GET` | `/api/system-info` | Deteksi riil GPU RTX / CPU & konkurensi *worker pool* |
+| `POST` | `/predict` | Inferensi AI satu citra via *Multipart Form-Data* |
+| `POST` | `/predict-base64` | Inferensi AI berkecepatan tinggi via payload Base64 JSON |
+| `POST` | `/api/parse-acmt-excel` | Parsing & pemetaan kolom rekap ACMT (`.xlsx`, `.xls`, `.csv`) |
+| `POST` | `/api/export-audit-excel` | Pembuatan berkas Excel resmi PLN ber-hyperlink foto |
+| `GET` | `/api/feedback/status` | Memeriksa jumlah tabungan Celengan AI & rilis ZIP tersedia |
+| `POST` | `/api/feedback/sync` | Menyinkronkan koreksi & catatan AI ke `%LOCALAPPDATA%` |
+| `POST` | `/api/feedback/package-now` | Mengemas manual tabungan Celengan AI menjadi berkas ZIP |
+| `POST` | `/api/feedback/open-folder` | Membuka direktori `%LOCALAPPDATA%\ARGUS_PLN\feedback_vault` |
+| `GET` | `/api/feedback/download/{fname}` | Mengunduh berkas ZIP hasil kemas paket Celengan AI |
 
-Pastikan ekstensi berikut terpasang di VS Code (`Ctrl + Shift + X`):
-
-1. **Python & Pylance (Microsoft):** Pengenalan interpreter dan debugging.
-   - _Aktivasi:_ Tekan `Ctrl + Shift + P` $\rightarrow$ `Python: Select Interpreter` $\rightarrow$ pilih `('ARGUS': .venv)`.
-2. **Excel Viewer (GrapeCity):** Membaca tabel file Excel langsung di VS Code tanpa membuka software MS Excel.
-3. **Markdown Preview Mermaid Support (Matt Bierner):** Merender grafik Mermaid interaktif di markdown.
-
-### 5. Modul Userscript Browser (Portal ACMT PLN)
-
-Untuk staf operasional di portal PLN (`https://portalapp.iconpln.co.id/*`):
-
-1. Pasang ekstensi **Tampermonkey** / **Violentmonkey** di Google Chrome atau Microsoft Edge.
-2. Tambahkan script baru dan salin isi berkas `web_extension/argus_evaluator.user.js`.
+### 5. Mengompilasi Ulang Paket Portabel `.exe`
+Untuk membungkus ulang aplikasi siap sebar ke direktori `dist/ARGUS/`:
+```powershell
+.\.venv_gpu\Scripts\python.exe build_exe.py
+```
 
 ---
 
-## 📊 Project Status Tracker (ARGUS)
+## 📚 Tata Kelola Dokumentasi (*The Holy Trinity*)
 
-### The Good
+Seluruh pengembangan proyek tunduk pada 3 dokumen inti + log rilis resmi:
+- 📄 **[`README.md`](./README.md)** — Wajah proyek, panduan instalasi, alur kerja & arsitektur sistem.
+- 📜 **[`RULEBOOK.md`](./RULEBOOK.md)** — Konstitusi hukum teknis, aturan keamanan data PLN, & integritas Computer Vision.
+- 🎯 **[`WHITEBOARD.md`](./WHITEBOARD.md)** — Roadmap 5 fase, rekam jejak keputusan arsitektur & catatan isu (*audit trail*).
+- 🧾 **[`CHANGELOG.md`](./CHANGELOG.md)** — Catatan rilis terstruktur dari `0.1.0` hingga rilis resmi `1.0.0`.
 
-- **Fondasi Ilmiah & Arsitektur Terverifikasi:** Cascading Multi-Tier Pipeline resmi divalidasi oleh literatur internasional (MDPI, IEEE, CMC) dan didokumentasikan di [`Docs/ARGUS_Research_Validation.md`](./Docs/ARGUS_Research_Validation.md).
-- **Dataset Lapangan Masif & Valid:** Tersedia 7.470 foto asli lapangan beresolusi $540 \times 960$ dan 8.126 data pelanggan lengkap dengan koordinat geolokasi di Excel.
-- **Lonjakan Akurasi Digit YOLOv8s ke 96.1% mAP@50:** Pelatihan model digit lokal di GPU RTX 4060 tanpa flip horizontal melesat dengan Precision 94.6%, Recall 92.8%, dan latensi inferensi super kencang 4.2 ms.
-- **Two-Stage Pipeline Sukses 100% pada Analog Bersih:** Menguji end-to-end 10 sampel foto lapangan menghasilkan pembacaan 5-digit sempurna pada seluruh meteran analog yang tidak silau.
-- **Kunci Akses VLM Siap Pakai:** Kredensial NVIDIA NIM API Key terpasang aman di `.env` untuk penalaran anomali semantik.
+---
 
-### The Bad
-
-- **Karakter Titik/Koma LCD Digital Belum Teranotasi:** Model digit saat ini (`v2`) belum mengenali karakter `dot` desimal, menyebabkan meter digital seperti Sampel #8 (`20,163`) baru terbaca parsial (`2, 6, 3`). Diperlukan rilis dataset `v3` dengan kelas `dot` agar pembacaan digital tuntas lokal tanpa buang token VLM.
-- **Script Web Eksisting Salah Target:** Source code userscript `Tanpa judul.txt` masih membawa logika lama, memerlukan refactoring prompt dan parser data untuk kasus LBKB token/rintangan.
-
-### The Ugly
-
-- **Silau Matahari Ekstrem (Kasus Sampel #6):** Pantulan cahaya pada mika penutup menghapus 4 digit analog, namun menyisakan 1 digit ('6') dengan confidence 85%. Tanpa Gatekeeper Kualitas & Strict Sequence Validator, pipeline naif meloloskan angka tunggal ke database penagihan.
-- **Resiko Manipulasi Lapangan (Fraud):** Petugas lapangan kerap mengunggah foto tidak relevan untuk mengejar target laporan, menuntut VLM memiliki *prompt guardrails* yang ketat terhadap deteksi objek aspal/lantai/jok motor.
+**PT PLN (Persero) Unit Induk Distribusi Jawa Timur — UP3 Mojokerto**  
+*Lead Engineer: **Benedictus Pascal***
