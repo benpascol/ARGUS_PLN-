@@ -1,5 +1,5 @@
 ================================================================================
-⚡ PANDUAN PENGGUNAAN & PENGOPERASIAN SISTEM ARGUS AI V5
+⚡ PANDUAN PENGGUNAAN & PENGOPERASIAN ARGUS v1.0.0 (AI MODEL V5)
    PT PLN (PERSERO) UNIT INDUK DISTRIBUSI JAWA TIMUR — UP3 MOJOKERTO
 ================================================================================
 Sistem Audit Pengawasan Otomatis Stand KWH Meter (LBKB) Berbasis AI Vision Lokal
@@ -192,7 +192,7 @@ A: BISA. Seluruh folder ARGUS bersifat 'Portable'. Anda cukup meng-copy seluruh 
 
 --------------------------------------------------------------------------------
 PT PLN (PERSERO) UNIT INDUK DISTRIBUSI JAWA TIMUR — UP3 MOJOKERTO
-Sistem Pengawasan Visual Otomatis LBKB (Project ARGUS AI V5)
+Sistem Pengawasan Visual Otomatis LBKB (Project ARGUS v1.0.0 • AI Model V5)
 Lead Engineer: Benedictus Pascal
 ================================================================================
 

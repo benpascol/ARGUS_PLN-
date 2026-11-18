@@ -1,23 +1,33 @@
 # ==============================================================================
-# 📦 PYTHON DEPENDENCIES — PROJECT ARGUS
+# 📦 PYTHON DEPENDENCIES — PROJECT ARGUS v1.0.0 (Model V5)
+# PT PLN (Persero) UP3 Mojokerto | Lead Engineer: Benedictus Pascal
 # ==============================================================================
-# Untuk menginstal seluruh dependensi di lingkungan virtual:
-#   python -m venv .venv
-#   .\.venv\Scripts\activate   (Windows PowerShell)
+# Rekomendasi setup di Windows (Python 3.11):
+#   python -m venv .venv_gpu
+#   .\.venv_gpu\Scripts\activate
 #   pip install -r Docs/requirements.txt
+#
+# Catatan GPU NVIDIA CUDA (opsional namun direkomendasikan):
+#   Instal PyTorch versi CUDA sesuai driver (contoh CUDA 12.4):
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
 
-# 1. Computer Vision & Image Quality
-opencv-python>=5.0.0
+# 1. Deep Learning & Computer Vision
+ultralytics>=8.3.0
+torch>=2.5.0
+torchvision>=0.20.0
+opencv-python>=4.10.0
 numpy>=2.0.0
-pillow>=12.0.0
 
-# 2. Barcode & QR Code Decoders
-pyzbar>=0.1.9
-zxing-cpp>=3.1.0
+# 2. Backend Local API & Web Dashboard
+fastapi>=0.115.0
+uvicorn>=0.32.0
+pydantic>=2.10.0
+jinja2>=3.1.4
+python-multipart>=0.0.12
 
-# 3. Excel Processing & Data Analysis
+# 3. Pengolahan Rekap Excel ACMT & Ekspor Laporan Resmi
 openpyxl>=3.1.5
 
-# 4. Networking & Environment Config
-requests>=2.32.0
+# 4. Konfigurasi Lingkungan & Packaging Portable
 python-dotenv>=1.0.0
+pyinstaller>=6.10.0

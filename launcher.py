@@ -36,7 +36,7 @@ if sys.platform == "win32":
 # CETAK HEADER INSTAN DI DETIK PERTAMA SEBELUM IMPORT BERAT
 print("\n" + "=" * 78, flush=True)
 print("⚡ PT PLN (PERSERO) UNIT INDUK DISTRIBUSI JAWA TIMUR", flush=True)
-print("   UP3 MOJOKERTO — SISTEM AUDIT STAND KWH METER (ARGUS AI V5)", flush=True)
+print("   UP3 MOJOKERTO — SISTEM AUDIT STAND KWH METER (ARGUS v1.0.0 • MODEL V5)", flush=True)
 print("=" * 78, flush=True)
 print("⏳ Memulai inisialisasi sistem...", flush=True)
 
