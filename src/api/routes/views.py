@@ -9,9 +9,8 @@ Menyediakan halaman web dan aset statis:
 2. GET /api/system-info     : Deteksi hardware riil GPU RTX / CPU
 3. GET /dashboard           : Halaman antarmuka utama Dashboard Modular
 4. GET /tutorial            : Halaman panduan operasional & tutorial ARGUS V5
-5. GET /simulator           : Halaman simulator portal ACMT PLN
-6. GET /favicon.ico         : Favicon SVG resmi PLN
-7. GET /sample-photo/{path} : Foto sampel meteran dengan fuzzy matcher
+5. GET /favicon.ico         : Favicon SVG resmi PLN
+6. GET /sample-photo/{path} : Foto sampel meteran dengan fuzzy matcher
 =============================================================================
 """
 
@@ -59,24 +58,15 @@ def get_system_info():
     }
 
 
-@router.get("/simulator", response_class=HTMLResponse)
-def get_simulator():
-    """Halaman Simulator Portal ACMT PLN untuk Uji Coba Evaluasi & Tampermonkey."""
-    sim_path = BASE_DIR / "web_extension" / "simulator.html"
-    if not sim_path.is_file():
-        raise HTTPException(status_code=404, detail="Berkas simulator.html tidak ditemukan.")
-    return HTMLResponse(content=sim_path.read_text(encoding="utf-8"))
-
-
 @router.get("/dashboard", response_class=HTMLResponse)
 def get_dashboard(request: Request):
     """Halaman Standalone Web Dashboard ARGUS (Modular Component Architecture)."""
     if templates and (DASHBOARD_DIR / "index.html").is_file():
         return templates.TemplateResponse(request=request, name="index.html")
-    dash_path = BASE_DIR / "web_extension" / "dashboard.html"
-    if dash_path.is_file():
-        return HTMLResponse(content=dash_path.read_text(encoding="utf-8"))
-    raise HTTPException(status_code=404, detail="Berkas dashboard tidak ditemukan.")
+    dash_index = DASHBOARD_DIR / "index.html"
+    if dash_index.is_file():
+        return HTMLResponse(content=dash_index.read_text(encoding="utf-8"))
+    raise HTTPException(status_code=404, detail="Berkas dashboard/index.html tidak ditemukan.")
 
 
 @router.get("/tutorial", response_class=HTMLResponse)

@@ -83,31 +83,23 @@ def build():
         print(f"   [+] Menyalin model: {pt_file.name} -> {dest_file.relative_to(dist_dir)}")
         shutil.copy2(pt_file, dest_file)
 
-    # 4. Salin Web Extension & Dashboard
+    # 4. Salin Antarmuka Dashboard Web & Tutorial (HTML, CSS, JS)
     target_web = app_dist_dir / "web_extension"
     target_web.mkdir(parents=True, exist_ok=True)
     src_web = BASE_DIR / "web_extension"
 
-    # Dashboard folder
+    # Dashboard & Tutorial folder
     dest_dashboard = target_web / "dashboard"
     if dest_dashboard.exists():
         shutil.rmtree(dest_dashboard)
     shutil.copytree(src_web / "dashboard", dest_dashboard)
-    print("   [+] Menyalin antarmuka Dashboard Web (HTML, CSS, JS)...")
-
-    # Simulator & userscript jika ada
-    if (src_web / "simulator.html").is_file():
-        shutil.copy2(src_web / "simulator.html", target_web / "simulator.html")
-    if (src_web / "argus_evaluator.user.js").is_file():
-        shutil.copy2(src_web / "argus_evaluator.user.js", target_web / "argus_evaluator.user.js")
+    print("   [+] Menyalin antarmuka Dashboard Web & Tutorial (HTML, CSS, JS)...")
 
     # 5. Siapkan struktur folder data/
     (app_dist_dir / "data" / "input_foto").mkdir(parents=True, exist_ok=True)
     (app_dist_dir / "data" / "input_excel").mkdir(parents=True, exist_ok=True)
     (app_dist_dir / "data" / "audit_results").mkdir(parents=True, exist_ok=True)
     (app_dist_dir / "data" / "samples").mkdir(parents=True, exist_ok=True)
-    (app_dist_dir / "data" / "feedback_staging").mkdir(parents=True, exist_ok=True)
-    (app_dist_dir / "data" / "feedback_releases").mkdir(parents=True, exist_ok=True)
 
     # Salin README panduan input folder
     if (BASE_DIR / "data" / "input_foto" / "BACA_SAYA.txt").is_file():
