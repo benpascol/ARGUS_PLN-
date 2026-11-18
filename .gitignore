@@ -75,6 +75,8 @@ data/samples/Hasil_Deteksi_*
 # Pengecualian: Izinkan foto aset dokumentasi SVG/PNG dan sampel benchmark resmi di subfolder
 !Docs/*.svg
 !Docs/*.png
+!Docs/assets/*.svg
+!Docs/assets/*.png
 !data/samples/A_*/*.jpg
 !data/samples/B_*/*.jpg
 !data/samples/C_*/*.jpg

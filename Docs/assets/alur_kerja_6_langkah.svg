@@ -1,0 +1,246 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 520" width="100%" height="100%">
+  <defs>
+    <filter id="cardShadow" x="-6%" y="-6%" width="112%" height="116%">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#0f172a" flood-opacity="0.06" />
+    </filter>
+    <linearGradient id="plnHeaderGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#004d73" />
+      <stop offset="55%" stop-color="#006b9e" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <clipPath id="outerClip">
+      <rect x="0" y="0" width="1040" height="520" rx="16" />
+    </clipPath>
+    <marker id="arrowSlate" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#64748b" />
+    </marker>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#0284c7" />
+    </marker>
+  </defs>
+
+  <g clip-path="url(#outerClip)">
+    <!-- Canvas Background -->
+    <rect x="0" y="0" width="1040" height="520" fill="#f8fafc" />
+
+    <!-- Corporate PLN Top Header -->
+    <rect x="0" y="0" width="1040" height="76" fill="url(#plnHeaderGrad)" />
+    <rect x="0" y="73" width="1040" height="3" fill="#fdb913" />
+
+    <!-- PLN Lightning Badge -->
+    <rect x="32" y="18" width="40" height="40" rx="10" fill="#fdb913" />
+    <path d="M54 24 L43 40 L51 40 L49 52 L61 35 L53 35 Z" fill="#0f172a" />
+
+    <!-- Header Typography -->
+    <text x="86" y="37" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="18" font-weight="800" fill="#ffffff" letter-spacing="0.2">
+      ALUR KERJA OPERASIONAL ARGUS (END-TO-END 6 LANGKAH)
+    </text>
+    <text x="86" y="57" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12" font-weight="500" fill="#bae6fd">
+      PT PLN (Persero) UID Jawa Timur — UP3 Mojokerto  •  Audit Stand KWH Meter LBKB 100% Lokal &amp; Offline
+    </text>
+
+    <!-- Header Right Badge -->
+    <rect x="836" y="23" width="172" height="28" rx="14" fill="#082f49" fill-opacity="0.45" stroke="#38bdf8" stroke-opacity="0.5" stroke-width="1" />
+    <circle cx="854" cy="37" r="4" fill="#22c55e" />
+    <text x="866" y="41" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="11" font-weight="700" fill="#e0f2fe">
+      SIAP PAKAI (OFFLINE)
+    </text>
+
+    <!-- ================= ROW 1 ARROWS ================= -->
+    <line x1="332" y1="180" x2="364" y2="180" stroke="#64748b" stroke-width="2.2" marker-end="url(#arrowSlate)" />
+    <line x1="672" y1="180" x2="704" y2="180" stroke="#64748b" stroke-width="2.2" marker-end="url(#arrowSlate)" />
+
+    <!-- Connector Langkah 3 -> Langkah 4 (Clean Return Elbow) -->
+    <path d="M 860 264 L 860 286 L 180 286 L 180 302" fill="none" stroke="#0284c7" stroke-width="2.2" stroke-dasharray="6,4" marker-end="url(#arrowBlue)" />
+    <rect x="448" y="276" width="144" height="20" rx="10" fill="#e0f2fe" stroke="#bae6fd" stroke-width="1" />
+    <text x="520" y="289" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10" font-weight="700" fill="#0369a1">
+      TINJAUAN &amp; LAPORAN
+    </text>
+
+    <!-- ================= ROW 2 ARROWS ================= -->
+    <line x1="332" y1="392" x2="364" y2="392" stroke="#64748b" stroke-width="2.2" marker-end="url(#arrowSlate)" />
+    <line x1="672" y1="392" x2="704" y2="392" stroke="#64748b" stroke-width="2.2" marker-end="url(#arrowSlate)" />
+
+    <!-- ================= LANGKAH 1 ================= -->
+    <g transform="translate(32, 98)" filter="url(#cardShadow)">
+      <rect width="296" height="164" rx="12" fill="#f0f9ff" stroke="#bae6fd" stroke-width="1.5" />
+      <rect width="296" height="5" rx="2.5" fill="#0284c7" />
+      <rect x="18" y="18" width="84" height="22" rx="6" fill="#0284c7" />
+      <text x="60" y="33" text-anchor="middle" font-family="Consolas, 'Courier New', monospace" font-size="11" font-weight="700" fill="#ffffff">LANGKAH 1</text>
+      <!-- Icon Play Circle -->
+      <circle cx="264" cy="29" r="12" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5" />
+      <path d="M261 24 L270 29 L261 34 Z" fill="#0284c7" />
+
+      <text x="18" y="64" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="15" font-weight="800" fill="#0f172a">
+        Nyalakan Aplikasi
+      </text>
+      <text x="18" y="86" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12" fill="#334155">
+        Klik ganda <tspan font-family="Consolas, monospace" font-weight="700" fill="#0369a1">Mulai_ARGUS.bat</tspan>
+      </text>
+      <text x="18" y="103" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12" fill="#334155">
+        atau <tspan font-family="Consolas, monospace" font-weight="700" fill="#0369a1">ARGUS.exe</tspan>, tunggu model siap
+      </text>
+      <text x="18" y="120" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12" fill="#334155">
+        &amp; browser membuka dashboard.
+      </text>
+      <rect x="18" y="132" width="260" height="22" rx="6" fill="#e0f2fe" />
+      <text x="28" y="147" font-family="Consolas, 'Courier New', monospace" font-size="10.5" font-weight="700" fill="#0369a1">
+        URL: http://127.0.0.1:8000/dashboard
+      </text>
+    </g>
+
+    <!-- ================= LANGKAH 2 ================= -->
+    <g transform="translate(372, 98)" filter="url(#cardShadow)">
+      <rect width="296" height="164" rx="12" fill="#ecfeff" stroke="#a5f3fc" stroke-width="1.5" />
+      <rect width="296" height="5" rx="2.5" fill="#0891b2" />
+      <rect x="18" y="18" width="84" height="22" rx="6" fill="#0891b2" />
+      <text x="60" y="33" text-anchor="middle" font-family="Consolas, 'Courier New', monospace" font-size="11" font-weight="700" fill="#ffffff">LANGKAH 2</text>
+      <!-- Icon Upload -->
+      <circle cx="264" cy="29" r="12" fill="#cffafe" stroke="#0891b2" stroke-width="1.5" />
+      <path d="M264 23 L259 28 H262 V34 H266 V28 H269 Z" fill="#0891b2" />
+
+      <text x="18" y="64" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="15" font-weight="800" fill="#0f172a">
+        Impor ACMT &amp; Foto
+      </text>
+      <text x="18" y="86" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12" fill="#334155">
+        Unggah Excel ACMT (opsional), lalu
+      </text>
+      <text x="18" y="103" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12" fill="#334155">
+        pilih atau seret (drag &amp; drop)
+      </text>
+      <text x="18" y="120" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12" fill="#334155">
+        folder ribuan foto KWH meter.
+      </text>
+      <rect x="18" y="132" width="260" height="22" rx="6" fill="#cffafe" />
+      <text x="28" y="147" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#0e7490">
+        Proteksi Anti-Duplikasi (Skip/Overwrite)
+      </text>
+    </g>
+
+    <!-- ================= LANGKAH 3 ================= -->
+    <g transform="translate(712, 98)" filter="url(#cardShadow)">
+      <rect width="296" height="164" rx="12" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1.5" />
+      <rect width="296" height="5" rx="2.5" fill="#4f46e5" />
+      <rect x="18" y="18" width="84" height="22" rx="6" fill="#4f46e5" />
+      <text x="60" y="33" text-anchor="middle" font-family="Consolas, 'Courier New', monospace" font-size="11" font-weight="700" fill="#ffffff">LANGKAH 3</text>
+      <!-- Icon CPU/Lightning -->
+      <circle cx="264" cy="29" r="12" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1.5" />
+      <path d="M266 22 L259 30 H264 L262 36 L269 28 H264 Z" fill="#4f46e5" />
+
+      <text x="18" y="64" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="15" font-weight="800" fill="#0f172a">
+        Jalankan Audit Batch AI
+      </text>
+      <text x="18" y="86" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12" fill="#334155">
+        Pilih Mode (Auto / Mandiri /
+      </text>
+      <text x="18" y="103" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12" fill="#334155">
+        Komparasi) lalu klik Mulai Audit.
+      </text>
+      <text x="18" y="120" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12" fill="#334155">
+        GPU/CPU memproses foto paralel.
+      </text>
+      <rect x="18" y="132" width="260" height="22" rx="6" fill="#e0e7ff" />
+      <text x="28" y="147" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#3730a3">
+        Two-Stage YOLOv8s + OpenCV Offline
+      </text>
+    </g>
+
+    <!-- ================= LANGKAH 4 ================= -->
+    <g transform="translate(32, 310)" filter="url(#cardShadow)">
+      <rect width="296" height="164" rx="12" fill="#f0fdfa" stroke="#99f6e4" stroke-width="1.5" />
+      <rect width="296" height="5" rx="2.5" fill="#0d9488" />
+      <rect x="18" y="18" width="84" height="22" rx="6" fill="#0d9488" />
+      <text x="60" y="33" text-anchor="middle" font-family="Consolas, 'Courier New', monospace" font-size="11" font-weight="700" fill="#ffffff">LANGKAH 4</text>
+      <!-- Icon Search/Inspect -->
+      <circle cx="264" cy="29" r="12" fill="#ccfbf1" stroke="#0d9488" stroke-width="1.5" />
+      <circle cx="262.5" cy="27.5" r="4" fill="none" stroke="#0d9488" stroke-width="1.8" />
+      <line x1="265.5" y1="30.5" x2="269" y2="34" stroke="#0d9488" stroke-width="1.8" stroke-linecap="round" />
+
+      <text x="18" y="64" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="15" font-weight="800" fill="#0f172a">
+        Filter &amp; Tinjau Modal HD
+      </text>
+      <text x="18" y="86" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12" fill="#334155">
+        Klik Kartu KPI (Beda Stand /
+      </text>
+      <text x="18" y="103" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12" fill="#334155">
+        Tinjau Ulang), periksa foto HD &amp;
+      </text>
+      <text x="18" y="120" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12" fill="#334155">
+        koreksi cepat via Hotkey 1–5.
+      </text>
+      <rect x="18" y="132" width="260" height="22" rx="6" fill="#ccfbf1" />
+      <text x="28" y="147" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#0f766e">
+        Human-in-the-Loop Zoom &amp; Pan HD
+      </text>
+    </g>
+
+    <!-- ================= LANGKAH 5 ================= -->
+    <g transform="translate(372, 310)" filter="url(#cardShadow)">
+      <rect width="296" height="164" rx="12" fill="#faf5ff" stroke="#e9d5ff" stroke-width="1.5" />
+      <rect width="296" height="5" rx="2.5" fill="#7c3aed" />
+      <rect x="18" y="18" width="84" height="22" rx="6" fill="#7c3aed" />
+      <text x="60" y="33" text-anchor="middle" font-family="Consolas, 'Courier New', monospace" font-size="11" font-weight="700" fill="#ffffff">LANGKAH 5</text>
+      <!-- Icon Database/Vault -->
+      <circle cx="264" cy="29" r="12" fill="#f3e8ff" stroke="#7c3aed" stroke-width="1.5" />
+      <ellipse cx="264" cy="25" rx="5" ry="2.2" fill="#7c3aed" />
+      <path d="M259 25 V33 C259 34.5 269 34.5 269 33 V25" fill="none" stroke="#7c3aed" stroke-width="1.6" />
+
+      <text x="18" y="64" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="15" font-weight="800" fill="#0f172a">
+        Celengan Feedback AI
+      </text>
+      <text x="18" y="86" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12" fill="#334155">
+        Setiap koreksi &amp; tag salah baca
+      </text>
+      <text x="18" y="103" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12" fill="#334155">
+        ditabung aman ke %LOCALAPPDATA%
+      </text>
+      <text x="18" y="120" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12" fill="#334155">
+        &amp; terkemas ZIP tiap 1.000 kasus.
+      </text>
+      <rect x="18" y="132" width="260" height="22" rx="6" fill="#f3e8ff" />
+      <text x="28" y="147" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#6b21a8">
+        Kebal Refresh, Reset &amp; Repack EXE
+      </text>
+    </g>
+
+    <!-- ================= LANGKAH 6 ================= -->
+    <g transform="translate(712, 310)" filter="url(#cardShadow)">
+      <rect width="296" height="164" rx="12" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1.5" />
+      <rect width="296" height="5" rx="2.5" fill="#059669" />
+      <rect x="18" y="18" width="84" height="22" rx="6" fill="#059669" />
+      <text x="60" y="33" text-anchor="middle" font-family="Consolas, 'Courier New', monospace" font-size="11" font-weight="700" fill="#ffffff">LANGKAH 6</text>
+      <!-- Icon Check/Download -->
+      <circle cx="264" cy="29" r="12" fill="#d1fae5" stroke="#059669" stroke-width="1.5" />
+      <path d="M259 29 L262.5 32.5 L270 25" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+
+      <text x="18" y="64" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="15" font-weight="800" fill="#0f172a">
+        Unduh Excel Resmi PLN
+      </text>
+      <text x="18" y="86" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12" fill="#334155">
+        Klik Unduh Laporan Excel (.xlsx)
+      </text>
+      <text x="18" y="103" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12" fill="#334155">
+        lengkap dengan hyperlink foto,
+      </text>
+      <text x="18" y="120" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12" fill="#334155">
+        formula &amp; catatan auditor PLN.
+      </text>
+      <rect x="18" y="132" width="260" height="22" rx="6" fill="#d1fae5" />
+      <text x="28" y="147" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#065f46">
+        Laporan Siap Serah Terima Dinas
+      </text>
+    </g>
+
+    <!-- Bottom Footer -->
+    <line x1="32" y1="488" x2="1008" y2="488" stroke="#e2e8f0" stroke-width="1" />
+    <text x="32" y="506" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="11" font-weight="500" fill="#64748b">
+      Project ARGUS — Sistem Pengawasan Visual Otomatis LBKB UP3 Mojokerto
+    </text>
+    <text x="1008" y="506" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="11" font-weight="700" fill="#0f172a">
+      Lead Engineer: Benedictus Pascal
+    </text>
+  </g>
+
+  <!-- Outer Border -->
+  <rect x="0.75" y="0.75" width="1038.5" height="518.5" rx="15.5" fill="none" stroke="#cbd5e1" stroke-width="1.5" />
+</svg>
