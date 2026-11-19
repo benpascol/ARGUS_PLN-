@@ -56,8 +56,11 @@ async function imageToBase64(url, fallbackFilename) {
     }
 }
 
-async function auditSingleRow(rowIndex) {
-    const row = document.getElementById(`row-${rowIndex}`);
+window.isBatchAuditRunning = false;
+
+async function auditSingleRow(rowIndex, opts = {}) {
+    const batchMode = Boolean(opts && opts.batchMode);
+    const row = (opts && opts.rowEl) || document.getElementById(`row-${rowIndex}`);
     if (!row) return;
 
     const photoImg = row.querySelector('.photo-thumbnail');
@@ -74,16 +77,30 @@ async function auditSingleRow(rowIndex) {
     btnAudit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Audit...';
 
     try {
-        const b64 = await imageToBase64(photoImg ? photoImg.src : '', photoName);
-        const resp = await fetch('/predict-base64', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                image_base64: b64,
-                filename: photoName
-            })
-        });
+        let resp;
+        // Fast-path biner (Anti-OOM): kirim File/Blob langsung via FormData ke /predict tanpa alokasi string Base64
+        if (row._photoBlob instanceof Blob) {
+            const formData = new FormData();
+            formData.append('file', row._photoBlob, photoName || 'meter.jpg');
+            resp = await fetch('/predict', {
+                method: 'POST',
+                body: formData
+            });
+        } else {
+            const b64 = await imageToBase64(photoImg ? photoImg.src : '', photoName);
+            resp = await fetch('/predict-base64', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    image_base64: b64,
+                    filename: photoName
+                })
+            });
+        }
 
+        if (!resp.ok) {
+            throw new Error(`Server AI mengembalikan HTTP ${resp.status}`);
+        }
         const data = await resp.json();
 
         cellRaw.textContent = data.raw_display || '-';
@@ -163,8 +180,10 @@ async function auditSingleRow(rowIndex) {
 
         updateSelectStyle(statusSelect);
         updateRowStyle(row);
-        if (typeof updateKPIs === 'function') updateKPIs();
-        if (typeof persistCurrentSession === 'function') persistCurrentSession();
+        if (!batchMode) {
+            if (typeof updateKPIs === 'function') updateKPIs();
+            if (typeof persistCurrentSession === 'function') persistCurrentSession();
+        }
     } catch (err) {
         console.error(err);
         statusSelect.value = 'TRIAGE';
@@ -176,6 +195,7 @@ async function auditSingleRow(rowIndex) {
 }
 
 async function auditAllRows() {
+    if (window.isBatchAuditRunning) return;
     const btn = document.getElementById('btn-run-all');
     const rows = document.querySelectorAll('#table-body tr:not(#empty-state-row)');
     if (rows.length === 0) {
@@ -185,8 +205,14 @@ async function auditAllRows() {
         return;
     }
 
+    // SOLUSI 5: CONCURRENT WORKER POOL (AKSELERASI MULTI-WORKER DENGAN AUTO-HARDWARE TUNING)
+    const CONCURRENCY = window.BATCH_CONCURRENCY || 4;
+    const hwInfo = window.ARGUS_HARDWARE_INFO || {};
+    const hwLabel = hwInfo.device_name || 'Local Engine';
+
+    window.isBatchAuditRunning = true;
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-bolt" style="color:var(--pln-yellow);"></i> Memproses Batch (4x Worker)...';
+    btn.innerHTML = `<i class="fas fa-bolt" style="color:var(--pln-yellow);"></i> Memproses Batch (${CONCURRENCY}x Worker)...`;
 
     const pWrapper = document.getElementById('batch-progress-wrapper');
     const pFill = document.getElementById('batch-progress-fill');
@@ -194,33 +220,38 @@ async function auditAllRows() {
     const pTitle = document.getElementById('batch-progress-label');
     if (pWrapper) pWrapper.style.display = 'block';
     if (pFill) pFill.style.width = '0%';
-    if (pTitle) pTitle.textContent = 'Memproses Batch AI (4x Worker Pool - RTX 4060 GPU)...';
-    if (pEta) pEta.innerHTML = '<i class="fas fa-bolt" style="color:var(--pln-yellow);"></i> Mengaktifkan 4 worker GPU paralel...';
+    if (pTitle) pTitle.textContent = `Memproses Batch AI (${CONCURRENCY}x Worker Pool — ${hwLabel})...`;
+    if (pEta) pEta.innerHTML = `<i class="fas fa-bolt" style="color:var(--pln-yellow);"></i> Mengaktifkan ${CONCURRENCY} worker paralel...`;
 
     let processedCount = 0;
     let protectedCount = 0;
     let completedCount = 0;
     const totalCount = rows.length;
     const tBatchStart = performance.now();
-
-    // SOLUSI 5: CONCURRENT WORKER POOL (AKSELERASI MULTI-WORKER DENGAN AUTO-HARDWARE TUNING)
-    const CONCURRENCY = window.BATCH_CONCURRENCY || 4;
+    let lastKpiRefreshAt = tBatchStart;
     let nextIndex = 0;
 
     function updateBatchProgress(done) {
         const progressPct = Math.min(100, Math.round((done / totalCount) * 100));
         if (pFill) pFill.style.width = `${progressPct}%`;
 
+        const now = performance.now();
         if (pEta) {
             if (done <= CONCURRENCY) {
-                pEta.innerHTML = `<i class="fas fa-bolt" style="color:var(--pln-yellow);"></i> 4x GPU Worker Aktif: Memproses ${done} dari ${totalCount}...`;
+                pEta.innerHTML = `<i class="fas fa-bolt" style="color:var(--pln-yellow);"></i> ${CONCURRENCY}x Worker Aktif: Memproses ${done} dari ${totalCount}...`;
             } else {
-                const elapsedSec = (performance.now() - tBatchStart) / 1000;
+                const elapsedSec = (now - tBatchStart) / 1000;
                 const avgSecPerPhoto = elapsedSec / done;
                 const remainingPhotos = totalCount - done;
                 const estRemainingSec = Math.max(1, Math.round(avgSecPerPhoto * remainingPhotos));
-                pEta.innerHTML = `<i class="fas fa-bolt" style="color:var(--pln-yellow);"></i> 4x GPU Worker: Selesai ${done}/${totalCount} (Sisa ~${estRemainingSec} detik)`;
+                pEta.innerHTML = `<i class="fas fa-bolt" style="color:var(--pln-yellow);"></i> ${CONCURRENCY}x Worker: Selesai ${done}/${totalCount} (Sisa ~${estRemainingSec} detik)`;
             }
+        }
+
+        // Throttle updateKPIs agar tidak memindai 7.000 baris DOM di setiap 1 foto (maks 1x per 600ms)
+        if (now - lastKpiRefreshAt >= 600) {
+            lastKpiRefreshAt = now;
+            if (typeof updateKPIs === 'function') updateKPIs();
         }
     }
 
@@ -239,7 +270,7 @@ async function auditAllRows() {
             }
 
             try {
-                await auditSingleRow(currentIdx);
+                await auditSingleRow(currentIdx, { batchMode: true, rowEl: row });
                 processedCount++;
             } catch (err) {
                 console.error(`[Worker ${workerId}] Error audit baris ${currentIdx}:`, err);
@@ -250,13 +281,17 @@ async function auditAllRows() {
         }
     }
 
-    // Eksekusi paralel 4 worker serentak
-    const activeWorkers = Math.min(CONCURRENCY, totalCount);
-    const workerPromises = [];
-    for (let w = 1; w <= activeWorkers; w++) {
-        workerPromises.push(worker(w));
+    try {
+        // Eksekusi paralel worker serentak
+        const activeWorkers = Math.min(CONCURRENCY, totalCount);
+        const workerPromises = [];
+        for (let w = 1; w <= activeWorkers; w++) {
+            workerPromises.push(worker(w));
+        }
+        await Promise.all(workerPromises);
+    } finally {
+        window.isBatchAuditRunning = false;
     }
-    await Promise.all(workerPromises);
 
     const totalBatchDuration = ((performance.now() - tBatchStart) / 1000).toFixed(1);
     const avgLatency = (totalBatchDuration / Math.max(1, processedCount)).toFixed(2);

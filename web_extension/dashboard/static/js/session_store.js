@@ -1,13 +1,20 @@
 /**
  * Module: session_store.js
  * Deskripsi: Manajemen persistensi sesi audit lokal via IndexedDB & jaring pengaman anti-refresh.
- *            Mencegah data antrean foto dan hasil koreksi hilang saat browser di-refresh.
+ *            Mencegah data antrean foto dan hasil koreksi hilang saat browser di-refresh,
+ *            sekaligus dilengkapi perlindungan Anti-OOM untuk antrean massal (>500 hingga 7.500+ foto).
  * Lead Engineer: Benedictus Pascal
  */
 
-const DB_NAME = 'ARGUS_LOCAL_SESSION_DB';
+const DB_NAME = 'ARGUS_LOCAL_SESSION_DB_V2';
+const LEGACY_DB_NAME = 'ARGUS_LOCAL_SESSION_DB';
 const DB_VERSION = 1;
 const STORE_NAME = 'audit_session_data';
+
+// Batas aman penyimpanan Blob foto biner di IndexedDB:
+// <= 500 foto: simpan Blob agar thumbnail instan saat refresh (F5).
+// > 500 foto : simpan metadata hasil audit saja (~2 MB untuk 7.000 baris) agar RAM browser tidak OOM.
+const MAX_BLOB_PERSIST_ROWS = 500;
 
 // Jaring Pengaman Instan: Peringatan jika pengguna tidak sengaja menekan F5 / Tutup Tab
 window.addEventListener('beforeunload', (e) => {
@@ -34,81 +41,150 @@ function openSessionDB() {
 }
 
 let persistDebounceTimer = null;
+let isPersistingSession = false;
+let persistQueuedAgain = false;
 
 function persistCurrentSession(immediate = false) {
+    // Anti-OOM Guard: Jangan tulis ulang seluruh tabel ke IndexedDB di tengah proses Audit Batch ribuan foto!
+    if (window.isBatchAuditRunning && !immediate) {
+        return;
+    }
     if (immediate) {
         if (persistDebounceTimer) clearTimeout(persistDebounceTimer);
+        persistDebounceTimer = null;
         return doPersistCurrentSession();
     }
     if (persistDebounceTimer) clearTimeout(persistDebounceTimer);
     persistDebounceTimer = setTimeout(() => {
+        persistDebounceTimer = null;
         doPersistCurrentSession();
-    }, 350);
+    }, 600);
 }
 
 async function doPersistCurrentSession() {
+    if (isPersistingSession) {
+        persistQueuedAgain = true;
+        return;
+    }
+    isPersistingSession = true;
+    let db = null;
     try {
         const rows = document.querySelectorAll('#table-body tr:not(#empty-state-row)');
-        const sessionData = [];
+        const totalRows = rows.length;
+        const includeBlobs = totalRows <= MAX_BLOB_PERSIST_ROWS;
+        const sessionData = new Array(totalRows);
 
-        for (let i = 0; i < rows.length; i++) {
+        for (let i = 0; i < totalRows; i++) {
             const r = rows[i];
             const img = r.querySelector('.photo-thumbnail');
             const photoName = r.getAttribute('data-photo') || '';
-            const currStanLap = r.querySelectorAll('.input-table')[0] ? r.querySelectorAll('.input-table')[0].value : '';
-            const currArgus = r.querySelector('.cell-argus') ? r.querySelector('.cell-argus').value : '-';
+            const stanInput = r.querySelectorAll('.input-table')[0];
+            const argusInput = r.querySelector('.cell-argus');
+            const currStanLap = stanInput ? stanInput.value : '';
+            const currArgus = argusInput ? argusInput.value : '-';
             const currStatus = r.getAttribute('data-status') || 'PENDING';
-            sessionData.push({
+            const rawEl = r.querySelector('.cell-raw');
+            const diffEl = r.querySelector('.cell-diff');
+            const selEl = r.querySelector('.select-status');
+            const notesEl = r.querySelector('.input-notes');
+            const latEl = r.querySelector('.cell-lat');
+            const strongEl = r.querySelector('strong');
+
+            sessionData[i] = {
                 index: i,
                 idpel: r.getAttribute('data-idpel') || '',
                 photo_name: photoName,
-                photo_blob: r._photoBlob || null,
+                photo_blob: includeBlobs ? (r._photoBlob || null) : null,
                 photo_src: (img && img.src && !img.src.startsWith('blob:')) ? img.src : `/sample-photo/${encodeURIComponent(photoName)}`,
-                nama: r.querySelector('strong') ? r.querySelector('strong').textContent : '',
+                nama: strongEl ? strongEl.textContent : '',
                 tarif_daya: r.cells[3] ? r.cells[3].textContent : '',
                 stan_lapangan: currStanLap,
-                raw_display: r.querySelector('.cell-raw') ? r.querySelector('.cell-raw').textContent : '-',
+                raw_display: rawEl ? rawEl.textContent : '-',
                 stan_argus: currArgus,
-                selisih: r.querySelector('.cell-diff') ? r.querySelector('.cell-diff').textContent : '-',
+                selisih: diffEl ? diffEl.textContent : '-',
                 status: currStatus,
-                verdict_select: r.querySelector('.select-status') ? r.querySelector('.select-status').value : 'PENDING',
+                verdict_select: selEl ? selEl.value : 'PENDING',
                 is_edited: r.getAttribute('data-edited') === 'true',
                 orig_stan_lap: r.hasAttribute('data-orig-stan-lap') ? r.getAttribute('data-orig-stan-lap') : currStanLap,
                 orig_argus: r.hasAttribute('data-orig-argus') ? r.getAttribute('data-orig-argus') : currArgus,
                 orig_status: r.hasAttribute('data-orig-status') ? r.getAttribute('data-orig-status') : currStatus,
-                notes: r.querySelector('.input-notes') ? r.querySelector('.input-notes').value : '',
+                notes: notesEl ? notesEl.value : '',
                 ai_notes: r.getAttribute('data-ai-notes') || '',
                 ai_prelabel_meta: r._aiPrelabelMeta || null,
-                latensi: r.querySelector('.cell-lat') ? r.querySelector('.cell-lat').textContent : '-',
+                latensi: latEl ? latEl.textContent : '-',
                 blur: r.getAttribute('data-blur') || '0',
                 glare: r.getAttribute('data-glare') || '0',
                 tier: r.getAttribute('data-tier') || 'GREEN'
-            });
+            };
         }
 
-        const db = await openSessionDB();
-        const tx = db.transaction(STORE_NAME, 'readwrite');
-        const store = tx.objectStore(STORE_NAME);
-        store.put(sessionData, 'active_session_rows');
-        
-        // Simpan juga kamus excel
-        const excelArr = Array.from(excelRecordsMap.entries());
-        store.put(excelArr, 'excel_records_map');
-        store.put(currentAuditMode, 'current_audit_mode');
+        db = await openSessionDB();
+        await new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            const store = tx.objectStore(STORE_NAME);
+            store.put(sessionData, 'active_session_rows');
+
+            // Simpan juga kamus excel & mode audit aktif
+            const excelArr = Array.from(excelRecordsMap.entries());
+            store.put(excelArr, 'excel_records_map');
+            store.put(currentAuditMode, 'current_audit_mode');
+
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+            tx.onabort = () => reject(tx.error || new Error('IndexedDB transaction aborted'));
+        });
     } catch (err) {
         console.warn('Gagal menyimpan sesi ke IndexedDB:', err);
+    } finally {
+        if (db) {
+            try { db.close(); } catch (e) {}
+        }
+        isPersistingSession = false;
+        if (persistQueuedAgain && !window.isBatchAuditRunning) {
+            persistQueuedAgain = false;
+            setTimeout(() => doPersistCurrentSession(), 300);
+        } else {
+            persistQueuedAgain = false;
+        }
     }
 }
 
 async function restoreSessionOnStartup() {
+    // Self-Healing Anti-Crash Loop:
+    // Hapus paksa database IndexedDB lama v1.0.0 di level storage engine TANPA membacanya ke RAM
+    // (mencegah Edge langsung OOM/force-close akibat sisa blob 7.000 foto dari sesi v1.0.0).
     try {
-        const db = await openSessionDB();
+        indexedDB.deleteDatabase(LEGACY_DB_NAME);
+    } catch (e) {}
+
+    // Escape hatch darurat: buka /dashboard?reset=1 untuk mengosongkan sesi lokal seketika
+    try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('reset') === '1') {
+            indexedDB.deleteDatabase(DB_NAME);
+            window.history.replaceState({}, document.title, window.location.pathname);
+            if (typeof showToast === 'function') {
+                showToast('Memori sesi browser berhasil dikosongkan.', 'info');
+            }
+            return;
+        }
+    } catch (e) {}
+
+    let db = null;
+    try {
+        db = await openSessionDB();
         const tx = db.transaction(STORE_NAME, 'readonly');
         const store = tx.objectStore(STORE_NAME);
 
         const getRowsReq = store.get('active_session_rows');
         const getExcelReq = store.get('excel_records_map');
         const getModeReq = store.get('current_audit_mode');
+
+        tx.oncomplete = () => {
+            if (db) {
+                try { db.close(); } catch (e) {}
+            }
+        };
 
         getExcelReq.onsuccess = () => {
             const res = getExcelReq.result;
@@ -226,17 +302,28 @@ async function restoreSessionOnStartup() {
             }
         };
     } catch (err) {
+        if (db) {
+            try { db.close(); } catch (e) {}
+        }
         console.warn('Tidak ada sesi yang dipulihkan:', err);
     }
 }
 
 async function clearPersistedSession() {
+    let db = null;
     try {
-        const db = await openSessionDB();
-        const tx = db.transaction(STORE_NAME, 'readwrite');
-        tx.objectStore(STORE_NAME).clear();
+        db = await openSessionDB();
+        await new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            tx.objectStore(STORE_NAME).clear();
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+        });
     } catch (err) {
         console.warn('Gagal membersihkan IndexedDB:', err);
+    } finally {
+        if (db) {
+            try { db.close(); } catch (e) {}
+        }
     }
 }
-

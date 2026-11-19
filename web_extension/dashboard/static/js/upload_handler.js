@@ -260,6 +260,8 @@ function resolveDuplicateAction(action) {
             photoImg.setAttribute('onerror', `if(!this.src.includes('/sample-photo/')){this.src='/sample-photo/' + encodeURIComponent('${item.file.name}')}`);
             r.setAttribute('data-photo', item.file.name);
             r.setAttribute('data-status', 'PENDING');
+            const stanInputEl = r.querySelectorAll('.input-table')[0];
+            const stanInputVal = stanInputEl ? stanInputEl.value.trim() : '-';
             r.setAttribute('data-orig-stan-lap', stanInputVal);
             r.setAttribute('data-orig-argus', '-');
             r.setAttribute('data-orig-status', 'PENDING');
