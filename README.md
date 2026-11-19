@@ -1,9 +1,9 @@
-# ⚡ ARGUS v1.0.0 — Automated Recognition & Grid Utility Surveillance
+# ⚡ ARGUS v1.0.1 — Automated Recognition & Grid Utility Surveillance
 
 **Sistem Audit Otomatis Stand KWH Meter LBKB 100% Lokal & Offline**  
 **PT PLN (Persero) UID Jawa Timur — UP3 Mojokerto** | **Lead Engineer:** Benedictus Pascal
 
-![Release](https://img.shields.io/badge/Release-v1.0.0_(Official)-0284C7?style=for-the-badge)
+![Release](https://img.shields.io/badge/Release-v1.0.1_(Official)-0284C7?style=for-the-badge)
 ![AI Model](https://img.shields.io/badge/Vision_Engine-YOLOv8s_Model_V5-059669?style=for-the-badge)
 ![Offline](https://img.shields.io/badge/Mode-100%25_Pure_Local_%26_Offline-0F172A?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/Platform-Windows_10%2F11_Portable-FDB913?style=for-the-badge&logoColor=0F172A)
@@ -12,7 +12,7 @@
 
 > [!NOTE]
 > **Kebijakan Penomoran Versi (Semantic Versioning):**
-> - **Versi Rilis Aplikasi (`v1.0.0`):** Rilis produksi resmi perdana aplikasi desktop & dashboard PLN UP3 Mojokerto.
+> - **Versi Rilis Aplikasi (`v1.0.1`):** Rilis produksi resmi untuk PLN UP3 Mojokerto dengan hotfix *Anti-OOM* teruji pada skala penuh **7.470 foto**.
 > - **Versi Bobot Model AI (`Model V5`):** Otak pengenalan angka di dalamnya menggunakan bobot `digit_ocr_detector_v5.pt` hasil 5 generasi pelatihan dataset Roboflow/YOLO serta 8 siklus penyempurnaan pra-rilis (`0.1.0` s.d. `0.8.0`). Seluruh rekam jejak *trial-and-error* tercatat lengkap di [`CHANGELOG.md`](./CHANGELOG.md).
 
 ---
@@ -21,10 +21,10 @@
 
 Bagi petugas lapangan, auditor, maupun supervisor PT PLN (Persero) yang ingin langsung menjalankan aplikasi **tanpa perlu instalasi Python maupun memahami kode sumber**:
 
-1. **Unduh Paket Portable Siap Pakai (`ARGUS_v1.0.0_Portable.zip` ~2,48 GiB):**  
-   - 👉 **[Unduh langsung `ARGUS_v1.0.0_Portable.zip` (Google Drive)](https://drive.google.com/file/d/1jw2hl4y7npi1REvmtk9ww-97oN-0sx7C/view?usp=drive_link)** *(Folder rilis lengkap: [Google Drive PLN](https://drive.google.com/drive/folders/17sT3Ab5qJGD-8bqnpvFPkGp7aKSDk-MC?usp=sharing))*  
-   - *(Atau buka panel **`Releases`** `v1.0.0` di sisi kanan halaman repositori GitHub ini)*  
-   - **SHA-256 Checksum:** `E8CB251BC79A469D3ED3071B11FFD4E8576A63D6B9D1C4880911DA4AE6DA150F`
+1. **Unduh Paket Portable Siap Pakai (`ARGUS_v1.0.1_Portable.zip` ~2,48 GiB):**  
+   - 👉 **[Unduh langsung `ARGUS_v1.0.1_Portable.zip` (Google Drive)](https://drive.google.com/file/d/1pduI9KeG0r7AVD5E0_CqdZtlTiWcsqHF/view?usp=sharing)** *(Folder rilis lengkap: [Google Drive PLN](https://drive.google.com/drive/folders/17sT3Ab5qJGD-8bqnpvFPkGp7aKSDk-MC?usp=sharing))*  
+   - *(Atau buka panel **`Releases`** `v1.0.1` di sisi kanan halaman repositori GitHub ini)*  
+   - **SHA-256 Checksum:** `DC6A811A1C0CA15142DF48D1D55A50E36EF97BB012274F9F1F22FEE029C363FB`
 2. **Ekstrak Berkas ZIP:**  
    Ekstrak seluruh isi folder ke direktori kerja di komputer/laptop Windows Anda (contoh: `D:\ARGUS\`).
 3. **Jalankan Dashboard Audit:**  
@@ -40,13 +40,28 @@ Bagi petugas lapangan, auditor, maupun supervisor PT PLN (Persero) yang ingin la
 > ![Dropdown Code GitHub](./Docs/assets/dropdown_code_untukdownload.png)
 >
 > Tombol hijau **`<> Code` → `Download ZIP`** di halaman utama repo **HANYA mengunduh kode sumber (`.py`, `.html`, `.js`)** untuk keperluan pengembang/tim IT, dan **TIDAK berisi `ARGUS.exe`**.  
-> Untuk operasional langsung oleh petugas PLN, selalu unduh **`ARGUS_v1.0.0_Portable.zip`** melalui tautan **Google Drive di atas** atau halaman **`Releases`**.
+> Untuk operasional langsung oleh petugas PLN, selalu unduh **`ARGUS_v1.0.1_Portable.zip`** melalui tautan **Google Drive di atas** atau halaman **`Releases`**.
+
+---
+
+## 📊 Hasil Validasi Lapangan (Pilot Run 7.470 Foto & Ground Truth 100 Sampel)
+
+Telah diuji secara *blind test* (`0` koreksi auditor) pada seluruh **7.470 foto dokumentasi LBKB UP3 Mojokerto** dan diverifikasi manual pada **100 sampel acak (`seed=42`)** melalui [`src/evaluate_ground_truth.py`](./src/evaluate_ground_truth.py) ([ringkasan JSON](./Docs/Ground_Truth_100_Summary_v1.0.1.json)):
+
+| Metrik Validasi | Hasil | Keterangan Operasional |
+| :--- | :---: | :--- |
+| **Skala Uji Batch Penuh** | **`7.470 Foto`** | Lulus penuh & ekspor `.xlsx` 7.470 baris tanpa OOM crash |
+| **Recall Deteksi Kelainan & Fraud** | **`100,0%`** | `TP=39, FN=0` — seluruh kelainan, non-KWH, blur & beda stand tertangkap |
+| **False Billing Escape (`FN`)** | **`0,0%`** | **0 kesalahan tagihan lolos** ke status otomatis *Match/Rolling* |
+| **F1-Score / Akurasi Vonis** | **`80,41%` / `81,0%`** | `Precision 67,24%` (konservatif: kasus ragu diarahkan ke Triage) |
+| **Auto-Clearance Rate** | **`42,0%`** | Langsung memangkas 42% beban pengecekan manual auditor |
+| **Akurasi OCR (Saat AI Terbit Angka)** | **`79,25%` (`42/53`)** | Menjadi `81,13%` (`43/53`) termasuk 1 kasus *Rolling Digit* ($\pm 1\text{ kWh}$) |
 
 ---
 
 ## 🗺️ Alur Kerja Operasional (End-to-End 6 Langkah)
 
-Berikut ringkasan alur penggunaan harian **ARGUS v1.0.0** dari menyalakan aplikasi hingga menghasilkan laporan Excel resmi PLN:
+Berikut ringkasan alur penggunaan harian **ARGUS v1.0.1** dari menyalakan aplikasi hingga menghasilkan laporan Excel resmi PLN:
 
 ![Alur Kerja Operasional ARGUS End-to-End 6 Langkah](./Docs/assets/alur_kerja_6_langkah.svg)
 
