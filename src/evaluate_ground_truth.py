@@ -82,7 +82,7 @@ def normalize_stand_text(value: Any) -> str:
     return text
 
 
-def parse_numeric_stand(text: str) -> Optional[float]:
+def parse_numeric_stand(text: Any) -> Optional[float]:
     """Mengonversi teks stand kWh menjadi angka float bila valid."""
     clean = normalize_stand_text(text).replace(",", ".")
     if not clean:
@@ -93,8 +93,20 @@ def parse_numeric_stand(text: str) -> Optional[float]:
         return None
 
 
+def extract_integer_stand(val: Any) -> Optional[int]:
+    """Mengekstrak stand bulat kWh di depan titik/koma desimal sesuai SOP penagihan PLN."""
+    clean = normalize_stand_text(val).replace(",", ".")
+    if not clean:
+        return None
+    int_part = clean.split(".")[0]
+    digits = re.sub(r"\D", "", int_part)
+    if not digits:
+        return None
+    return int(digits)
+
+
 def stands_match(pred_val: Any, gt_val: Any) -> Optional[bool]:
-    """Membandingkan stand AI vs ground truth secara numerik/zero-padded.
+    """Membandingkan stand bulat kWh AI vs ground truth sesuai SOP PLN (abaikan angka desimal).
 
     Mengembalikan None apabila ground truth kosong atau tidak diisi angka.
     """
@@ -106,10 +118,10 @@ def stands_match(pred_val: Any, gt_val: Any) -> Optional[bool]:
     if not pred_text:
         return False
 
-    gt_num = parse_numeric_stand(gt_text)
-    pred_num = parse_numeric_stand(pred_text)
-    if gt_num is not None and pred_num is not None:
-        return abs(gt_num - pred_num) < 1e-6
+    gt_int = extract_integer_stand(gt_text)
+    pred_int = extract_integer_stand(pred_text)
+    if gt_int is not None and pred_int is not None:
+        return gt_int == pred_int
 
     return pred_text.upper() == gt_text.upper()
 
@@ -318,6 +330,8 @@ def score_ground_truth_sheet(gt_excel: Path, json_out: Optional[Path] = None) ->
 
     stand_checked = 0
     stand_exact_match = 0
+    emitted_stand_checked = 0
+    emitted_stand_exact = 0
     abs_errors: List[float] = []
 
     tp = fp = tn = fn = 0
@@ -335,10 +349,13 @@ def score_ground_truth_sheet(gt_excel: Path, json_out: Optional[Path] = None) ->
             stand_checked += 1
             if is_exact:
                 stand_exact_match += 1
-            p_num = parse_numeric_stand(pred_stand)
-            g_num = parse_numeric_stand(gt_stand)
-            if p_num is not None and g_num is not None:
-                abs_errors.append(abs(p_num - g_num))
+            p_int = extract_integer_stand(pred_stand)
+            g_int = extract_integer_stand(gt_stand)
+            if p_int is not None and g_int is not None:
+                emitted_stand_checked += 1
+                if p_int == g_int:
+                    emitted_stand_exact += 1
+                abs_errors.append(abs(p_int - g_int))
 
         pred_anom = is_anomaly_verdict(_cell_str(row, cols["verdict"]))
         gt_anom = is_anomaly_verdict(_cell_str(row, cols["gt_status"]))
@@ -358,6 +375,7 @@ def score_ground_truth_sheet(gt_excel: Path, json_out: Optional[Path] = None) ->
     f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0.0
     cls_acc = ((tp + tn) / cls_total) if cls_total > 0 else 0.0
     stand_acc = (stand_exact_match / stand_checked) if stand_checked > 0 else 0.0
+    emitted_acc = (emitted_stand_exact / emitted_stand_checked) if emitted_stand_checked > 0 else 0.0
     mae_kwh = (sum(abs_errors) / len(abs_errors)) if abs_errors else 0.0
     false_billing_escape = (fn / cls_total) if cls_total > 0 else 0.0
     auto_clear_rate = ((tn + fn) / cls_total) if cls_total > 0 else 0.0
@@ -369,6 +387,9 @@ def score_ground_truth_sheet(gt_excel: Path, json_out: Optional[Path] = None) ->
             "evaluated_count": stand_checked,
             "exact_match_count": stand_exact_match,
             "exact_match_accuracy_pct": round(stand_acc * 100, 2),
+            "emitted_stand_count": emitted_stand_checked,
+            "emitted_exact_count": emitted_stand_exact,
+            "emitted_accuracy_pct": round(emitted_acc * 100, 2),
             "mae_kwh": round(mae_kwh, 2),
         },
         "classification_evaluation": {
@@ -402,10 +423,11 @@ def print_evaluation_report(summary: Dict[str, Any]) -> None:
     print(f"Berkas Uji        : {summary['file']}")
     print(f"Total Baris Sampel: {summary['total_rows']}")
     print("-" * 72)
-    print("1. AKURASI PEMBACAAN STAND METER (OCR DIGIT):")
-    print(f"   • Sampel Terisi : {s_eval['evaluated_count']}")
-    print(f"   • Cocok Eksak   : {s_eval['exact_match_count']} ({s_eval['exact_match_accuracy_pct']}%)")
-    print(f"   • MAE kWh       : {s_eval['mae_kwh']} kWh")
+    print("1. AKURASI PEMBACAAN STAND METER (OCR DIGIT — SOP INTEGER kWh PLN):")
+    print(f"   • Total Meter Terbaca GT   : {s_eval['evaluated_count']} (termasuk kasus AI Triage/ragu)")
+    print(f"   • Cocok Eksak (End-to-End) : {s_eval['exact_match_count']}/{s_eval['evaluated_count']} ({s_eval['exact_match_accuracy_pct']}%)")
+    print(f"   • Akurasi Saat AI Terbit   : {s_eval['emitted_exact_count']}/{s_eval['emitted_stand_count']} ({s_eval['emitted_accuracy_pct']}%)")
+    print(f"   • MAE kWh (Saat AI Terbit) : {s_eval['mae_kwh']} kWh")
     print("-" * 72)
     print("2. KLASIFIKASI DETEKSI KELAINAN / ANOMALI (Positif = Kelainan/Triage):")
     print(f"   • Sampel Terisi : {c_eval['evaluated_count']}")

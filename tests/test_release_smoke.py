@@ -223,6 +223,8 @@ class GroundTruthEvaluatorTests(unittest.TestCase):
             self.assertEqual(summary["stand_evaluation"]["evaluated_count"], 6)
             self.assertEqual(summary["stand_evaluation"]["exact_match_count"], 5)
             self.assertEqual(summary["classification_evaluation"]["evaluated_count"], 6)
+            self.assertTrue(gt_eval.stands_match("17", "17.84"))
+            self.assertTrue(gt_eval.stands_match("00000", "00000.4"))
 
 
 class FastAPIRoutesTests(unittest.TestCase):
