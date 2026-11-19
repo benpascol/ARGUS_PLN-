@@ -1,0 +1,28 @@
+{
+  "file": "Docs\\Formulir_Ground_Truth_100_Sampel_PLN_Verified.xlsx",
+  "total_rows": 100,
+  "stand_evaluation": {
+    "evaluated_count": 63,
+    "exact_match_count": 42,
+    "exact_match_accuracy_pct": 66.67,
+    "emitted_stand_count": 53,
+    "emitted_exact_count": 42,
+    "emitted_accuracy_pct": 79.25,
+    "mae_kwh": 2259.25
+  },
+  "classification_evaluation": {
+    "evaluated_count": 100,
+    "confusion_matrix": {
+      "TP": 39,
+      "FP": 19,
+      "TN": 42,
+      "FN": 0
+    },
+    "precision_pct": 67.24,
+    "recall_pct": 100.0,
+    "f1_score_pct": 80.41,
+    "accuracy_pct": 81.0,
+    "false_billing_escape_pct": 0.0,
+    "auto_clearance_rate_pct": 42.0
+  }
+}

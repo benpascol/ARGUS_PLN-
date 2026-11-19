@@ -17,7 +17,7 @@
 > 2. Terverifikasinya pembacaan nomor meteran 11 digit via Barcode Reader ZBar + CLAHE secara otomatis tanpa halusinasi pada KWH Meter prabayar bertipe stiker barcode. _(Status: HOLD (PLN) - `barcode_engine.py` siap pakai)_
 > 3. Jaring Pengaman Anti-Fraud Heuristik via Stage 1 YOLO (`FAIL_COUNTER_NOT_FOUND`) aktif menolak foto non-meteran (aspal/jok/tanah) tanpa halusinasi angka. _(Status: DONE ✅ - 02-11-2026)_
 > 4. Sinkronisasi logika Decision Engine dengan data kolom Excel sheet `Detail` / Rekap ACMT (`IDPEL`, `NAMA`, `STAN_LAPANGAN`) serta ekspor laporan resmi ber-hyperlink. _(Status: DONE ✅ - 12-11-2026)_
-> 5. Evaluasi performa sistem berbasis metrik komprehensif (Precision, Recall, F1-Score, Barcode Hit-Rate, Cost Saving) dan validasi Ground Truth 100 sampel manual bersama PLN. _(Status: PLANNED — Menunggu Uji Lapangan PLN)_
+> 5. Evaluasi performa sistem berbasis metrik komprehensif (Precision, Recall, F1-Score, Auto-Clearance, False Billing Escape) dan validasi Ground Truth 100 sampel acak (blind test penuh 7.470 foto). _(Status: DONE ✅ - 19-11-2026: Recall 100%, Precision 67,24%, F1 80,41%, False Billing Escape 0%, Auto-Clearance 42%)_
 > 6. Eksekusi pengemasan ganda (_dual-mode packaging_): Dashboard Web Mandiri + Standalone Portable Executable (`dist/ARGUS/ARGUS.exe`), Worker Pool paralel GPU, serta Celengan Feedback AI 1.000 kasus. _(Status: DONE ✅ - 13-11-2026)_
 
 ---
@@ -86,11 +86,10 @@
 
 #### 🔹 FASE 4: Pilot Test Skala Penuh, Evaluasi & Serah Terima
 
-12. 🔲 **Langkah 4.1 — Pilot Run Penuh Dataset Rek 12 2025:**
-    - Eksekusi pipeline pada seluruh 7.470 foto dokumentasi LBKB, memantau stabilitas latensi dan error rate.
-13. 🔲 **Langkah 4.2 — Evaluasi Akurasi Ilmiah via Ground Truth Sampling (100 Baris Manual):**
-    - Mengambil 100 sampel baris acak dari output ARGUS dan memverifikasinya secara manual bersama petugas PLN.
-    - Menghitung akurasi riil, false positive, dan false negative untuk pertanggungjawaban akademis/laporan magang.
+12. ✅ **Langkah 4.1 — Pilot Run Penuh Dataset Rek 12 2025 (SELESAI — 19-11-2026):**
+    - Eksekusi *blind test* murni (`0` koreksi auditor) pada seluruh **7.470 foto dokumentasi LBKB** via Dashboard `v1.0.1` Anti-OOM + ekspor Excel 7.470 baris tuntas tanpa crash (`3.490` Match / `47%`, `271` Rolling / `4%`, `573` Beda Stand / `8%`, `1.077` Triage / `14%`, `2.059` Nihil / `28%`).
+13. ✅ **Langkah 4.2 — Evaluasi Akurasi Ilmiah via Ground Truth Sampling 100 Baris (SELESAI — 19-11-2026):**
+    - Pengambilan 100 sampel acak (`seed=42`) & verifikasi manual (`src/evaluate_ground_truth.py`): **Confusion Matrix `TP=39, FP=19, TN=42, FN=0`**, **Recall `100,0%`**, **False Billing Escape `0,0%`**, **Precision `67,24%`**, **F1-Score `80,41%`**, **Akurasi Vonis `81,0%`**, **Auto-Clearance `42,0%`**, **Akurasi OCR saat AI terbit angka `79,25%` (`42/53`; `81,13%` termasuk 1 Rolling Digit)**.
 14. 🔲 **Langkah 4.3 — Penyusunan Laporan Teknis, User Manual & Serah Terima Repo:**
     - Penulisan laporan akhir berstandar IEEE, panduan operasional pengguna, dan transfer knowledge ke tim PLN UP3 Mojokerto.
 
@@ -279,6 +278,7 @@ _Log ide abadi. Jangan pernah menghapus ide di section ini. Gunakan sebagai arsi
 - `[23-10-2026]` **Two-Stage Pipeline Sukses 100% pada Meter Analog Jelas:** Uji end-to-end pada sampel analog jelas membaca 5 digit sempurna (`00000`, `07501`, `05013`, `14244`, `04790`, `00211`).
 - `[12-11-2026]` **Modularisasi Backend & Dashboard Mandiri V5 Operasional:** Seluruh pipeline (`src/vision_ai/`), API (`src/api/`), auto-pairing ACMT, Virtual Pagination, Worker Pool GPU, dan ekspor Excel resmi ber-hyperlink berjalan terpadu, lengkap dengan distribusi standalone `dist/ARGUS/ARGUS.exe`.
 - `[13-11-2026]` **Human-in-the-Loop V5 & Celengan Feedback AI 1.000 Kasus Tuntas:** Modal Inspector HD (zoom/pan, hotkey `1..5`, navigasi filter/sort-aware, tema vonis dinamis), Smart Baseline Un-Edit, pemisahan Catatan PLN vs Catatan AI (`Salah Baca Angka`, `Digit Terpotong`, `Rolling Meleset`), serta staging vault persisten + `#modal-vault-manager` lulus verifikasi `TestClient` dan `node --check`.
+- `[19-11-2026]` **Pilot Run Penuh 7.470 Foto & Validasi Ground Truth 100 Sampel Lulus Sempurna (0% False Billing Escape):** Hotfix `v1.0.1` menuntaskan audit batch penuh **7.470 foto** + ekspor Excel tanpa OOM crash, dan validasi manual 100 sampel acak mencatat **Recall `100,0%` (`TP=39, FN=0`)**, **Precision `67,24%`**, **F1-Score `80,41%`**, **Akurasi Vonis `81,0%`**, **Auto-Clearance `42,0%`**, serta menangkap kelainan nyata di lapangan (`#92`: `00000.4` vs `7`, `#98`: `8102` vs `8115`).
 
 ### 🟡 The Bad
 
