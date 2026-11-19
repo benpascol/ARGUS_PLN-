@@ -11,6 +11,19 @@ Format catatan mengacu pada [Keep a Changelog](https://keepachangelog.com/en/1.0
 
 ---
 
+## [1.0.1] — 2026-11-19 *(Hotfix: Anti-OOM Mass Batch 7.000+ Foto)*
+
+### Fixed
+- **Pencegahan Crash / Auto-Close Browser (OOM) pada Batch Ribuan Foto (`session_store.js`, `audit_engine.js`):**
+  - Memblokir penulisan ulang penuh IndexedDB di tengah eksekusi `auditAllRows()` (`window.isBatchAuditRunning`), menambah *in-flight overlap lock*, serta menutup handle koneksi `db.close()` setelah transaksi selesai.
+  - Membatasi penyimpanan *binary Blob* foto di IndexedDB hanya untuk antrean $\le 500$ foto (`MAX_BLOB_PERSIST_ROWS = 500`); untuk antrean massal $> 500$ foto (mis. 7.000+ foto), sistem otomatis beralih ke persistensi *metadata-only* ($\sim 2\text{ MB}$) guna memangkas beban RAM browser hingga $>90\%$.
+  - Melakukan *throttling* pembaruan `updateKPIs()` saat batch berjalan (maksimal 1x per 600 ms alih-alih di setiap 1 foto, memangkas jutaan scan DOM).
+  - Memanfaatkan jalur unggah biner langsung (`FormData` $\rightarrow$ `POST /predict`) saat `row._photoBlob` tersedia sehingga mengeliminasi overhead alokasi string Base64 + JSON di memori browser.
+  - Menambahkan mekanisme *self-healing* migrasi IndexedDB (`ARGUS_LOCAL_SESSION_DB_V2`) yang otomatis menghapus database legacy `ARGUS_LOCAL_SESSION_DB` di level storage engine tanpa deserialisasi ke RAM (mencegah *crash loop* saat F5) serta *escape hatch* `/dashboard?reset=1`.
+  - Memperbarui *cache-busting* aset frontend menjadi `?v=7.4` di `web_extension/dashboard/index.html`.
+
+---
+
 ## [1.0.0] — 2026-11-18 (Official Production Release • AI Model V5)
 
 Rilis produksi resmi perdana **ARGUS Portable Desktop & Web Dashboard** yang siap didistribusikan sebagai paket portabel (`.zip` tanpa instalasi Python) untuk verifikasi dan audit stand KWH Meter LBKB PLN UP3 Mojokerto.

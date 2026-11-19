@@ -94,6 +94,17 @@
 14. 🔲 **Langkah 4.3 — Penyusunan Laporan Teknis, User Manual & Serah Terima Repo:**
     - Penulisan laporan akhir berstandar IEEE, panduan operasional pengguna, dan transfer knowledge ke tim PLN UP3 Mojokerto.
 
+#### 🔹 FASE 5: Siklus Peningkatan Berkelanjutan (`v1.1.0` & Vision Engine `Model V6`) [PLANNED 🗓️]
+
+15. 🔲 **Langkah 5.1 — Akumulasi Dataset Nyata via Celengan Feedback AI (Batch 1.000 Kasus):**
+    - Mengumpulkan paket rilis ZIP (`images/`, `crops/`, `labels/`, `manifest`) dari pemakaian operasional petugas UP3 Mojokerto di `%LOCALAPPDATA%\ARGUS_PLN\feedback_vault\releases\`.
+16. 🔲 **Langkah 5.2 — Fine-Tuning `digit_ocr_detector_v6.pt` (`src/train_finetune.py`):**
+    - Memperkuat deteksi titik desimal (`dot`) pada LCD tipis/pudar (kasus `.06`, `.74`) serta angka drum mekanis yang miring/rolling (`8` vs `9`, `3` vs `2`, `7` vs `2`) dengan tetap menjaga aturan *strict No-Flip*.
+17. 🔲 **Langkah 5.3 — Ekspansi Klasifikasi Rintangan Fisik (`YOLOv8-Cls`) & Barcode 11-Digit:**
+    - Melatih model klasifikasi lokal untuk membedakan rintangan sah (`kode E, F, 4`: pagar terkunci, rumah tutup) dari foto *fraud* setelah dataset resmi PLN tersedia, serta mengaktifkan pencocokan serial meter 11-digit bila disetujui SOP PLN.
+18. 🔲 **Langkah 5.4 — Pembaruan Aplikasi `v1.1.0` (Executive Excel, Mode LAN & Optimasi Build):**
+    - Menambahkan Sheet #2 *Executive Summary* pada laporan Excel `.xlsx`, mode server LAN kantor UP3 (`--host 0.0.0.0` agar 1 PC GPU melayani banyak laptop non-GPU), pemangkasan bobot lama (`v4.pt`, `yolov8s.pt`) di `build_exe.py` agar paket ZIP lebih ramping, serta penyelarasan label versi UI (`v1.1.0 • Model V6`).
+
 ## 💡 Section 2: Ideas to Discuss (Log Ide & Keputusan Rekayasa)
 
 _Log ide abadi. Jangan pernah menghapus ide di section ini. Gunakan sebagai arsip evolusi pemikiran tim._
@@ -245,6 +256,15 @@ _Log ide abadi. Jangan pernah menghapus ide di section ini. Gunakan sebagai arsi
   2. **Housekeeping & Arsip Riset:** Skrip eksperimen `scratch/`, log training `runs/`, bobot `weights/`, serta prototipe lama dipisahkan ke arsip pribadi di luar repo (`Arsip_Riset_Pascal_ARGUS/`) sehingga repositori inti tetap ramping dan siap audit.
   3. **Dokumentasi Visual Korporat:** Menambahkan diagram SVG [`Docs/assets/alur_kerja_6_langkah.svg`](./Docs/assets/alur_kerja_6_langkah.svg) serta galeri antarmuka pada [`README.md`](./README.md) dilengkapi instruksi pengunduhan paket portabel `Releases` agar staf non-IT tidak keliru mengunduh kode sumber.
 
+### [Status: RENCANA / PLANNED] Peta Jalan Pasca-Rilis v1.1.0 & Vision Model V6 (Active Learning & Enterprise Scaling)
+- **Tanggal & Inisiator:** `[19-11-2026]` - Benedictus Pascal
+- **Konteks & Latar Belakang:** Setelah **ARGUS v1.0.0 (Model V5)** resmi diterbitkan dan diuji pada data lapangan (`63` & `220` sampel uji awal), ditemukan pola kasus spesifik yang dapat ditingkatkan pada siklus berikutnya — seperti angka *dot* desimal LCD pudar dan pembacaan drum rolling mekanis — serta kebutuhan efisiensi distribusi untuk operasional UP3 Mojokerto.
+- **Rencana Rekayasa v1.1.0 & Model V6:**
+  1. **Active Learning Flywheel (Target 1.000 Kasus):** Memanfaatkan paket rilis ZIP dari Celengan Feedback AI (`%LOCALAPPDATA%`) untuk melatih `digit_ocr_detector_v6.pt` melalui `src/train_finetune.py` tanpa perlu pelabelan ulang dari nol.
+  2. **Peningkatan Laporan Dinas & Manajemen:** Menambahkan Sheet #2 *Executive Summary* otomatis pada ekspor `.xlsx` berisi ringkasan persentase KPI siap cetak untuk manajer UP3.
+  3. **Mode Server LAN Kantor UP3 (`192.168.x.x:8000`):** Menyediakan opsi peluncur khusus jaringan lokal agar 1 PC kantor ber-GPU RTX dapat diakses bersama oleh beberapa laptop staf admin non-GPU.
+  4. **Optimasi Paket Distribusi & Sinkronisasi Label:** Menyalin hanya bobot model aktif di `build_exe.py` (memangkas bobot lama `v4.pt`/`yolov8s.pt` $\approx 64\text{ MB}$), menyelaraskan label versi UI (`v1.1.0` vs `Model V6`), serta mengaktifkan kembali verifikasi barcode 11-digit dan `YOLOv8-Cls` rintangan fisik saat dataset & SOP PLN siap.
+
 ---
 
 ## 🩻 Section 3: Audit Plan (The Ruthless Audit)
@@ -297,3 +317,4 @@ _Log ide abadi. Jangan pernah menghapus ide di section ini. Gunakan sebagai arsi
 |  🟢   | `13-11-2026` | **Evaluasi Model AI, Smart Baseline Un-Edit & Risiko Hilangnya Feedback Saat Refresh/Reset:** Mengembalikan nilai edit masih tertanda `Dikoreksi`, catatan AI berisiko mengotori Excel dinas PLN, serta kasus sulit hilang saat tabel di-reset. | Menerapkan Smart Baseline Un-Edit, memisahkan Catatan AI ke modal pratinjau (3 chip toggle + tombol clear), memperbaiki navigasi modal filter/sort-aware + paginasi `goToPage()`, dan membangun Celengan Feedback AI persisten (target 1.000 kasus + `#modal-vault-manager`). | Benedictus Pascal | `DONE` | `13-11-2026` |
 |  🟢   | `18-11-2026` | **Risiko Hilang Data Celengan Saat Repack EXE, Kontras Kartu Header Terlalu Menonjol & Petugas Awam Butuh Panduan Offline:** Folder staging di `dist/` terhapus bila exe di-rebuild, 3 kartu header bersaing visual dengan 7 kartu KPI, dan petugas membutuhkan SOP interaktif. | Merelokasi Celengan AI ke `%LOCALAPPDATA%\ARGUS_PLN\feedback_vault\` (kebal rebuild) + tombol buka folder di File Explorer, menyelaraskan header dengan 3 kartu glass-blue elegan (46px hover aksen), serta membuat rute `/tutorial` + shortcut launcher `Buka_Panduan_ARGUS.bat`. | Benedictus Pascal | `DONE` | `18-11-2026` |
 |  🟢   | `18-11-2026` | **Inkonsistensi Penamaan Versi (`V5` vs `v1.0.0`), README Usang & Keberadaan Berkas Prototipe:** `README.md` masih menyebut arsitektur Cloud VLM lama, versi aplikasi tercampur dengan versi model AI, dan folder `web_extension/` masih menyimpan `simulator.html`/userscript usang. | Menetapkan SemVer standar `v1.0.0` (Model V5) dengan riwayat lengkap `0.1.0`–`0.8.0` di `CHANGELOG.md`, membersihkan berkas prototipe & memindahkan arsip eksperimen ke luar repo, serta menulis ulang `README.md` dilengkapi SVG 6 langkah dan galeri tangkapan layar. | Benedictus Pascal | `DONE` | `18-11-2026` |
+|  🟢   | `19-11-2026` | **Browser Edge OOM / Auto-Close pada Audit Batch 7.000 Foto:** `persistCurrentSession()` menyalin ulang seluruh 7.000 `photo_blob` (~1 GB) ke IndexedDB tiap 350 ms di tengah batch tanpa lock/close, ditambah `updateKPIs()` memindai 7.000 DOM per foto & alokasi Base64. | Hotfix `v1.0.1`: blokir persistensi IndexedDB selama batch (`isBatchAuditRunning`), *metadata-only* IndexedDB untuk $>500$ foto (`MAX_BLOB_PERSIST_ROWS=500`), *overlap lock* + `db.close()`, throttle `updateKPIs()` maks 1x/600 ms, serta kirim biner `FormData` langsung ke `POST /predict`. | Benedictus Pascal | `DONE` | `19-11-2026` |
