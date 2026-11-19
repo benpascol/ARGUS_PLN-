@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Audit Stand KWH Meter ARGUS V5 - PT PLN (Persero) UP3 Mojokerto</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <!-- FONTS & ICONS -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- MODULAR CSS STYLESHEETS -->
+    <link rel="stylesheet" href="/static/css/pln_theme.css?v=7.2">
+    <link rel="stylesheet" href="/static/css/dashboard.css?v=7.2">
+</head>
+<body>
+
+    <!-- COMPONENT: HEADER -->
+    {% include "components/header.html" %}
+
+    <!-- COMPONENT: INTERACTIVE KPI CARDS -->
+    {% include "components/kpi_cards.html" %}
+
+    <!-- COMPONENT: NOTICE BANNER -->
+    {% include "components/notice_banner.html" %}
+
+    <!-- COMPONENT: ACTION TOOLBAR -->
+    {% include "components/toolbar.html" %}
+
+    <!-- COMPONENT: MAIN AUDIT TABLE -->
+    {% include "components/table.html" %}
+
+    <!-- COMPONENT: FOOTER -->
+    {% include "components/footer.html" %}
+
+    <!-- COMPONENT: MODALS (INSPECTOR & DUPLICATE) -->
+    {% include "components/modals.html" %}
+
+    <!-- MODULAR JAVASCRIPT LOGIC -->
+    <script src="/static/js/session_store.js?v=7.2"></script>
+    <script src="/static/js/feedback_vault.js?v=7.2"></script>
+    <script src="/static/js/upload_handler.js?v=7.2"></script>
+    <script src="/static/js/audit_engine.js?v=7.2"></script>
+    <script src="/static/js/excel_export.js?v=7.2"></script>
+    <script src="/static/js/dashboard_app.js?v=7.2"></script>
+</body>
+</html>

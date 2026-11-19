@@ -1,0 +1,198 @@
+================================================================================
+⚡ PANDUAN PENGGUNAAN & PENGOPERASIAN ARGUS v1.0.0 (AI MODEL V5)
+   PT PLN (PERSERO) UNIT INDUK DISTRIBUSI JAWA TIMUR — UP3 MOJOKERTO
+================================================================================
+Sistem Audit Pengawasan Otomatis Stand KWH Meter (LBKB) Berbasis AI Vision Lokal
+Sifat: 100% Offline, Mandiri, & Menjaga Kerahasiaan Data Pelanggan PLN.
+================================================================================
+
+DAFTAR ISI:
+1. PENGENALAN SINGKAT
+2. PERSYARATAN SISTEM & HARDWARE
+3. STRUKTUR DIREKTORI & LOKASI PENYIMPANAN BERKAS (FOTO & EXCEL)
+4. CARA MENJALANKAN APLIKASI
+5. PANDUAN OPERASIONAL DARI A SAMPAI Z (LANGKAH DEMI LANGKAH)
+   A. Mengunggah Foto Meteran
+   B. Mengimpor Rekap ACMT / LBKB Excel
+   C. Menjalankan Audit AI Batch
+   D. Melakukan Review / Koreksi Manual (In-Modal Review Station)
+   E. Mengunduh Laporan Resmi Excel Ber-Hyperlink
+6. CARA MEMATIKAN SISTEM SECARA AMAN
+7. PERTANYAAN UMUM & TROUBLESHOOTING (FAQ)
+
+================================================================================
+1. PENGENALAN SINGKAT
+================================================================================
+ARGUS (Automated Recognition & Grid Utility Surveillance) adalah sistem audit
+stand kwh meter berbasis Computer Vision (YOLO V5 Two-Stage) yang dirancang khusus
+untuk mendeteksi angka stand meter analog maupun digital, mengidentifikasi drum
+angka berputar (Rolling Digit), menganalisis perbedaan stand lapangan petugas,
+serta mengklasifikasikan bukti foto meteran secara instan dan akurat.
+
+Sistem ini berjalan 100% secara lokal di laptop/komputer Anda tanpa memerlukan
+koneksi internet, sehingga data pelanggan dan foto meteran PLN aman.
+
+================================================================================
+2. PERSYARATAN SISTEM & HARDWARE
+================================================================================
+- Sistem Operasi : Windows 10 atau Windows 11 (64-bit)
+- RAM Komputer   : Minimal 8 GB (Disarankan 16 GB)
+- Grafis / GPU   : 
+  * Direkomendasikan: GPU NVIDIA GeForce RTX/GTX dengan VRAM minimal 4-8 GB
+    (Misal: RTX 4060 / 3060 / 3050). AI akan berjalan dengan akselerasi penuh
+    (4 foto diproses serentak / ~80-120 ms per foto).
+  * Komputer Tanpa GPU: Sistem otomatis beralih ke CPU Mode secara mandiri.
+- Browser        : Google Chrome, Microsoft Edge, atau browser modern lainnya.
+
+================================================================================
+3. STRUKTUR DIREKTORI & LOKASI PENYIMPANAN BERKAS (FOTO & EXCEL)
+================================================================================
+Saat Anda mengunduh atau mengekstrak folder ARGUS, susunan berkas adalah sbb:
+
+ARGUS/
+├── ARGUS.exe                    <-- PROGRAM UTAMA (Klik 2x untuk menyalakan)
+├── Mulai_ARGUS.bat              <-- Shortcut alternatif jika diperlukan
+├── PETUNJUK_PENGGUNAAN_ARGUS.txt<-- Dokumen panduan ini
+│
+├── data/                        <-- WADAH PENYIMPANAN DATA ANDA
+│   ├── input_foto/              <-- [TEMPAT MENYIMPAN FOTO METERAN]
+│   │                               Simpan berkas-berkas foto meteran (.jpg/.png)
+│   │                               atau folder dokumentasi foto cater di sini.
+│   │
+│   ├── input_excel/             <-- [TEMPAT MENYIMPAN REKAP EXCEL ACMT]
+│   │                               Simpan berkas Excel (.xlsx/.xls/.csv) hasil
+│   │                               unduhan dari ACMT / LBKB PLN di sini.
+│   │
+│   └── audit_results/           <-- [LOKASI HASIL EKSPOR LAPORAN]
+│                                   Folder ini otomatis menampung file laporan
+│                                   hasil audit resmi ber-Hyperlink yang diekspor.
+│
+├── models/                      <-- [JANGAN DIHAPUS / JANGAN DIUBAH]
+│                                   Berisi bobot kecerdasan buatan (Model YOLO).
+├── web_extension/               <-- [JANGAN DIHAPUS / JANGAN DIUBAH]
+│                                   Berisi antarmuka tampilan Web Dashboard.
+└── _internal/                   <-- [JANGAN DIHAPUS / JANGAN DIUBAH]
+                                    Berisi engine Python, CUDA GPU, dan pustaka sistem.
+
+================================================================================
+4. CARA MENJALANKAN APLIKASI
+================================================================================
+1. Buka folder aplikasi 'ARGUS'.
+2. Klik ganda pada berkas 'ARGUS.exe' (atau 'Mulai_ARGUS.bat').
+3. Jendela terminal hitam (Command Prompt) akan muncul dengan banner resmi PLN.
+4. Tunggu 1-2 detik:
+   - Sistem akan memuat model AI ke GPU VRAM.
+   - Browser default Anda (Google Chrome / Edge) akan OTOMATIS TERBUKA sendiri
+     menuju Dashboard di alamat: http://127.0.0.1:8000/dashboard
+5. JANGAN TUTUP jendela terminal hitam tersebut selama Anda bekerja menggunakan
+   Dashboard, karena jendela tersebut adalah mesin AI yang sedang bekerja di latar.
+
+================================================================================
+5. PANDUAN OPERASIONAL DARI A SAMPAI Z (LANGKAH DEMI LANGKAH)
+================================================================================
+
+--- LANGKAH A: MEMASUKKAN REKAP EXCEL DATA PELANGGAN (AUTO-PAIRING) ---
+1. Siapkan file Excel rekap ACMT / LBKB PLN (dapat disimpan di folder data/input_excel/).
+2. Pada toolbar Dashboard, klik tombol: [📊 Impor Rekap ACMT (.xlsx / .csv)].
+3. Pilih file Excel Anda.
+4. Sistem otomatis membaca IDPEL, Nama Pelanggan, Tarif/Daya, Stan Lapangan, dan
+   nama file foto. Baris data akan terisi rapi di tabel.
+
+--- LANGKAH B: MEMASUKKAN FOTO METERAN ---
+1. Klik tombol: [📁 Unggah Folder Foto] jika ingin mengunggah satu folder penuh,
+   ATAU klik [📄 Tambah File Foto] untuk memilih beberapa foto sekaligus.
+2. Pilih foto meteran yang tersimpan di laptop Anda (misal dari folder data/input_foto/).
+3. Foto otomatis terpasang dengan baris IDPEL yang sesuai dan thumbnail pratinjau
+   akan langsung muncul pada kolom foto.
+
+--- LANGKAH C: MENJALANKAN AUDIT AI BATCH ---
+1. Pastikan data dan foto sudah berada di tabel.
+2. Klik tombol hijau: [▶ Mulai Audit Batch].
+3. AI Vision akan memproses seluruh foto secara otomatis dan cepat:
+   - Angka Stan AI terdeteksi otomatis.
+   - Selisih matematis (Stan AI dikurangi Stan Lapangan) dihitung seketika.
+   - Vonis Audit ditetapkan secara otomatis:
+     * 🟢 Sesuai Match  : Angka stan AI sama persis dengan Stan Lapangan (Selisih 0).
+     * 🟡 Rolling Digit  : Selisih ±1 s.d. ±2 (drum angka sedang berputar).
+     * 🔴 Beda Stand     : Selisih > 2 (potensi salah baca / koreksi billing).
+     * ⚪ Bukan KWH / Nihil: Foto blur ekstrem, gelap, atau bukan gambar meteran.
+4. Kartu ringkasan KPI di bagian paling atas akan otomatis merekap angka persentase.
+   Anda bisa mengklik kartu KPI mana saja untuk menyaring tabel secara instan!
+
+--- LANGKAH D: REVIEW AUDITOR & EDIT LIVE (HUMAN-IN-THE-LOOP) ---
+1. Klik salah satu thumbnail foto di tabel untuk membuka 'Pratinjau Stand KWH Meter'.
+2. Di dalam kotak pratinjau, kartu latar belakang vonis akan berwarna elegan sesuai
+   status audit (jika masih Belum Diaudit, kartu tetap bersih netral). Anda dapat:
+   - Melihat foto meteran yang di-zoom secara tajam.
+   - Menavigasi ke foto sebelum/sesudahnya dengan tombol [◀ Foto Sebelumnya] dan
+     [Foto Berikutnya ▶], atau cukup tekan tombol PANAH KANAN / KIRI di keyboard.
+   - Mengubah langsung 'Stand Lapangan', 'Stand Hasil Baca AI', atau 'Vonis Audit'.
+     (Jika nilai dikembalikan persis ke hasil asli ARGUS & Catatan AI kosong,
+     label 'Dikoreksi' otomatis terhapus dari baris dan kartu KPI).
+   - Memberikan 'Catatan Auditor (Laporan Excel PLN)' untuk keperluan operasional.
+   - Memberikan 'Catatan Evaluasi Model AI (Celengan 1.000)' beserta tombol cepat
+     (mis. Salah Baca Angka, Digit Terpotong, Rolling Meleset) untuk evaluasi AI.
+     Baris yang diberi catatan AI akan menampilkan lencana robot ungu 'Catatan AI'.
+3. Tekan tombol [Esc] atau klik [X] untuk keluar.
+4. Seluruh tabel, angka selisih, dan kartu ringkasan KPI langsung tersinkronisasi
+   otomatis tanpa perlu memuat ulang halaman!
+
+--- LANGKAH E: CELENGAN FEEDBACK AI (TARGET 1.000 KASUS) ---
+1. Kartu mini 'CELENGAN AI' pada Header memantau jumlah kasus koreksi/evaluasi
+   model yang telah ditabung (tersimpan persisten di direktori profil Windows:
+   %LOCALAPPDATA%\ARGUS_PLN\feedback_vault\ sehingga aman meski aplikasi di-repack
+   atau di-upgrade ke versi baru).
+2. Setiap baris yang dikoreksi atau diberi Catatan Model AI otomatis tersimpan
+   aman di harddisk lokal.
+3. Tabungan Celengan AI TIDAK akan hilang meskipun browser di-Refresh (F5),
+   aplikasi ditutup, ataupun petugas menekan tombol [🔄 Reset Tabel].
+4. Klik kartu 'CELENGAN AI' di Header untuk membuka jendela pengelola,
+   mengklik [📁 Buka Folder Celengan] langsung di File Explorer, atau mengunduh
+   paket ZIP rilis yang sudah siap.
+5. Begitu terkumpul genap 1.000 kasus unik, sistem otomatis membungkus 1 paket
+   ZIP siap latih ulang (foto + crop + pre-label YOLO + Excel Master Feedback)
+   ke subfolder releases\ untuk tim IT/Engineer.
+
+--- LANGKAH F: MENGUNDUH LAPORAN RESMI EXCEL ---
+1. Setelah audit dan verifikasi selesai, klik tombol:
+   [📥 Unduh Laporan Excel Resmi (.xlsx)].
+2. Browser akan mengunduh file laporan resmi Excel standar UP3 Mojokerto.
+3. Di dalam Excel tersebut:
+   - Terdapat 4 baris Header Resmi Eksekutif & Legenda Status.
+   - 19 kolom data lengkap dengan pewarnaan baris otomatis sesuai vonis, termasuk
+     Catatan Auditor operasional (Catatan Evaluasi Model AI TIDAK dicampurkan).
+   - Kolom foto dilengkapi formula interaktif '=HYPERLINK(...)' sehingga jika
+     diklik langsung membuka foto terkait.
+
+================================================================================
+6. CARA MEMATIKAN SISTEM SECARA AMAN
+================================================================================
+Jika pekerjaan audit telah selesai:
+1. Simpan/unduh hasil laporan Excel Anda.
+2. Tutup tab browser Dashboard.
+3. Pada jendela terminal hitam CMD, tekan tombol [Ctrl + C] pada keyboard, ATAU
+   cukup klik tombol silang [X] di pojok kanan atas jendela terminal.
+4. Server akan mati secara bersih dan memori GPU VRAM dilepaskan kembali ke laptop.
+
+================================================================================
+7. PERTANYAAN UMUM & TROUBLESHOOTING (FAQ)
+================================================================================
+Q: Browser tidak otomatis terbuka saat ARGUS.exe dijalankan?
+A: Buka browser Anda (Google Chrome / Edge) secara manual dan ketik alamat:
+   http://127.0.0.1:8000/dashboard
+
+Q: Muncul pesan error "Port 8000 already in use" di terminal?
+A: Artinya ada instans ARGUS lama yang masih berjalan di latar belakang. Tutup jendela
+   CMD lama tersebut, atau buka Task Manager dan matikan proses 'ARGUS.exe', lalu buka kembali.
+
+Q: Apakah saya bisa memindahkan folder ARGUS ke laptop lain?
+A: BISA. Seluruh folder ARGUS bersifat 'Portable'. Anda cukup meng-copy seluruh folder
+   ARGUS menggunakan flashdisk ke laptop lain, dan aplikasi langsung bisa dijalankan
+   tanpa perlu menginstal Python atau driver tambahan!
+
+--------------------------------------------------------------------------------
+PT PLN (PERSERO) UNIT INDUK DISTRIBUSI JAWA TIMUR — UP3 MOJOKERTO
+Sistem Pengawasan Visual Otomatis LBKB (Project ARGUS v1.0.0 • AI Model V5)
+Lead Engineer: Benedictus Pascal
+================================================================================
+

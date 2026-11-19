@@ -1,0 +1,10 @@
+TEMPAT MENYIMPAN REKAP EXCEL ACMT / LBKB
+==========================================
+Letakkan berkas Excel rekap data pelanggan (.xlsx / .xls / .csv)
+yang diunduh dari portal ACMT PLN di dalam folder ini.
+
+Saat berada di Dashboard, Anda cukup klik tombol:
+[📊 Impor Rekap ACMT (.xlsx / .csv)]
+lalu pilih berkas Excel yang ada di folder ini.
+Sistem akan otomatis memasangkan data IDPEL & Stan Lapangan dengan fotonya.
+

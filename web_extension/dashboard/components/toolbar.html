@@ -1,0 +1,65 @@
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toast-box"></div>
+
+<!-- TOOLBAR -->
+<div class="toolbar-panel">
+    <div class="toolbar-group">
+        <button class="btn btn-run" id="btn-run-all" onclick="auditAllRows()">
+            <i class="fas fa-play"></i> Mulai Audit Batch
+        </button>
+        <button class="btn btn-upload-folder" onclick="document.getElementById('folder-input').click()">
+            <i class="fas fa-folder-plus"></i> Unggah Folder Foto
+        </button>
+        <input type="file" id="folder-input" webkitdirectory directory multiple style="display:none;" onchange="handleFolderUpload(event)">
+        
+        <button class="btn btn-upload-file" onclick="document.getElementById('file-input').click()">
+            <i class="fas fa-file-image"></i> Tambah File Foto
+        </button>
+        <input type="file" id="file-input" accept="image/*" multiple style="display:none;" onchange="handleFileUpload(event)">
+
+        <button class="btn btn-upload-excel" id="btn-upload-excel" onclick="document.getElementById('excel-input').click()" title="Unggah file rekap ACMT (.xlsx / .csv) untuk memasangkan data pelanggan dan stan lapangan otomatis">
+            <i class="fas fa-file-excel"></i> Impor Rekap ACMT (.xlsx / .csv)
+        </button>
+        <input type="file" id="excel-input" accept=".xlsx, .xls, .csv" style="display:none;" onchange="handleExcelUpload(event)">
+
+        <button class="btn btn-export-excel" id="btn-export-excel" onclick="exportOfficialExcel()">
+            <i class="fas fa-file-excel"></i> Unduh Laporan Excel Resmi (.xlsx)
+        </button>
+        <button class="btn btn-secondary" onclick="resetTable()">
+            <i class="fas fa-redo-alt"></i> Reset Tabel
+        </button>
+    </div>
+    <div class="toolbar-group">
+        <div class="audit-mode-selector" title="Pilih mode audit: Komparasi Stand Lapangan vs Ekstraksi Mandiri">
+            <span class="mode-label"><i class="fas fa-sliders-h"></i> Mode:</span>
+            <select id="audit-mode-select" class="select-mode" onchange="changeAuditMode(this.value)">
+                <option value="AUTO" selected>Auto (Sesuai Data)</option>
+                <option value="MANDIRI">Ekstraksi Mandiri (Murni AI)</option>
+                <option value="KOMPARASI">Komparasi ACMT Lapangan</option>
+            </select>
+        </div>
+        <div class="search-field">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="search-input" placeholder="Cari IDPEL / Nama..." oninput="handleSearchInput(this.value)">
+            <button type="button" class="btn-search-clear" id="btn-search-clear" onclick="clearSearchInput()" title="Bersihkan pencarian (ESC)" style="display:none;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- AUDIT PROGRESS BAR & LIVE ETA COUNTER -->
+<div class="batch-progress-wrapper" id="batch-progress-wrapper">
+    <div class="batch-progress-header">
+        <div class="batch-progress-title">
+            <i class="fas fa-microchip"></i>
+            <span id="batch-progress-label">Memproses Batch AI...</span>
+        </div>
+        <div class="batch-eta-badge" id="batch-eta-badge">
+            <i class="fas fa-hourglass-half"></i> Menyiapkan antrean...
+        </div>
+    </div>
+    <div class="batch-progress-bar-track">
+        <div class="batch-progress-fill" id="batch-progress-fill"></div>
+    </div>
+</div>

@@ -1,0 +1,308 @@
+<!-- MODAL INSPECTOR HD & AUDITOR VERIFICATION STATION -->
+<div class="modal-backdrop" id="modal-inspector" onclick="closeInspector()">
+    <div class="modal-window modal-window-large" onclick="event.stopPropagation()">
+        <div class="modal-bar">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <h3 id="modal-title" style="margin:0;"><i class="fas fa-search-plus" style="color: var(--pln-blue);"></i> Pratinjau & Verifikasi Stand KWH Meter</h3>
+                <span class="inspector-counter-badge" id="modal-counter-badge">Foto 1 dari 1</span>
+                <span id="modal-verdict-pill" class="modal-verdict-pill pill-pending"><i class="fas fa-clock"></i> BELUM DIAUDIT</span>
+            </div>
+            <button class="btn btn-secondary" style="padding: 4px 10px;" onclick="closeInspector()" title="Tutup (ESC)"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body-grid">
+            <div class="modal-image-box" id="inspector-image-container">
+                <div class="zoom-toolbar">
+                    <button type="button" class="zoom-btn" onclick="zoomIn()" title="Perbesar (Zoom In)"><i class="fas fa-search-plus"></i></button>
+                    <span class="zoom-level-badge" id="zoom-badge">100%</span>
+                    <button type="button" class="zoom-btn" onclick="zoomOut()" title="Perkecil (Zoom Out)"><i class="fas fa-search-minus"></i></button>
+                    <button type="button" class="zoom-btn" onclick="resetZoom()" title="Reset Ukuran (Fit)"><i class="fas fa-compress-arrows-alt"></i></button>
+                </div>
+                <div class="zoom-viewport" id="zoom-viewport" onwheel="handleWheelZoom(event)" onmousedown="startPan(event)">
+                    <img id="modal-photo-src" src="" alt="Pratinjau KWH Meter">
+                </div>
+                <div class="modal-image-hint">
+                    <i class="fas fa-keyboard"></i> <strong>[←/→]</strong> Navigasi • Tombol <strong>[1]</strong> Match | <strong>[2]</strong> Rolling | <strong>[3]</strong> Beda | <strong>[4]</strong> Triage | <strong>[5]</strong> Nihil
+                </div>
+            </div>
+            <div class="modal-info-list">
+                <div class="info-card">
+                    <div class="info-card-label">IDPEL & Nama Pelanggan</div>
+                    <div class="info-card-val" id="modal-idpel" style="font-size: 14.5px; color: var(--pln-blue); font-weight:700;">-</div>
+                    <div id="modal-tarif-daya" style="font-size:12px; color:var(--text-muted); margin-top:2px;">-</div>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-card-label">Stand Lapangan (Petugas Cater)</div>
+                    <input type="text" id="modal-stan-lap" class="modal-input-field" placeholder="Stan Lapangan..." onchange="onModalFieldChange('stan_lap', this.value)" onkeydown="handleModalKeydown(event, 'stan_lap')">
+                </div>
+
+                <div class="info-card">
+                    <div class="info-card-label">Stand Hasil AI ARGUS (V5)</div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <input type="text" id="modal-stan-ai" class="modal-input-field ai-field" placeholder="Hasil Stan..." onchange="onModalFieldChange('stan_ai', this.value)" onkeydown="handleModalKeydown(event, 'stan_ai')">
+                        <div id="modal-edit-tag-slot"></div>
+                    </div>
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">
+                        Teks Mentah AI: <span id="modal-raw-display" style="font-family:'JetBrains Mono'; font-weight:600; color:#334155;">-</span>
+                    </div>
+                </div>
+
+                <div class="info-card" id="modal-card-verdict">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <div class="info-card-label" id="modal-card-verdict-label">Selisih (kWh) & Vonis Audit</div>
+                        <div id="modal-diff-display" style="font-family:'JetBrains Mono'; font-weight:700; font-size:13px;">-</div>
+                    </div>
+                    <select id="modal-select-status" class="modal-select-status" onchange="onModalFieldChange('status', this.value)">
+                        <option value="PENDING">Belum Diaudit</option>
+                        <option value="MATCH">Sesuai Match</option>
+                        <option value="ROLLING">Rolling Digit</option>
+                        <option value="DIFF">Beda Stand</option>
+                        <option value="TRIAGE">Perlu Tinjau Ulang</option>
+                        <option value="NIHIL">Bukan KWH / Nihil</option>
+                    </select>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-card-label">Catatan Auditor (Laporan Excel PLN)</div>
+                    <input type="text" id="modal-input-notes" class="modal-input-field" placeholder="Tulis catatan operasional untuk laporan PLN..." onchange="onModalFieldChange('notes', this.value)" onkeydown="handleModalKeydown(event, 'notes')">
+                </div>
+
+                <div class="info-card ai-feedback-card" id="modal-card-ai-feedback">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <div class="info-card-label" style="color:#6B21A8; margin-bottom:0;"><i class="fas fa-robot"></i> Catatan Evaluasi Model AI (Celengan 1.000)</div>
+                        <span id="modal-ai-feedback-status" style="font-size:10px; font-weight:700; color:#7C3AED;"></span>
+                    </div>
+                    <div class="ai-quick-chips">
+                        <button type="button" class="ai-chip-btn" data-ai-tag="Salah Baca Angka" onclick="appendAiFeedbackTag('Salah Baca Angka')" title="Klik untuk pasang/lepas tag klasifikasi salah baca atau tertukar angka">Salah Baca Angka</button>
+                        <button type="button" class="ai-chip-btn" data-ai-tag="Digit Kurang/Terpotong" onclick="appendAiFeedbackTag('Digit Kurang/Terpotong')" title="Klik untuk pasang/lepas tag angka kurang atau terpotong">Digit Terpotong</button>
+                        <button type="button" class="ai-chip-btn" data-ai-tag="Rolling Meleset" onclick="appendAiFeedbackTag('Rolling Meleset')" title="Klik untuk pasang/lepas tag salah baca drum rolling">Rolling Meleset</button>
+                    </div>
+                    <div class="ai-note-input-wrap">
+                        <input type="text" id="modal-input-ai-notes" class="modal-input-field" placeholder="Catat salah baca AI (tersimpan ke Celengan AI, bukan ke Excel PLN)..." oninput="onModalFieldChange('ai_notes', this.value)" onchange="onModalFieldChange('ai_notes', this.value)" onkeydown="handleModalKeydown(event, 'ai_notes')">
+                        <button type="button" id="btn-clear-ai-notes" class="ai-note-clear-btn" onclick="clearAiFeedbackNotes()" title="Kosongkan catatan AI" style="display:none;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-nav-bar">
+            <button type="button" class="btn btn-secondary btn-modal-nav" id="btn-modal-prev" onclick="navigateInspector(-1)">
+                <i class="fas fa-chevron-left"></i> Foto Sebelumnya [←]
+            </button>
+            <div class="modal-nav-info" id="modal-nav-info">
+                Menampilkan Baris <strong id="modal-current-row-num">1</strong> dari <strong id="modal-total-rows-num">1</strong>
+            </div>
+            <button type="button" class="btn btn-secondary btn-modal-nav" id="btn-modal-next" onclick="navigateInspector(1)">
+                Foto Berikutnya [→] <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DUPLICATE CONFIRMATION -->
+<div class="modal-backdrop" id="modal-duplicate" style="display:none;" onclick="event.stopPropagation()">
+    <div class="modal-window" style="max-width: 480px; padding: 24px;">
+        <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
+            <div style="width:42px; height:42px; border-radius:50%; background:#FEF3C7; color:#D97706; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;">
+                <i class="fas fa-clone"></i>
+            </div>
+            <div>
+                <h4 style="font-size:15px; font-weight:700; color:var(--text-heading);">Deteksi Foto Duplikat</h4>
+                <p style="font-size:12px; color:var(--text-muted);" id="dup-modal-desc">Ditemukan foto yang sudah ada di antrean.</p>
+            </div>
+        </div>
+        <p style="font-size:12.5px; color:var(--text-body); margin-bottom:20px; line-height:1.5;">
+            Beberapa berkas foto yang Anda unggah sudah ada di dalam tabel antrean. Anda dapat melewati berkas duplikat agar data tidak ganda, atau menimpa berkas yang lama.
+        </p>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+            <button class="btn btn-secondary" onclick="resolveDuplicateAction('skip')">
+                <i class="fas fa-forward"></i> Lewati Duplikat (Skip)
+            </button>
+            <button class="btn btn-run" style="background:#0284C7;" onclick="resolveDuplicateAction('overwrite')">
+                <i class="fas fa-sync-alt"></i> Timpa / Perbarui (Overwrite)
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL EXCEL IMPORT RESULT (UX 3) -->
+<div class="modal-backdrop" id="modal-excel-result" style="display:none;" onclick="event.stopPropagation()">
+    <div class="modal-window" style="max-width: 520px; padding: 24px;">
+        <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px;">
+            <div id="excel-res-icon" style="width:46px; height:46px; border-radius:50%; background:#DCFCE7; color:#16A34A; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div>
+                <h4 style="font-size:16px; font-weight:800; color:var(--text-heading);" id="excel-res-title">Impor Rekap ACMT Berhasil!</h4>
+                <p style="font-size:12px; color:var(--text-muted);" id="excel-res-filename">Berkas: -</p>
+            </div>
+        </div>
+        <div style="background:#F8FAFC; border:1px solid var(--border-color); border-radius:8px; padding:14px; margin-bottom:18px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
+                <span style="color:var(--text-muted);">Total Data Pelanggan Terbaca:</span>
+                <strong style="font-family:'JetBrains Mono'; color:var(--pln-blue);" id="excel-res-total">0 Baris</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
+                <span style="color:var(--text-muted);">Foto Langsung Terpasang:</span>
+                <strong style="font-family:'JetBrains Mono'; color:#16A34A;" id="excel-res-matched">0 Foto</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:13px;">
+                <span style="color:var(--text-muted);">Status Integrasi:</span>
+                <strong style="color:var(--text-heading);">Auto-Pairing Aktif di Memori</strong>
+            </div>
+        </div>
+        <p style="font-size:12.5px; color:var(--text-body); line-height:1.5; margin-bottom:20px;">
+            Setiap kali Anda mengunggah folder atau file foto baru, sistem akan otomatis mencocokkan IDPEL foto dengan Nama Pelanggan dan Stan Lapangan dari berkas Excel ini.
+        </p>
+        <div style="display:flex; justify-content:flex-end;">
+            <button class="btn btn-run" onclick="closeExcelModal()">
+                <i class="fas fa-check"></i> Siap, Lanjutkan Audit
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL BATCH COMPLETE POP-UP (UX 6) -->
+<div class="modal-backdrop" id="modal-batch-complete" style="display:none;" onclick="event.stopPropagation()">
+    <div class="modal-window" style="max-width: 580px; padding: 26px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border-color); padding-bottom:14px; margin-bottom:16px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:42px; height:42px; border-radius:50%; background:#DCFCE7; color:#16A34A; display:flex; align-items:center; justify-content:center; font-size:20px;">
+                    <i class="fas fa-flag-checkered"></i>
+                </div>
+                <div>
+                    <h3 style="font-size:17px; font-weight:800; color:var(--text-heading); margin:0;">Proses Audit Batch Selesai!</h3>
+                    <p style="font-size:12px; color:var(--text-muted); margin:0;">Seluruh antrean citra meteran telah diproses oleh GPU AI ARGUS V5</p>
+                </div>
+            </div>
+            <button class="btn btn-secondary" style="padding:4px 8px; font-size:12px;" onclick="closeBatchCompleteModal()"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="batch-stats-grid">
+            <div class="batch-stat-box">
+                <div class="batch-stat-num" id="batch-modal-total" style="color:var(--text-heading);">0</div>
+                <div class="batch-stat-label">Total Diproses</div>
+            </div>
+            <div class="batch-stat-box" style="border-top:3px solid #16A34A;">
+                <div class="batch-stat-num" id="batch-modal-match" style="color:#16A34A;">0</div>
+                <div class="batch-stat-label">Sesuai Match</div>
+            </div>
+            <div class="batch-stat-box" style="border-top:3px solid #D97706;">
+                <div class="batch-stat-num" id="batch-modal-rolling" style="color:#D97706;">0</div>
+                <div class="batch-stat-label">Rolling Digit</div>
+            </div>
+            <div class="batch-stat-box" style="border-top:3px solid #DC2626;">
+                <div class="batch-stat-num" id="batch-modal-diff" style="color:#DC2626;">0</div>
+                <div class="batch-stat-label">Beda Stand</div>
+            </div>
+            <div class="batch-stat-box" style="border-top:3px solid #7C3AED;">
+                <div class="batch-stat-num" id="batch-modal-triage" style="color:#7C3AED;">0</div>
+                <div class="batch-stat-label">Perlu Tinjau Ulang</div>
+            </div>
+            <div class="batch-stat-box" style="border-top:3px solid #64748B;">
+                <div class="batch-stat-num" id="batch-modal-nihil" style="color:#64748B;">0</div>
+                <div class="batch-stat-label">Bukan KWH / Nihil</div>
+            </div>
+            <div class="batch-stat-box" style="border-top:3px solid #0284C7;">
+                <div class="batch-stat-num" id="batch-modal-edited" style="color:#0284C7;">0</div>
+                <div class="batch-stat-label">Koreksi Auditor</div>
+            </div>
+        </div>
+
+        <div style="background:#EFF6FF; border:1px solid #BFDBFE; border-radius:6px; padding:10px 14px; margin-bottom:20px; font-size:12.5px; color:#1E3A8A; display:flex; align-items:center; gap:10px;">
+            <i class="fas fa-info-circle" style="font-size:16px; color:var(--pln-blue);"></i>
+            <span id="batch-modal-notes">Hasil audit telah siap diekspor ke laporan resmi PLN UP3 Mojokerto.</span>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:12px;">
+            <button class="btn btn-secondary" onclick="closeBatchCompleteModal()">
+                <i class="fas fa-check"></i> Tutup & Tinjau Tabel
+            </button>
+            <button class="btn btn-export-excel" onclick="closeBatchCompleteModal(); exportOfficialExcel()">
+                <i class="fas fa-file-excel"></i> Unduh Laporan Excel Resmi (.xlsx)
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL RESET CONFIRMATION -->
+<div class="modal-backdrop" id="modal-reset-confirm" style="display:none;" onclick="event.stopPropagation()">
+    <div class="modal-window" style="max-width: 460px; padding: 24px;">
+        <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
+            <div style="width:42px; height:42px; border-radius:50%; background:#FEE2E2; color:#DC2626; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;">
+                <i class="fas fa-trash-alt"></i>
+            </div>
+            <div>
+                <h4 style="font-size:15px; font-weight:700; color:var(--text-heading);">Konfirmasi Reset Tabel</h4>
+                <p style="font-size:12px; color:var(--text-muted);">Bersihkan seluruh antrean dan mulai sesi baru</p>
+            </div>
+        </div>
+        <p style="font-size:12.5px; color:var(--text-body); margin-bottom:20px; line-height:1.5;">
+            Apakah Anda yakin ingin mengosongkan seluruh antrean? Semua foto, baris audit, dan data rekap Excel ACMT yang pernah diimpor akan dibersihkan total untuk memulai sesi kerja baru dari nol.
+        </p>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+            <button class="btn btn-secondary" onclick="document.getElementById('modal-reset-confirm').style.display='none'">
+                Batal
+            </button>
+            <button class="btn btn-run" style="background:#DC2626;" onclick="executeResetTable()">
+                <i class="fas fa-trash"></i> Ya, Reset Tabel
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL KELOLA CELENGAN FEEDBACK AI (PERSISTENT STAGING & RELEASES) -->
+<div class="modal-backdrop" id="modal-vault-manager" style="display:none;" onclick="closeVaultManagerModal()">
+    <div class="modal-window" style="max-width: 560px; padding: 24px;" onclick="event.stopPropagation()">
+        <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border-color); padding-bottom:14px; margin-bottom:16px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:42px; height:42px; border-radius:50%; background:#F3E8FF; color:#7C3AED; display:flex; align-items:center; justify-content:center; font-size:19px; flex-shrink:0;">
+                    <i class="fas fa-piggy-bank"></i>
+                </div>
+                <div>
+                    <h4 style="font-size:16px; font-weight:800; color:var(--text-heading); margin:0;">Celengan Feedback AI (Active Learning)</h4>
+                    <p style="font-size:12px; color:var(--text-muted); margin:0;">Tersimpan persisten di disk lokal & aman dari Refresh / Reset Tabel</p>
+                </div>
+            </div>
+            <button type="button" class="btn btn-secondary" style="padding:4px 10px;" onclick="closeVaultManagerModal()" title="Tutup (ESC)"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="vault-summary-box">
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;">
+                <span style="font-size:12.5px; font-weight:700; color:#581C87;">Progres Tabungan Kasus Sulit / Koreksi</span>
+                <strong id="vault-modal-counter" style="font-family:'JetBrains Mono'; font-size:14px; color:#7C3AED;">0 / 1000 (0%)</strong>
+            </div>
+            <div class="vault-progress-track">
+                <div class="vault-progress-fill" id="vault-modal-progress-fill" style="width:0%;"></div>
+            </div>
+            <p style="font-size:11.5px; color:#6B21A8; margin:8px 0 0 0; line-height:1.5;">
+                Lokasi penyimpanan aman (kebal repack &amp; upgrade aplikasi): <code id="vault-modal-path">%LOCALAPPDATA%\ARGUS_PLN\feedback_vault</code>. Otomatis dikemas ke 1 berkas ZIP (Excel Master + Foto + Pre-Label YOLO) saat genap 1.000 kasus unik.
+            </p>
+        </div>
+
+        <div style="margin-top:16px;">
+            <div style="font-size:12px; font-weight:700; color:var(--text-heading); margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                <span><i class="fas fa-box-archive" style="color:#7C3AED; margin-right:5px;"></i>Paket Rilis ZIP Siap Unduh</span>
+                <span id="vault-releases-count" style="font-size:11px; color:var(--text-muted);">0 paket</span>
+            </div>
+            <div id="vault-releases-list" class="vault-releases-list">
+                <div class="vault-release-empty">Belum ada paket rilis ZIP yang terbentuk.</div>
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:20px; padding-top:14px; border-top:1px solid var(--border-color); flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <button type="button" class="btn btn-secondary" id="btn-vault-open-folder" onclick="openVaultFolderInExplorer()" title="Buka langsung lokasi folder %LOCALAPPDATA% Celengan AI di File Explorer">
+                    <i class="fas fa-folder-open"></i> Buka Folder Celengan
+                </button>
+                <button type="button" class="btn btn-secondary" id="btn-vault-package-now" onclick="triggerManualVaultPackage()" title="Kemas kasus yang ada di staging menjadi file ZIP sekarang (khusus Tim IT / Engineer)">
+                    <i class="fas fa-file-zipper"></i> Kemas Paket Sekarang
+                </button>
+            </div>
+            <button type="button" class="btn btn-run" onclick="closeVaultManagerModal()">
+                <i class="fas fa-check"></i> Tutup
+            </button>
+        </div>
+    </div>
+</div>

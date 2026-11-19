@@ -1,0 +1,92 @@
+<!-- MAIN TABLE CONTAINER -->
+<div class="table-container">
+    <div class="table-scroll">
+        <table id="main-table">
+            <thead>
+                <tr>
+                    <th class="th-sortable" onclick="handleSortTable('no')" title="Klik untuk mengurutkan No antrean">NO <span class="sort-icon" id="sort-icon-no"><i class="fas fa-sort"></i></span></th>
+                    <th class="th-sortable" onclick="handleSortTable('idpel')" title="Klik untuk mengurutkan IDPEL">IDPEL <span class="sort-icon" id="sort-icon-idpel"><i class="fas fa-sort"></i></span></th>
+                    <th class="th-sortable" onclick="handleSortTable('nama')" title="Klik untuk mengurutkan Nama Pelanggan">NAMA PELANGGAN <span class="sort-icon" id="sort-icon-nama"><i class="fas fa-sort"></i></span></th>
+                    <th>TARIF / DAYA</th>
+                    <th class="th-sortable" onclick="handleSortTable('stan_lap')" title="Klik untuk mengurutkan Stan Lapangan">STAN LAPANGAN <span class="sort-icon" id="sort-icon-stan_lap"><i class="fas fa-sort"></i></span></th>
+                    <th>FOTO METERAN</th>
+                    <th>HASIL ANALISA ARGUS</th>
+                    <th>HASIL STAN BACA (EDITABLE)</th>
+                    <th class="th-sortable" onclick="handleSortTable('diff')" title="Klik untuk mengurutkan Selisih kWh (Anomali Terbesar)">SELISIH (kWh) <span class="sort-icon" id="sort-icon-diff"><i class="fas fa-sort"></i></span></th>
+                    <th class="th-sortable" onclick="handleSortTable('status')" title="Klik untuk mengurutkan Vonis Audit">VONIS AUDIT <span class="sort-icon" id="sort-icon-status"><i class="fas fa-sort"></i></span></th>
+                    <th>CATATAN AUDITOR</th>
+                    <th class="th-sortable" onclick="handleSortTable('latency')" title="Klik untuk mengurutkan Latensi AI">LATENSI <span class="sort-icon" id="sort-icon-latency"><i class="fas fa-sort"></i></span></th>
+                    <th>AKSI</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <!-- EMPTY STATE & DROPZONE -->
+                <tr id="empty-state-row">
+                    <td colspan="13" class="empty-state-td" style="white-space: normal !important; text-align: center !important; vertical-align: middle !important; padding: 48px 20px !important;">
+                        <div class="empty-dropzone" id="empty-dropzone" onclick="document.getElementById('folder-input').click()" style="text-align: center !important; margin: 0 auto !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; width: 100% !important; max-width: 740px !important; box-sizing: border-box !important;">
+                            <div class="empty-icon-circle" style="margin: 0 auto 16px auto !important; display: flex !important; align-items: center !important; justify-content: center !important;">
+                                <i class="fas fa-cloud-upload-alt" style="margin: 0 !important; line-height: 1 !important;"></i>
+                            </div>
+                            <h3 class="empty-title" style="text-align: center !important; width: 100% !important; margin: 0 auto 8px auto !important;">Antrean Audit Masih Kosong</h3>
+                            <p class="empty-subtitle" style="text-align: center !important; width: 100% !important; max-width: 560px !important; margin: 0 auto 20px auto !important; white-space: normal !important; display: block !important;">
+                                Seret dan jatuhkan (<strong>Drag & Drop</strong>) berkas foto ke sini, atau klik tombol di bawah untuk memulai:
+                            </p>
+                            <div class="empty-actions" style="display: flex !important; justify-content: center !important; align-items: center !important; gap: 12px !important; margin: 0 auto 16px auto !important; width: 100% !important;">
+                                <button type="button" class="btn btn-upload-folder" style="min-width: 175px !important; justify-content: center !important; text-align: center !important;" onclick="event.stopPropagation(); document.getElementById('folder-input').click()">
+                                    <i class="fas fa-folder-plus"></i> Unggah Folder Foto
+                                </button>
+                                <button type="button" class="btn btn-upload-file" style="min-width: 175px !important; justify-content: center !important; text-align: center !important;" onclick="event.stopPropagation(); document.getElementById('file-input').click()">
+                                    <i class="fas fa-file-image"></i> Tambah File Foto
+                                </button>
+                                <button type="button" class="btn btn-upload-excel" style="min-width: 175px !important; justify-content: center !important; text-align: center !important;" onclick="event.stopPropagation(); document.getElementById('excel-input').click()">
+                                    <i class="fas fa-file-excel"></i> Impor Rekap ACMT
+                                </button>
+                            </div>
+                            <div class="empty-hint" style="display: inline-flex !important; justify-content: center !important; align-items: center !important; margin: 0 auto !important; text-align: center !important;">
+                                <i class="fas fa-shield-alt" style="color:var(--pln-blue);"></i> Dilengkapi Jaring Pengaman Anti-Duplikasi Foto & Auto-Pairing Data Pelanggan
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ENTERPRISE PAGINATION FOOTER -->
+    <div class="table-pagination-footer" id="table-pagination-footer">
+        <div class="pagination-info" id="pagination-info">
+            Menampilkan <strong id="page-start">0</strong> - <strong id="page-end">0</strong> dari <strong id="page-total">0</strong> data antrean
+            <span id="pagination-filter-badge" class="pagination-filter-badge" style="display:none;"></span>
+        </div>
+        <div class="pagination-controls">
+            <div class="page-size-selector">
+                <label for="page-size-select"><i class="fas fa-list-ol" style="color:var(--pln-blue); margin-right:4px;"></i>Baris per halaman:</label>
+                <select id="page-size-select" class="select-page-size" onchange="changePageSize(this.value)">
+                    <option value="25">25</option>
+                    <option value="50" selected>50</option>
+                    <option value="100">100</option>
+                    <option value="ALL">Semua</option>
+                </select>
+            </div>
+            <div class="pagination-nav">
+                <button type="button" class="btn-page" id="btn-page-first" onclick="goToPage('first')" title="Halaman Pertama" disabled>
+                    <i class="fas fa-angles-left"></i>
+                </button>
+                <button type="button" class="btn-page" id="btn-page-prev" onclick="goToPage('prev')" title="Halaman Sebelumnya" disabled>
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="page-indicator">
+                    <span>Halaman</span>
+                    <input type="number" id="page-jump-input" class="input-page-jump" min="1" max="1" value="1" title="Ketik nomor halaman lalu tekan Enter untuk lompat cepat" onkeydown="handlePageJumpKeydown(event, this)" onchange="handlePageJumpChange(this)">
+                    <span>dari <strong id="total-pages-num">1</strong></span>
+                </div>
+                <button type="button" class="btn-page" id="btn-page-next" onclick="goToPage('next')" title="Halaman Berikutnya" disabled>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                <button type="button" class="btn-page" id="btn-page-last" onclick="goToPage('last')" title="Halaman Terakhir" disabled>
+                    <i class="fas fa-angles-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

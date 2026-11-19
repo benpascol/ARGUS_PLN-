@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panduan Penggunaan ARGUS AI V5 - PT PLN (Persero) UP3 Mojokerto</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/pln_theme.css?v=7.1">
+    <link rel="stylesheet" href="/static/css/tutorial.css?v=7.1">
+</head>
+<body class="tutorial-page">
+    <!-- FULL-WIDTH STICKY TOP HEADER + SYMMETRICAL NAVBAR -->
+    <div class="tutorial-topbar">
+        <header class="tutorial-header">
+            <div class="tutorial-brand">
+                <div class="tutorial-logo">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <div>
+                    <h1>PANDUAN OPERASIONAL ARGUS AI V5</h1>
+                    <p>PT PLN (Persero) UID Jawa Timur — UP3 Mojokerto • Sistem Audit Stand KWH Meter (LBKB) 100% Lokal & Offline</p>
+                </div>
+            </div>
+            <div class="tutorial-header-actions">
+                <button type="button" class="tut-btn tut-btn-outline" onclick="window.print()" title="Cetak panduan atau simpan sebagai PDF">
+                    <i class="fas fa-print"></i> Cetak / PDF
+                </button>
+                <a href="/dashboard" class="tut-btn tut-btn-primary">
+                    <i class="fas fa-gauge-high"></i> Buka Dashboard Audit
+                </a>
+            </div>
+        </header>
+
+        <nav class="tutorial-toc" aria-label="Navigasi Panduan">
+            <span class="toc-label"><i class="fas fa-compass"></i> Navigasi Panduan:</span>
+            <div class="toc-links-row">
+                <a class="toc-pill" href="#ringkasan">Alur 6 Langkah</a>
+                <a class="toc-pill" href="#persiapan">1. Persiapan & Impor</a>
+                <a class="toc-pill" href="#mode-audit">2. Mode & Batch AI</a>
+                <a class="toc-pill" href="#kpi-filter">3. Kartu KPI & Filter</a>
+                <a class="toc-pill" href="#modal-inspector">4. Modal & Hotkey</a>
+                <a class="toc-pill" href="#celengan-ai">5. Celengan AI (1.000)</a>
+                <a class="toc-pill" href="#ekspor-faq">6. Ekspor & Kendala</a>
+            </div>
+        </nav>
+    </div>
+
+    <main class="tutorial-shell">
+        <!-- RINGKASAN ALUR CEPAT -->
+        <section class="tut-card theme-cyan" id="ringkasan">
+            <div class="tut-section-head">
+                <div class="tut-step-badge cyan"><i class="fas fa-route"></i></div>
+                <div>
+                    <h2>Alur Kerja Singkat (End-to-End)</h2>
+                    <div class="tut-section-sub">Gambaran umum penggunaan ARGUS AI V5 dari menyalakan aplikasi hingga laporan resmi PLN terunduh</div>
+                </div>
+            </div>
+            <div class="flow-grid">
+                <div class="flow-item f1">
+                    <div class="flow-num">Langkah 1</div>
+                    <div class="flow-title">Nyalakan Aplikasi</div>
+                    <div class="flow-desc">Klik ganda <code>ARGUS.exe</code> atau <code>Mulai_ARGUS.bat</code>, tunggu model GPU siap & browser membuka <code>/dashboard</code>.</div>
+                </div>
+                <div class="flow-item f2">
+                    <div class="flow-num">Langkah 2</div>
+                    <div class="flow-title">Impor ACMT & Foto</div>
+                    <div class="flow-desc">Unggah file Excel ACMT (opsional) lalu pilih/seret folder ribuan foto meteran pelanggan.</div>
+                </div>
+                <div class="flow-item f3">
+                    <div class="flow-num">Langkah 3</div>
+                    <div class="flow-title">Jalankan Audit AI</div>
+                    <div class="flow-desc">Pilih mode audit lalu klik <strong>Mulai Audit Batch</strong>. GPU memproses ribuan foto secara paralel.</div>
+                </div>
+                <div class="flow-item f4">
+                    <div class="flow-num">Langkah 4</div>
+                    <div class="flow-title">Filter & Tinjau Modal</div>
+                    <div class="flow-desc">Klik kartu KPI (mis. <strong>Beda Stand</strong> / <strong>Tinjau Ulang</strong>), lalu periksa foto di Modal Pratinjau HD.</div>
+                </div>
+                <div class="flow-item f5">
+                    <div class="flow-num">Langkah 5</div>
+                    <div class="flow-title">Celengan Feedback AI</div>
+                    <div class="flow-desc">Setiap koreksi & tag salah baca AI otomatis ditabung aman di disk hingga 1.000 kasus unik.</div>
+                </div>
+                <div class="flow-item f6">
+                    <div class="flow-num">Langkah 6</div>
+                    <div class="flow-title">Unduh Excel Resmi</div>
+                    <div class="flow-desc">Klik <strong>Unduh Laporan Excel Resmi (.xlsx)</strong> lengkap dengan hyperlink foto & catatan auditor PLN.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BAGIAN 1: PERSIAPAN & IMPOR DATA -->
+        <section class="tut-card theme-teal" id="persiapan">
+            <div class="tut-section-head">
+                <div class="tut-step-badge teal">01</div>
+                <div>
+                    <h2>Persiapan Berkas & Impor Data (Foto + Rekap ACMT)</h2>
+                    <div class="tut-section-sub">Mendukung unggah massal ribuan foto dengan proteksi anti-duplikasi otomatis</div>
+                </div>
+            </div>
+            <div class="tut-two-col">
+                <div class="tut-subbox box-sky">
+                    <h3><i class="fas fa-folder-open" style="color:#0284C7;"></i> Lokasi Folder Penyimpanan Resmi</h3>
+                    <ul class="tut-list">
+                        <li><code>data\input_foto\</code> — Tempat menyimpan folder foto dokumentasi LBKB (JPG/PNG).</li>
+                        <li><code>data\input_excel\</code> — Tempat menyimpan berkas rekap Excel ACMT (<code>.xlsx</code> / <code>.csv</code>).</li>
+                        <li><code>data\audit_results\</code> — Direktori cadangan hasil audit lokal.</li>
+                        <li><strong>Catatan penting:</strong> Jangan tutup jendela terminal hitam CMD selama aplikasi berjalan; untuk menutup aplikasi dengan aman tekan <kbd>Ctrl</kbd>+<kbd>C</kbd>.</li>
+                    </ul>
+                </div>
+                <div class="tut-subbox box-teal">
+                    <h3><i class="fas fa-cloud-upload-alt" style="color:#0D9488;"></i> Urutan Unggah di Dashboard</h3>
+                    <ol class="tut-list">
+                        <li><strong>(Disarankan lebih dulu) Impor Rekap ACMT:</strong> Klik tombol hijau <strong>Impor Rekap ACMT (.xlsx / .csv)</strong> agar sistem mengindeks IDPEL, Nama Pelanggan, Tarif/Daya, dan Stan Lapangan.</li>
+                        <li><strong>Unggah Folder Foto:</strong> Klik <strong>Unggah Folder Foto</strong> (atau seret langsung folder/file ke area tengah tabel).</li>
+                        <li><strong>Proteksi Duplikasi:</strong> Jika ada foto yang sama dengan antrean, modal pilihan <strong>Lewati Duplikat (Skip)</strong> atau <strong>Timpa (Overwrite)</strong> otomatis muncul.</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <!-- BAGIAN 2: MODE AUDIT & EKSEKUSI BATCH -->
+        <section class="tut-card theme-indigo" id="mode-audit">
+            <div class="tut-section-head">
+                <div class="tut-step-badge indigo">02</div>
+                <div>
+                    <h2>Memilih Mode Audit & Menjalankan Batch AI</h2>
+                    <div class="tut-section-sub">Fleksibel untuk audit perbandingan Excel ACMT maupun ekstraksi angka murni tanpa Excel</div>
+                </div>
+            </div>
+            <div class="tut-two-col">
+                <div class="tut-subbox box-indigo">
+                    <h3><i class="fas fa-sliders-h" style="color:#4F46E5;"></i> 3 Pilihan Mode di Toolbar</h3>
+                    <ul class="tut-list">
+                        <li><strong>Auto (Sesuai Data):</strong> Direkomendasikan. Jika baris memiliki Stan Lapangan dari ACMT, sistem membandingkan selisihnya; jika kosong, sistem tetap mengekstrak angka meteran tanpa vonis beda stand palsu.</li>
+                        <li><strong>Ekstraksi Mandiri (Murni AI):</strong> Khusus saat tidak membawa rekap Excel ACMT. Fokus membaca angka valid, mendeteksi blur/glare, dan menyaring foto non-meteran.</li>
+                        <li><strong>Komparasi ACMT Lapangan:</strong> Wajib membandingkan bacaan AI dengan Stan Lapangan pada setiap baris.</li>
+                    </ul>
+                </div>
+                <div class="tut-subbox box-cyan">
+                    <h3><i class="fas fa-microchip" style="color:#0891B2;"></i> Eksekusi Batch & Perlindungan Koreksi</h3>
+                    <ul class="tut-list">
+                        <li>Klik tombol hijau <strong>Mulai Audit Batch</strong>. Progress bar dan estimasi waktu selesai (ETA) akan berjalan real-time.</li>
+                        <li>Server otomatis mendeteksi perangkat (GPU RTX / CPU) dan mengatur jumlah <em>Worker</em> paralel secara optimal.</li>
+                        <li><strong>Aman saat audit ulang:</strong> Baris yang sudah Anda koreksi manual (berlabel <em>Dikoreksi</em>) <strong>tidak akan ditimpa</strong> apabila tombol batch ditekan lagi.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- BAGIAN 3: KARTU KPI & FILTER -->
+        <section class="tut-card theme-pln" id="kpi-filter">
+            <div class="tut-section-head">
+                <div class="tut-step-badge">03</div>
+                <div>
+                    <h2>Memahami 7 Kartu KPI, Quick Sort & Pencarian Cepat</h2>
+                    <div class="tut-section-sub">Warna di bawah mencerminkan kartu filter asli di Dashboard — klik kartu mana saja untuk menyaring tabel</div>
+                </div>
+            </div>
+            <div class="kpi-legend-grid">
+                <div class="kpi-legend-item kl-all">
+                    <strong>Total Sampel (ALL)</strong>
+                    Menampilkan seluruh foto dalam antrean sesi aktif.
+                </div>
+                <div class="kpi-legend-item kl-match">
+                    <strong>Sesuai Match</strong>
+                    Stan baca AI presisi sama dengan Stan Lapangan (Selisih = 0 kWh).
+                </div>
+                <div class="kpi-legend-item kl-rolling">
+                    <strong>Rolling Digit</strong>
+                    Selisih tipis ±1 s.d. ±2 kWh akibat drum angka meter analog sedang berputar transisi.
+                </div>
+                <div class="kpi-legend-item kl-diff">
+                    <strong>Beda Stand</strong>
+                    Selisih &gt; 2 kWh — prioritas utama untuk diverifikasi auditor di Modal Pratinjau.
+                </div>
+                <div class="kpi-legend-item kl-triage">
+                    <strong>Perlu Tinjau Ulang (TRIAGE)</strong>
+                    Foto buram parah, silau matahari (glare), atau angka terpotong/ambigu sehingga butuh mata auditor.
+                </div>
+                <div class="kpi-legend-item kl-nihil">
+                    <strong>Bukan KWH / Nihil</strong>
+                    Foto non-meteran (pagar terkunci, aspal, jok motor, dinding) — tidak ditemukan dial meteran.
+                </div>
+                <div class="kpi-legend-item kl-edited">
+                    <strong>Dikoreksi Auditor</strong>
+                    Menyaring semua baris yang telah diedit manual atau diberi Catatan Evaluasi Model AI.
+                </div>
+            </div>
+            <div class="tut-callout info">
+                <i class="fas fa-arrow-down-wide-short" style="font-size:16px; margin-top:2px;"></i>
+                <div>
+                    <strong>Tips Sortir & Pencarian:</strong> Klik judul kolom bertanda panah (<code>NO</code>, <code>IDPEL</code>, <code>NAMA</code>, <code>STAN LAPANGAN</code>, <code>SELISIH (kWh)</code>, <code>VONIS AUDIT</code>, <code>LATENSI</code>) untuk mengurutkan anomali terbesar ke paling atas. Gunakan kotak <strong>Cari IDPEL / Nama</strong> dan pengatur <strong>Baris per halaman (25 / 50 / 100 / Semua)</strong> di bawah tabel.
+                </div>
+            </div>
+        </section>
+
+        <!-- BAGIAN 4: MODAL PRATINJAU & HOTKEY -->
+        <section class="tut-card theme-slate" id="modal-inspector">
+            <div class="tut-section-head">
+                <div class="tut-step-badge slate">04</div>
+                <div>
+                    <h2>Verifikasi Cepat di Modal Pratinjau HD (Human-in-the-Loop)</h2>
+                    <div class="tut-section-sub">Klik thumbnail foto di tabel untuk memverifikasi gambar resolusi penuh, mengedit nilai, dan memberi catatan terpisah</div>
+                </div>
+            </div>
+            <div class="tut-two-col">
+                <div class="hotkey-panel">
+                    <div class="hotkey-panel-title">
+                        <i class="fas fa-keyboard" style="color:#FDB913;"></i> Shortcut Keyboard di Modal Pratinjau
+                    </div>
+                    <table class="hotkey-table">
+                        <thead>
+                            <tr>
+                                <th>Tombol</th>
+                                <th>Fungsi Cepat</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><kbd>←</kbd> / <kbd>→</kbd></td><td>Pindah foto sebelumnya/berikutnya (<strong>mengikuti filter & sortir aktif</strong>)</td></tr>
+                            <tr><td><kbd>1</kbd></td><td>Set vonis <strong>Sesuai Match</strong></td></tr>
+                            <tr><td><kbd>2</kbd></td><td>Set vonis <strong>Rolling Digit</strong></td></tr>
+                            <tr><td><kbd>3</kbd></td><td>Set vonis <strong>Beda Stand</strong></td></tr>
+                            <tr><td><kbd>4</kbd></td><td>Set vonis <strong>Perlu Tinjau Ulang</strong></td></tr>
+                            <tr><td><kbd>5</kbd></td><td>Set vonis <strong>Bukan KWH / Nihil</strong></td></tr>
+                            <tr><td><kbd>Esc</kbd></td><td>Simpan perubahan terakhir & tutup modal</td></tr>
+                            <tr><td>Scroll / Drag</td><td>Zoom in/out (50%–500%) & geser area angka meteran</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tut-subbox box-purple">
+                    <h3><i class="fas fa-code-branch" style="color:#7C3AED;"></i> Pemisahan Catatan PLN vs Catatan AI & Smart Un-Edit</h3>
+                    <ul class="tut-list">
+                        <li><strong>Catatan Auditor (Laporan Excel PLN):</strong> Untuk catatan operasional dinas (mis. <em>"Rumah tutup"</em>). Ikut masuk ke file Excel resmi PLN dan <strong>tidak</strong> memicu label <em>Dikoreksi</em>.</li>
+                        <li><strong>Catatan Evaluasi Model AI (Celengan 1.000):</strong> Khusus evaluasi salah baca model agar AI makin pintar. Klik tombol tag cepat (<code>Salah Baca Angka</code>, <code>Digit Terpotong</code>, <code>Rolling Meleset</code>) untuk pasang/lepas tag, atau ikon <code>×</code> untuk membersihkan.</li>
+                        <li><strong>Smart Baseline Un-Edit:</strong> Jika angka & vonis Anda kembalikan persis ke hasil asli ARGUS dan Catatan AI kosong, label <strong>Dikoreksi</strong> otomatis terhapus dan antrean Celengan AI ikut dibersihkan.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- BAGIAN 5: CELENGAN FEEDBACK AI -->
+        <section class="tut-card theme-purple" id="celengan-ai">
+            <div class="tut-section-head">
+                <div class="tut-step-badge purple"><i class="fas fa-piggy-bank"></i></div>
+                <div>
+                    <h2>Celengan Feedback AI Persisten (Target 1.000 Kasus)</h2>
+                    <div class="tut-section-sub">Tersimpan aman di profil Windows (%LOCALAPPDATA%) sehingga kebal dari repack maupun upgrade versi aplikasi</div>
+                </div>
+            </div>
+            <div class="tut-two-col">
+                <div class="tut-subbox box-purple">
+                    <h3><i class="fas fa-database" style="color:#7C3AED;"></i> Lokasi Aman &amp; Anti-Hilang</h3>
+                    <ul class="tut-list">
+                        <li>Setiap baris yang <strong>Dikoreksi</strong> atau memiliki <strong>Catatan AI</strong> otomatis tersimpan ke direktori sistem lokal <code>%LOCALAPPDATA%\ARGUS_PLN\feedback_vault\</code> (subfolder <code>staging\</code> dan <code>releases\</code>), lengkap dengan foto asli, potongan dial, &amp; pre-label YOLO.</li>
+                        <li><strong>Kebal Repack &amp; Upgrade:</strong> Karena terpisah dari folder instalasi <code>ARGUS.exe</code>, tabungan tetap utuh meski browser di-Refresh (<kbd>F5</kbd>), tombol <strong>Reset Tabel</strong> diklik, aplikasi di-repack ulang, ataupun folder <code>ARGUS</code> diperbarui ke versi baru.</li>
+                        <li><strong>Anti-Duplikasi:</strong> Dikunci berdasarkan pasangan <code>IDPEL + Nama File</code>, sehingga mengedit ulang baris yang sama hanya memperbarui entri tersebut.</li>
+                    </ul>
+                </div>
+                <div class="tut-subbox box-indigo">
+                    <h3><i class="fas fa-folder-open" style="color:#4F46E5;"></i> Akses Cepat Folder &amp; Rilis ZIP (Untuk Petugas &amp; Tim IT)</h3>
+                    <ul class="tut-list">
+                        <li>Lihat progres kapan saja pada kartu mini <strong>CELENGAN AI</strong> di pojok kanan atas header.</li>
+                        <li><strong>Klik kartu CELENGAN AI</strong> tersebut untuk membuka jendela pengelola: tersedia jalur folder lengkap, progress bar, daftar file <code>.zip</code> siap unduh, tombol <strong>Buka Folder Celengan</strong> (langsung membuka <code>%LOCALAPPDATA%\ARGUS_PLN\feedback_vault\</code> di File Explorer tanpa perlu mencari manual), dan tombol <strong>Kemas Paket Sekarang</strong> (untuk tim IT/Engineer).</li>
+                        <li>Saat mencapai <strong>1.000 kasus unik</strong>, sistem otomatis membungkus 1 paket <code>ARGUS_AI_Feedback_Batch_XX.zip</code> ke subfolder <code>releases\</code> dan mereset hitungan staging ke <code>0 / 1000</code>.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- BAGIAN 6: EKSPOR EXCEL & TROUBLESHOOTING -->
+        <section class="tut-card theme-emerald" id="ekspor-faq">
+            <div class="tut-section-head">
+                <div class="tut-step-badge green"><i class="fas fa-file-excel"></i></div>
+                <div>
+                    <h2>Ekspor Laporan Resmi Excel & Solusi Kendala Umum</h2>
+                    <div class="tut-section-sub">Format laporan standar PT PLN (Persero) UP3 Mojokerto beserta penanganan cepat</div>
+                </div>
+            </div>
+            <div class="tut-two-col">
+                <div class="tut-subbox box-emerald">
+                    <h3><i class="fas fa-download" style="color:#059669;"></i> Unduh Laporan Excel Resmi (.xlsx)</h3>
+                    <ul class="tut-list">
+                        <li>Klik <strong>Unduh Laporan Excel Resmi (.xlsx)</strong> setelah audit selesai.</li>
+                        <li>File berisi 4 baris header/legenda eksekutif, 19 kolom data audit lengkap, serta formula aktif <code>=HYPERLINK(...)</code> menuju foto asli dan hasil crop AI.</li>
+                        <li><strong>Catatan Model AI</strong> tidak dicampurkan ke file laporan dinas PLN ini agar laporan tetap bersih untuk kebutuhan operasional UP3 Mojokerto.</li>
+                    </ul>
+                </div>
+                <div class="tut-subbox box-amber">
+                    <h3><i class="fas fa-wrench" style="color:#D97706;"></i> Troubleshooting Cepat</h3>
+                    <ul class="tut-list">
+                        <li><strong>Aplikasi tampak berhenti di CMD:</strong> Pastikan tidak sengaja mengklik di dalam kotak hitam CMD (mode blokir seleksi sudah dinonaktifkan otomatis di V5, tekan <kbd>Esc</kbd> jika terlanjur menyorot teks).</li>
+                        <li><strong>Halaman tidak mau memuat di browser:</strong> Pastikan jendela terminal <code>ARGUS.exe</code> masih terbuka dan alamat di browser adalah <code>http://127.0.0.1:8000/dashboard</code>.</li>
+                        <li><strong>Layar kecil / baris terasa penuh:</strong> Atur <em>Baris per halaman</em> ke <code>25</code> atau <code>50</code>, dan gunakan zoom browser <code>90%</code> bila membuka di layar laptop 14 inci.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="tut-callout warn">
+                <i class="fas fa-shield-halved" style="font-size:16px; margin-top:2px;"></i>
+                <div>
+                    <strong>Kerahasiaan Data Pelanggan PLN:</strong> Seluruh pemrosesan gambar, deteksi angka YOLO, dan penyimpanan Celengan Feedback AI berjalan <strong>100% lokal di perangkat Anda tanpa koneksi internet maupun cloud API</strong>, sehingga data pelanggan dan foto meteran PLN tetap terjaga aman di internal kantor.
+                </div>
+            </div>
+        </section>
+
+        <footer class="tut-footer">
+            <div>
+                <i class="fas fa-shield-alt" style="color:var(--pln-blue);"></i>
+                © 2026 PT PLN (Persero) UP3 Mojokerto — Panduan Operasional Sistem Audit Stand KWH Meter ARGUS AI V5
+            </div>
+            <div>
+                <strong>Lead Engineer: Benedictus Pascal</strong>
+            </div>
+        </footer>
+    </main>
+</body>
+</html>
