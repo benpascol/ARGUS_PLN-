@@ -22,7 +22,7 @@
 Bagi petugas lapangan, auditor, maupun supervisor PT PLN (Persero) yang ingin langsung menjalankan aplikasi **tanpa perlu instalasi Python maupun memahami kode sumber**:
 
 1. **Unduh Paket Portable Siap Pakai (`ARGUS_v1.0.0_Portable.zip` ~2,48 GiB):**  
-   - 👉 **[Unduh langsung via Google Drive Distribusi PLN UP3 Mojokerto](https://drive.google.com/drive/folders/17sT3Ab5qJGD-8bqnpvFPkGp7aKSDk-MC?usp=sharing)**  
+   - 👉 **[Unduh langsung `ARGUS_v1.0.0_Portable.zip` (Google Drive)](https://drive.google.com/file/d/1jw2hl4y7npi1REvmtk9ww-97oN-0sx7C/view?usp=drive_link)** *(Folder rilis lengkap: [Google Drive PLN](https://drive.google.com/drive/folders/17sT3Ab5qJGD-8bqnpvFPkGp7aKSDk-MC?usp=sharing))*  
    - *(Atau buka panel **`Releases`** `v1.0.0` di sisi kanan halaman repositori GitHub ini)*  
    - **SHA-256 Checksum:** `E8CB251BC79A469D3ED3071B11FFD4E8576A63D6B9D1C4880911DA4AE6DA150F`
 2. **Ekstrak Berkas ZIP:**  
