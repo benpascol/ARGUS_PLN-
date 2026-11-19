@@ -190,6 +190,7 @@ def prepare_ground_truth_sheet(
     output_excel: Path,
     sample_size: int = 100,
     seed: int = 42,
+    photo_dir: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Membuat formulir Excel acak terukur untuk verifikasi manual Ground Truth bersama PLN."""
     headers, data_rows = _find_header_and_rows(input_excel)
@@ -260,9 +261,17 @@ def prepare_ground_truth_sheet(
         ws.column_dimensions[get_column_letter(c_idx)].width = col_width
     ws.row_dimensions[3].height = 28
 
+    resolved_photo_dir = photo_dir.resolve() if photo_dir is not None else None
+    link_font = Font(name="Segoe UI", size=9.5, color="0369A1", underline="single")
+
     for sample_no, row in enumerate(sampled_rows, start=1):
         r_idx = sample_no + 3
+        filename_val = _cell_str(row, cols["filename"])
         raw_link = row[cols["link_foto"]] if cols["link_foto"] is not None and cols["link_foto"] < len(row) else "-"
+        if resolved_photo_dir is not None and filename_val:
+            candidate = resolved_photo_dir / Path(filename_val).name
+            if candidate.is_file():
+                raw_link = f'=HYPERLINK("{str(candidate)}", "📷 Buka Foto Asli")'
         vals = [
             sample_no,
             _cell_str(row, cols["idpel"]),
@@ -273,7 +282,7 @@ def prepare_ground_truth_sheet(
             _cell_str(row, cols["stan_argus"], "-"),
             _cell_str(row, cols["verdict"], "-"),
             raw_link if raw_link else "-",
-            _cell_str(row, cols["filename"]),
+            filename_val,
             "",
             "",
             "",
@@ -281,7 +290,7 @@ def prepare_ground_truth_sheet(
         for c_idx, val in enumerate(vals, start=1):
             c = ws.cell(row=r_idx, column=c_idx, value=val)
             c.border = border
-            c.font = Font(name="Segoe UI", size=9.5)
+            c.font = link_font if (c_idx == 9 and isinstance(val, str) and val.startswith("=HYPERLINK")) else Font(name="Segoe UI", size=9.5)
             c.alignment = Alignment(
                 horizontal="left" if c_idx in (3, 10, 13) else "center",
                 vertical="center",
@@ -421,6 +430,7 @@ def main():
     prep.add_argument("--output", required=True, type=Path, help="Path output formulir Excel Ground Truth (.xlsx).")
     prep.add_argument("--samples", type=int, default=100, help="Jumlah sampel acak (default: 100).")
     prep.add_argument("--seed", type=int, default=42, help="Seed pengacakan agar reprodusibel (default: 42).")
+    prep.add_argument("--photo-dir", type=Path, default=None, help="Opsional: folder foto asli agar hyperlink Excel 100% langsung terbuka.")
 
     sc = sub.add_parser("score", help="Hitung Precision, Recall, F1-Score, dan Akurasi Stand dari formulir Ground Truth.")
     sc.add_argument("--input", required=True, type=Path, help="Path formulir Ground Truth Excel yang sudah diisi PLN.")
@@ -428,7 +438,13 @@ def main():
 
     args = parser.parse_args()
     if args.command == "prepare":
-        res = prepare_ground_truth_sheet(args.input, args.output, sample_size=args.samples, seed=args.seed)
+        res = prepare_ground_truth_sheet(
+            args.input,
+            args.output,
+            sample_size=args.samples,
+            seed=args.seed,
+            photo_dir=args.photo_dir,
+        )
         print(f"✅ Formulir Ground Truth selesai dibuat: {res['output_excel']} ({res['sampled_count']} dari {res['source_rows']} baris, seed={res['seed']}).")
     elif args.command == "score":
         summary = score_ground_truth_sheet(args.input, json_out=args.json_out)
