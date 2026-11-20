@@ -7,6 +7,7 @@
 ![AI Model](https://img.shields.io/badge/Vision_Engine-YOLOv8s_Model_V5-059669?style=for-the-badge)
 ![Offline](https://img.shields.io/badge/Mode-100%25_Pure_Local_%26_Offline-0F172A?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/Platform-Windows_10%2F11_Portable-FDB913?style=for-the-badge&logoColor=0F172A)
+![License](https://img.shields.io/badge/License-MIT-334155?style=for-the-badge)
 
 **ARGUS (*Automated Recognition & Grid Utility Surveillance*)** adalah sistem inspeksi visual digital garis depan berbasis *Two-Stage Computer Vision* untuk memvalidasi ribuan foto dokumentasi **LBKB (*Lembar Bukti Kelainan Bacaan*)** KWH Meter pelanggan setiap bulan secara lokal di lingkungan komputer PLN tanpa ketergantungan internet ataupun API cloud pihak ketiga.
 
@@ -301,7 +302,19 @@ Seluruh pengembangan proyek tunduk pada 3 dokumen inti + log rilis resmi:
 - 📄 **[`README.md`](./README.md)** — Wajah proyek, panduan instalasi, alur kerja & arsitektur sistem.
 - 📜 **[`RULEBOOK.md`](./RULEBOOK.md)** — Konstitusi hukum teknis, aturan keamanan data PLN, & integritas Computer Vision.
 - 🎯 **[`WHITEBOARD.md`](./WHITEBOARD.md)** — Roadmap 5 fase, rekam jejak keputusan arsitektur & catatan isu (*audit trail*).
-- 🧾 **[`CHANGELOG.md`](./CHANGELOG.md)** — Catatan rilis terstruktur dari `0.1.0` hingga rilis resmi `1.0.0`.
+- 🧾 **[`CHANGELOG.md`](./CHANGELOG.md)** — Catatan rilis terstruktur dari `0.1.0` hingga rilis resmi `1.0.1`.
+
+---
+
+## 👥 Tim & Lisensi (*Team & Licensing*)
+
+| Peran | Nama | Kontribusi Utama |
+| :--- | :--- | :--- |
+| **Lead Engineer & System Architect** | **Benedictus Pascal** | Arsitektur AI & *Two-Stage Pipeline*, Backend FastAPI, Dashboard Mandiri, Celengan AI, Packaging `.exe`, Evaluasi Ground Truth & Dokumentasi |
+| **Dataset Annotation (Roboflow)** | **Benedicta Alfiola** | Bantuan anotasi / *labelling* dataset citra KWH Meter pada Roboflow |
+| **Dataset Annotation (Roboflow)** | **Noval Rangga** | Bantuan anotasi / *labelling* dataset citra KWH Meter pada Roboflow |
+
+- **⚖️ Lisensi Kode Sumber:** Dilisensikan di bawah **[MIT License](./LICENSE)** (`Copyright (c) 2026 Benedictus Pascal`). Pustaka pihak ketiga (*seperti Ultralytics YOLOv8*) tetap tunduk pada ketentuan lisensi masing-masing (`AGPL-3.0`).
 
 ---
 
